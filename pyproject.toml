@@ -1,11 +1,13 @@
 [project]
 name = "supply-chain-monkey"
 version = "0.1.0"
-description = "Core supplier and distributor search tooling for PCB component sourcing"
+description = "Internal service for querying electronic component suppliers"
 readme = "README.md"
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "requests>=2.32.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
 ]
 
 [project.optional-dependencies]
@@ -23,7 +25,7 @@ dev = [
 ]
 
 [tool.uv.sources]
-wn-rack = { path = "../../wn-rack" }
+wn-rack = { git = "https://github.com/wavenumber-eng/wn-rack.git" }
 
 [build-system]
 requires = ["hatchling"]
@@ -37,7 +39,7 @@ packages = ["src/py/supply_chain_monkey"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src/py", ".."]
+pythonpath = ["src/py"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
