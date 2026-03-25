@@ -31,15 +31,10 @@ Usage:
 """
 
 
-from .supplier_interface import SupplierInterface, SupplierPartInfo, SupplierType
-
-try:
-    from .lcsc_scraper import get_lcsc_part_details, search_lcsc_by_mpn
-except ImportError:
-    # Handle different import contexts
-    from lcsc_scraper import get_lcsc_part_details, search_lcsc_by_mpn
-
 import logging
+
+from .base import SupplierInterface, SupplierPartInfo, SupplierType, resolve_stock
+from .lcsc_scraper import get_lcsc_part_details, search_lcsc_by_mpn
 
 log = logging.getLogger(__name__)
 
@@ -122,6 +117,7 @@ class LCSCSupplier(SupplierInterface):
             # Convert to standardized format
             results = []
             for lcsc_part in lcsc_results:
+                stock_qty, stock_status = resolve_stock(lcsc_part.stock)
                 results.append(SupplierPartInfo(
                     supplier=SupplierType.LCSC,
                     supplier_part_number=lcsc_part.lcsc_code,
@@ -129,11 +125,12 @@ class LCSCSupplier(SupplierInterface):
                     manufacturer_part_number=lcsc_part.mpn,
                     description=lcsc_part.description,
                     product_url=lcsc_part.url,
-                    stock_quantity=lcsc_part.stock,
-                    datasheet_url="",  # Not provided by scraper
-                    price_breaks=[],   # Not provided by scraper
-                    lifecycle_status="",  # Not provided by scraper
-                    extra_data=lcsc_part.to_dict()  # Store original scraper data
+                    stock_quantity=stock_qty,
+                    stock_status=stock_status,
+                    datasheet_url="",
+                    price_breaks=[],
+                    lifecycle_status="",
+                    extra_data=lcsc_part.to_dict(),
                 ))
 
             return results
@@ -176,6 +173,7 @@ class LCSCSupplier(SupplierInterface):
                 return None
 
             # Convert to standardized format
+            stock_qty, stock_status = resolve_stock(lcsc_part.stock)
             return SupplierPartInfo(
                 supplier=SupplierType.LCSC,
                 supplier_part_number=lcsc_part.lcsc_code,
@@ -183,11 +181,12 @@ class LCSCSupplier(SupplierInterface):
                 manufacturer_part_number=lcsc_part.mpn,
                 description=lcsc_part.description,
                 product_url=lcsc_part.url,
-                stock_quantity=lcsc_part.stock,
-                datasheet_url="",  # Not provided by scraper
-                price_breaks=[],   # Not provided by scraper
-                lifecycle_status="",  # Not provided by scraper
-                extra_data=lcsc_part.to_dict()  # Store original scraper data
+                stock_quantity=stock_qty,
+                stock_status=stock_status,
+                datasheet_url="",
+                price_breaks=[],
+                lifecycle_status="",
+                extra_data=lcsc_part.to_dict(),
             )
 
         except Exception as e:

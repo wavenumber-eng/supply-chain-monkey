@@ -14,12 +14,8 @@ import logging
 from typing import Any
 
 from .jlc_openapi import JLCOpenAPIClient, detail_url_for_code
-from .supplier_interface import SupplierInterface, SupplierPartInfo, SupplierType
-
-try:
-    from .jlc_scraper import JLCPartInfo, get_jlcpcb_part_details, search_jlcpcb_by_mpn
-except ImportError:
-    from jlc_scraper import JLCPartInfo, get_jlcpcb_part_details, search_jlcpcb_by_mpn
+from .base import SupplierInterface, SupplierPartInfo, SupplierType, resolve_stock
+from .jlc_scraper import JLCPartInfo, get_jlcpcb_part_details, search_jlcpcb_by_mpn
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +53,7 @@ def _price_breaks_from_api(detail: dict[str, Any]) -> list[dict[str, Any]]:
             price = float(row.get("unitPrice"))
         except (TypeError, ValueError):
             continue
-        price_breaks.append({"qty": qty, "price": price})
+        price_breaks.append({"qty": qty, "unit_price": price, "currency": "USD"})
     return price_breaks
 
 
@@ -208,6 +204,7 @@ class JLCPCBSupplier(SupplierInterface):
         *,
         detail_backend: str = DETAIL_BACKEND_SCRAPER,
     ) -> SupplierPartInfo:
+        stock_qty, stock_status = resolve_stock(jlc_part.stock)
         return SupplierPartInfo(
             supplier=SupplierType.JLCPCB,
             supplier_part_number=jlc_part.jlcpcb_code,
@@ -215,7 +212,8 @@ class JLCPCBSupplier(SupplierInterface):
             manufacturer_part_number=jlc_part.mpn,
             description=jlc_part.description,
             product_url=jlc_part.url,
-            stock_quantity=jlc_part.stock,
+            stock_quantity=stock_qty,
+            stock_status=stock_status,
             datasheet_url="",
             price_breaks=[],
             lifecycle_status="",
@@ -240,7 +238,7 @@ class JLCPCBSupplier(SupplierInterface):
         )
         description = str(detail.get("description") or (scraper_part.description if scraper_part else ""))
         datasheet_url = str(detail.get("datasheetUrl") or detail.get("dataManualUrl") or "")
-        stock_quantity = self._to_int(detail.get("stockCount"))
+        stock_qty, stock_status = resolve_stock(detail.get("stockCount"))
         product_url = detail_url_for_code(component_code)
 
         extra_data: dict[str, Any] = {
@@ -258,7 +256,8 @@ class JLCPCBSupplier(SupplierInterface):
             description=description,
             datasheet_url=datasheet_url,
             product_url=product_url,
-            stock_quantity=stock_quantity,
+            stock_quantity=stock_qty,
+            stock_status=stock_status,
             price_breaks=_price_breaks_from_api(detail),
             lifecycle_status="",
             extra_data=extra_data,
@@ -271,13 +270,6 @@ class JLCPCBSupplier(SupplierInterface):
             if name in {"manufacturer", "brand", "manufacturer name", "brand name"}:
                 return str(entry.get("parameterValue") or "").strip()
         return ""
-
-    @staticmethod
-    def _to_int(value: Any) -> int:
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            return 0
 
 
 def search_jlcpcb(manufacturer_part_number: str, verify_parts: bool = True) -> list[SupplierPartInfo]:

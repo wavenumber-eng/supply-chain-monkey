@@ -41,22 +41,13 @@ Usage:
 import logging
 import os
 import time
-from pathlib import Path
 
 import requests
 
 log = logging.getLogger(__name__)
 
 
-try:
-    from .supplier_interface import SupplierInterface, SupplierPartInfo, SupplierType
-except ImportError:
-    # Handle direct execution
-    from supplier_interface import SupplierInterface, SupplierPartInfo, SupplierType
-
-from .env import ensure_env_loaded
-
-ensure_env_loaded()
+from .base import SupplierInterface, SupplierPartInfo, SupplierType, resolve_stock
 
 
 class DigikeySupplier(SupplierInterface):
@@ -348,56 +339,6 @@ class DigikeySupplier(SupplierInterface):
             log.info(f"Error getting Digikey details for {supplier_part_number}: {str(e)}")
             return None
 
-    def get_substitutions(self, product_number: str, **kwargs) -> list[SupplierPartInfo]:
-        """
-        Get substitute/equivalent parts for a given Digikey product number.
-
-        Args:
-            product_number: Digikey product number (e.g., "296-TPS543620RPYRCT-ND")
-            **kwargs: Optional parameters
-
-        Returns:
-            List of SupplierPartInfo objects for substitute parts
-        """
-        try:
-            # Build URL
-            url = f"{self.SUBSTITUTIONS_URL}/{product_number}/substitutions"
-
-            # Make API request
-            data = self._make_request(url, method="GET")
-
-            if not data:
-                return []
-
-            # Parse substitutes
-            results = []
-            substitutes = data.get('ProductSubstitutes', [])
-
-            for sub in substitutes:
-                # Create SupplierPartInfo from substitute data
-                part_info = SupplierPartInfo(
-                    supplier_type=SupplierType.DIGIKEY,
-                    supplier_part_number="",  # Substitutes don't always have DK part numbers
-                    manufacturer=sub.get('Manufacturer', {}).get('Name', '') if sub.get('Manufacturer') else '',
-                    manufacturer_part_number=sub.get('ManufacturerProductNumber', ''),
-                    description=sub.get('Description', ''),
-                    stock_quantity=sub.get('QuantityAvailable', 0),
-                    unit_price=sub.get('UnitPrice', ''),
-                    product_url=sub.get('ProductUrl', ''),
-                    datasheet_url='',
-                    lifecycle_status='',
-                    packaging_type=sub.get('SubstituteType', ''),  # Use substitute type as packaging
-                    category='',
-                    supplier_data=sub
-                )
-                results.append(part_info)
-
-            return results
-
-        except Exception as e:
-            log.info(f"Error getting Digikey substitutions for {product_number}: {str(e)}")
-            return []
-
     def _parse_product_variations(self, product: dict, search_mpn: str = "") -> list[SupplierPartInfo]:
         """
         Parse all packaging variations from a Digikey product.
@@ -480,9 +421,6 @@ class DigikeySupplier(SupplierInterface):
             product_url = product.get('ProductUrl', '')
             datasheet_url = product.get('DatasheetUrl', '')
 
-            # Extract stock
-            stock = product.get('QuantityAvailable', 0)
-
             # Extract lifecycle status
             lifecycle = ""
             if product.get('Discontinued'):
@@ -496,11 +434,23 @@ class DigikeySupplier(SupplierInterface):
                 if isinstance(product_status, dict):
                     lifecycle = product_status.get('Status', '')
 
+            # Extract stock with status
+            stock_qty, stock_status = resolve_stock(
+                product.get('QuantityAvailable'), lifecycle
+            )
+
             # Extract pricing
             price_breaks = []
             unit_price = product.get('UnitPrice')
             if unit_price:
-                price_breaks.append({"qty": 1, "price": unit_price})
+                try:
+                    price_breaks.append({
+                        "qty": 1,
+                        "unit_price": float(unit_price),
+                        "currency": "USD",
+                    })
+                except (TypeError, ValueError):
+                    pass
 
             # Build SupplierPartInfo
             return SupplierPartInfo(
@@ -511,10 +461,11 @@ class DigikeySupplier(SupplierInterface):
                 description=description,
                 datasheet_url=datasheet_url,
                 product_url=product_url,
-                stock_quantity=stock,
+                stock_quantity=stock_qty,
+                stock_status=stock_status,
                 price_breaks=price_breaks,
                 lifecycle_status=lifecycle,
-                extra_data=product  # Store full product data
+                extra_data=product,
             )
 
         except Exception as e:

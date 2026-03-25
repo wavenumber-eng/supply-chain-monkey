@@ -40,12 +40,9 @@ from typing import Any
 
 import requests
 
-from .supplier_interface import SupplierInterface, SupplierPartInfo, SupplierType
-from .env import ensure_env_loaded
+from .base import SupplierInterface, SupplierPartInfo, SupplierType, resolve_stock
 
 log = logging.getLogger(__name__)
-
-ensure_env_loaded()
 
 
 class MouserSupplier(SupplierInterface):
@@ -251,12 +248,12 @@ class MouserSupplier(SupplierInterface):
             manufacturer = mouser_part.get("Manufacturer", "")
             description = mouser_part.get("Description", "")
 
-            # Extract stock - Mouser uses "Availability" field
-            availability = mouser_part.get("Availability", "")
-            stock = self._parse_availability(availability)
-
             # Extract lifecycle status
             lifecycle = mouser_part.get("LifecycleStatus", "")
+
+            # Extract stock - Mouser uses "Availability" field
+            raw_stock = self._parse_availability_raw(mouser_part.get("Availability", ""))
+            stock_qty, stock_status = resolve_stock(raw_stock, lifecycle)
 
             # Extract datasheet URL
             datasheet = mouser_part.get("DataSheetUrl", "")
@@ -274,57 +271,43 @@ class MouserSupplier(SupplierInterface):
                 manufacturer_part_number=mfr_pn,
                 description=description,
                 product_url=product_url,
-                stock_quantity=stock,
+                stock_quantity=stock_qty,
+                stock_status=stock_status,
                 datasheet_url=datasheet,
                 price_breaks=price_breaks,
                 lifecycle_status=lifecycle,
-                extra_data=mouser_part  # Store full response for additional fields
+                extra_data=mouser_part,
             )
 
         except Exception as e:
             log.error(f"[Mouser] Error converting part data: {str(e)}")
             return None
 
-    def _parse_availability(self, availability: str) -> int:
-        """
-        Parse Mouser's availability string to extract stock quantity.
+    def _parse_availability_raw(self, availability: str) -> int | str:
+        """Extract the numeric stock value from Mouser's availability string.
 
-        Args:
-            availability: String like "1818 In Stock" or "0 In Stock"
-
-        Returns:
-            Stock quantity as integer
+        Returns int if parseable, otherwise the raw string for resolve_stock.
         """
         if not availability:
-            return 0
-
-        # Extract number from availability string
+            return ""
         import re
-        match = re.search(r'(\d+)', availability)
+        match = re.search(r'(\d[\d,]*)', availability)
         if match:
             try:
-                return int(match.group(1))
+                return int(match.group(1).replace(",", ""))
             except ValueError:
-                return 0
-        return 0
+                return availability
+        return availability
 
-    def _parse_price_breaks(self, price_breaks: list[dict]) -> list[tuple]:
-        """
-        Parse Mouser price breaks into standardized format.
-
-        Args:
-            price_breaks: List of price break dicts from Mouser API
-
-        Returns:
-            List of (quantity, price) tuples
-        """
+    def _parse_price_breaks(self, price_breaks: list[dict]) -> list[dict]:
+        """Parse Mouser price breaks into standardized dict format."""
         result = []
         for pb in price_breaks:
             try:
-                qty = pb.get("Quantity", 0)
+                qty = int(pb.get("Quantity", 0))
                 price_str = pb.get("Price", "").replace("$", "").replace(",", "")
-                price = float(price_str) if price_str else 0.0
-                result.append((qty, price))
+                unit_price = float(price_str) if price_str else 0.0
+                result.append({"qty": qty, "unit_price": unit_price, "currency": "USD"})
             except (ValueError, AttributeError):
                 continue
         return result

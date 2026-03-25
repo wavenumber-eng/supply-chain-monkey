@@ -108,6 +108,7 @@ class SupplierPartInfo:
 
     # Availability & pricing
     stock_quantity: int = 0
+    stock_status: str = "unknown"  # "in_stock", "out_of_stock", "unknown", "discontinued"
     price_breaks: list[dict[str, Any]] = field(default_factory=list)
     lifecycle_status: str = ""
 
@@ -130,6 +131,7 @@ class SupplierPartInfo:
             'datasheet_url': self.datasheet_url,
             'product_url': self.product_url,
             'stock_quantity': self.stock_quantity,
+            'stock_status': self.stock_status,
             'price_breaks': self.price_breaks,
             'lifecycle_status': self.lifecycle_status,
             'extra_data': self.extra_data
@@ -354,19 +356,19 @@ def create_supplier(supplier_type: SupplierType, **credentials) -> SupplierInter
         ... )
     """
     if supplier_type == SupplierType.JLCPCB:
-        from .jlcpcb_supplier import JLCPCBSupplier
+        from .jlc import JLCPCBSupplier
         return JLCPCBSupplier(**credentials)
 
     elif supplier_type == SupplierType.LCSC:
-        from .lcsc_supplier import LCSCSupplier
+        from .lcsc import LCSCSupplier
         return LCSCSupplier(**credentials)
 
     elif supplier_type == SupplierType.DIGIKEY:
-        from .digikey_supplier import DigikeySupplier
+        from .digikey import DigikeySupplier
         return DigikeySupplier(**credentials)
 
     elif supplier_type == SupplierType.MOUSER:
-        from .mouser_supplier import MouserSupplier
+        from .mouser import MouserSupplier
         return MouserSupplier(**credentials)
 
     else:
@@ -374,6 +376,40 @@ def create_supplier(supplier_type: SupplierType, **credentials) -> SupplierInter
             f"Unsupported supplier type: {supplier_type}. "
             f"Available types: {', '.join([s.value for s in IMPLEMENTED_SUPPLIERS])}"
         )
+
+
+def resolve_stock(raw_value, lifecycle_status: str = "") -> tuple[int, str]:
+    """Convert a raw stock value into (stock_quantity, stock_status).
+
+    Handles numeric, string, None, and edge cases like "--".
+    """
+    if lifecycle_status.lower() in ("discontinued", "obsolete", "eol", "end of life"):
+        try:
+            qty = int(raw_value)
+        except (TypeError, ValueError):
+            qty = 0
+        return qty, "discontinued"
+
+    if raw_value is None or raw_value == "":
+        return 0, "unknown"
+
+    if isinstance(raw_value, str):
+        cleaned = raw_value.strip().replace(",", "")
+        if cleaned in ("--", "-", "N/A", "n/a"):
+            return 0, "unknown"
+        try:
+            qty = int(cleaned)
+        except ValueError:
+            return 0, "unknown"
+    else:
+        try:
+            qty = int(raw_value)
+        except (TypeError, ValueError):
+            return 0, "unknown"
+
+    if qty > 0:
+        return qty, "in_stock"
+    return 0, "out_of_stock"
 
 
 # List of implemented suppliers (suppliers that have working implementations)

@@ -13,8 +13,6 @@ from typing import Any
 
 import requests
 
-from .env import ensure_env_loaded
-
 log = logging.getLogger(__name__)
 
 JLCPCB_OPENAPI_ENDPOINT = "https://open.jlcpcb.com"
@@ -49,15 +47,13 @@ def _env_value(name: str) -> str:
 
 def load_jlc_openapi_credentials() -> JLCOpenAPICredentials | None:
     """
-    Load signing credentials for the JLC OpenAPI from the local environment.
+    Load signing credentials for the JLC OpenAPI from the environment.
 
     The signing triplet is:
     - JLCPCB_APP_ID
     - JLCPCB_ACCESS_KEY
     - JLCPCB_SECRET_KEY
     """
-    ensure_env_loaded()
-
     app_id = _env_value("JLCPCB_APP_ID")
     access_key = _env_value("JLCPCB_ACCESS_KEY")
     secret_key = _env_value("JLCPCB_SECRET_KEY")
@@ -94,8 +90,6 @@ class JLCOpenAPIClient:
         endpoint: str = JLCPCB_OPENAPI_ENDPOINT,
         timeout_seconds: float = 20.0,
     ) -> None:
-        ensure_env_loaded()
-
         self.endpoint = endpoint.rstrip("/")
         self.timeout_seconds = timeout_seconds
         self.credentials = JLCOpenAPICredentials(
