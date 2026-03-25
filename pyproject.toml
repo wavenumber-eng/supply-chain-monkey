@@ -1,0 +1,49 @@
+[project]
+name = "supply-chain-monkey"
+version = "0.1.0"
+description = "Core supplier and distributor search tooling for PCB component sourcing"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "requests>=2.32.0",
+]
+
+[project.optional-dependencies]
+ai = [
+    "anthropic>=0.52.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-json-report",
+    "wn-rack>=1.1.0",
+    "pyright>=1.1.390",
+    "ruff>=0.8.0",
+]
+
+[tool.uv.sources]
+wn-rack = { path = "../../wn-rack" }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+sources = ["src/py"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/py/supply_chain_monkey"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src/py", ".."]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+markers = [
+    "slow: long-running or live supplier validation",
+    "supplier: live supplier integration coverage",
+    "requires_credentials: test requires provider credentials",
+    "benchmark: timing-oriented supplier validation",
+]

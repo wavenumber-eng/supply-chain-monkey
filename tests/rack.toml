@@ -1,0 +1,32 @@
+[rack]
+name = "Supply Chain Monkey Suite"
+version = "0.1"
+description = "Rack test suite for supplier interface, env loading, and provider integrations"
+note = "Default runs stay structural; live provider checks are explicit opt-in"
+default_lane = "fast"
+
+[strata]
+order = [
+    "L0_foundation",
+]
+default_enabled = [
+    "L0_foundation",
+]
+
+[concerns.core]
+description = "Core supplier interface and package surface"
+
+[concerns.providers]
+description = "Provider implementations and live API/scraper access"
+
+[concerns.env]
+description = "Environment loading and local credential handling"
+
+[lanes.fast]
+description = "Default smoke lane for structural/path verification"
+
+[lanes.full]
+description = "Broader routine-validation lane"
+
+[lanes.strict]
+description = "Heavier or stricter validation lane"
