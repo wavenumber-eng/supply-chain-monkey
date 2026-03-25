@@ -628,8 +628,210 @@ def test_digikey_search():
 
 ---
 
+## Service Requirements (REQ-SVC)
+
+### REQ-SVC-001: FastAPI HTTP Service
+
+| Field | Value |
+|-------|-------|
+| **Status** | APPROVED |
+| **Priority** | HIGH |
+| **Added** | 2026-03-25 |
+
+**Requirement**: The service MUST expose a versioned HTTP API via FastAPI, deployed as a standalone application via Appliku.
+
+**Endpoints (v1)**:
+- `GET /v1/health` - Service health check
+- `GET /v1/providers/status` - Provider availability status
+- `GET /v1/search?supplier=<name>&mpn=<mpn>` - Search by MPN
+- `GET /v1/detail?supplier=<name>&part=<part_number>` - Get part details
+
+**Constraints**:
+- App binds to `0.0.0.0:8000`
+- All endpoints require bearer token authentication
+- `supplier` parameter is required on search and detail endpoints
+- Responses use standardized envelope (see REQ-SVC-003)
+
+**Rationale**: Centralizes vendor credentials and access behind a single internal API.
+
+**Verification**:
+- [ ] FastAPI app starts and serves requests
+- [ ] All endpoints return correct response shapes
+- [ ] Auth enforced on all endpoints except health
+
+---
+
+### REQ-SVC-002: Bearer Token Authentication
+
+| Field | Value |
+|-------|-------|
+| **Status** | APPROVED |
+| **Priority** | HIGH |
+| **Added** | 2026-03-25 |
+
+**Requirement**: All API endpoints (except `GET /v1/health`) MUST require a valid bearer token in the `Authorization` header.
+
+**v1 implementation**: Single token stored as `SCM_SERVICE_TOKEN` env var.
+
+**Later**: Per-client tokens with name/scope metadata.
+
+**Error response** for invalid/missing token:
+```json
+{"detail": "Invalid or missing token"}
+```
+HTTP 401 Unauthorized.
+
+**Rationale**: Prevents unauthorized access to vendor APIs and rate limits.
+
+**Verification**:
+- [ ] Requests without token return 401
+- [ ] Requests with invalid token return 401
+- [ ] Requests with valid token succeed
+- [ ] Health endpoint works without token
+
+---
+
+### REQ-SVC-003: Response Envelope
+
+| Field | Value |
+|-------|-------|
+| **Status** | APPROVED |
+| **Priority** | HIGH |
+| **Added** | 2026-03-25 |
+| **ADR** | ADR-005 |
+
+**Requirement**: All API responses MUST use a standard envelope containing metadata alongside the data payload.
+
+**Envelope fields**:
+- `status`: `"ok"`, `"not_found"`, `"provider_error"`
+- `supplier`: Provider name
+- `provider_latency_ms`: Time spent calling upstream provider
+- `service_timestamp`: ISO 8601 UTC timestamp
+- `cached`: Whether response came from cache (always `false` in v1)
+- `data`: Part data (object for detail, list for search)
+- `error`: Error message when status is not `"ok"`, null otherwise
+
+**Rationale**: Clients need timing, status, and cache info for operational decisions.
+
+**Verification**:
+- [ ] All endpoints return envelope format
+- [ ] `provider_latency_ms` accurately measures upstream call time
+- [ ] `status` correctly reflects provider outcome
+
+---
+
+### REQ-SVC-004: Stock Status Standardization
+
+| Field | Value |
+|-------|-------|
+| **Status** | APPROVED |
+| **Priority** | MEDIUM |
+| **Added** | 2026-03-25 |
+| **ADR** | ADR-003 |
+
+**Requirement**: `SupplierPartInfo` MUST include a `stock_status` field alongside `stock_quantity` to distinguish between known stock, unknown stock, and confirmed zero.
+
+**Valid values**: `"in_stock"`, `"out_of_stock"`, `"unknown"`, `"discontinued"`
+
+**Rules**:
+- Valid number > 0: `stock_status = "in_stock"`
+- Valid number == 0: `stock_status = "out_of_stock"`
+- Non-numeric (`"--"`, empty, null): `stock_status = "unknown"`, `stock_quantity = 0`
+- Lifecycle discontinued: `stock_status = "discontinued"`
+
+**Rationale**: JLC/LCSC return non-numeric stock values. `stock_quantity = 0` is ambiguous without status.
+
+**Verification**:
+- [ ] All providers set `stock_status` during conversion
+- [ ] Non-numeric stock values produce `"unknown"` status
+- [ ] API response includes both `stock_quantity` and `stock_status`
+
+---
+
+### REQ-SVC-005: Price Breaks Standardization
+
+| Field | Value |
+|-------|-------|
+| **Status** | APPROVED |
+| **Priority** | MEDIUM |
+| **Added** | 2026-03-25 |
+| **ADR** | ADR-004 |
+
+**Requirement**: `price_breaks` MUST use a consistent dict format across all providers.
+
+**Format**:
+```python
+{"qty": int, "unit_price": float, "currency": str}
+```
+
+**Replaces**: Mixed dict/tuple formats currently used across providers.
+
+**Rationale**: Clients must process pricing from any provider without knowing the source.
+
+**Verification**:
+- [ ] All providers output dicts with `qty`, `unit_price`, `currency`
+- [ ] Mouser converted from tuples to dicts
+- [ ] JLC `"price"` key renamed to `"unit_price"`
+
+---
+
+### REQ-SVC-006: Credentials from Settings
+
+| Field | Value |
+|-------|-------|
+| **Status** | APPROVED |
+| **Priority** | HIGH |
+| **Added** | 2026-03-25 |
+| **ADR** | ADR-006 |
+
+**Requirement**: All provider credentials MUST be loaded from a central `settings.py` module that reads `os.environ` at startup. No module-level `.env` file scanning.
+
+**Replaces**: `env.py` and `ensure_env_loaded()` calls at import time.
+
+**Env vars**:
+- `DIGIKEY_CLIENT_ID`, `DIGIKEY_CLIENT_SECRET`
+- `MOUSER_API_KEY`
+- `JLCPCB_APP_ID`, `JLCPCB_ACCESS_KEY`, `JLCPCB_SECRET_KEY`
+- `SCM_SERVICE_TOKEN`
+
+**Rationale**: Service gets env vars from container runtime, not filesystem scanning.
+
+**Verification**:
+- [ ] `env.py` removed
+- [ ] No `ensure_env_loaded()` calls in provider modules
+- [ ] All credentials sourced from `settings.py`
+
+---
+
+### REQ-SVC-007: Parallel Client Requests
+
+| Field | Value |
+|-------|-------|
+| **Status** | APPROVED |
+| **Priority** | MEDIUM |
+| **Added** | 2026-03-25 |
+| **ADR** | ADR-007 |
+
+**Requirement**: The API MUST support clients making concurrent per-provider requests. Each endpoint handles exactly one provider per request.
+
+**Pattern**: Client sends separate requests per provider and handles concurrency:
+```
+GET /v1/search?supplier=jlcpcb&mpn=TPS543620RPYR
+GET /v1/search?supplier=digikey&mpn=TPS543620RPYR
+GET /v1/search?supplier=mouser&mpn=TPS543620RPYR
+```
+
+**Rationale**: Simpler than server-side fan-out. Client controls which providers to query.
+
+**Verification**:
+- [ ] `supplier` is a required parameter
+- [ ] Concurrent requests to different providers work correctly
+- [ ] No shared mutable state between provider calls
+
+---
+
 ## References
 
-- `ARCHITECTURE.md` - Architecture principles and design patterns
-- `README.md` - User-facing documentation and quick start guide
-- `docs/` - Supplier-specific documentation
+- `CLAUDE.md` - Development directives
+- `docs/adrs/` - Architecture Decision Records
+- `docs/plans/SUPPLY_CHAIN_MONKEY_SERVICE_TRANSITION_PLAN.md` - Migration plan

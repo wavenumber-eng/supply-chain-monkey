@@ -9,6 +9,7 @@ Guidance for Claude Code when working in this repository.
 - Be factual and direct about what works and what doesn't
 - Short, simple commit messages. No fluff.
 - Place temporary/intermediate files in `/temp` (gitignored)
+- All decisions about structure, organization, or API changes must have an ADR in `docs/adrs/` before implementation
 
 ## Project
 
