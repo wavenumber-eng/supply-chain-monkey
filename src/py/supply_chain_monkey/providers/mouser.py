@@ -249,7 +249,7 @@ class MouserSupplier(SupplierInterface):
             description = mouser_part.get("Description", "")
 
             # Extract lifecycle status
-            lifecycle = mouser_part.get("LifecycleStatus", "")
+            lifecycle = mouser_part.get("LifecycleStatus") or ""
 
             # Extract stock - Mouser uses "Availability" field
             raw_stock = self._parse_availability_raw(mouser_part.get("Availability", ""))

@@ -383,7 +383,7 @@ def resolve_stock(raw_value, lifecycle_status: str = "") -> tuple[int, str]:
 
     Handles numeric, string, None, and edge cases like "--".
     """
-    if lifecycle_status.lower() in ("discontinued", "obsolete", "eol", "end of life"):
+    if (lifecycle_status or "").lower() in ("discontinued", "obsolete", "eol", "end of life"):
         try:
             qty = int(raw_value)
         except (TypeError, ValueError):
