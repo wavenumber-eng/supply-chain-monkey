@@ -1,280 +1,85 @@
 """
 LCSC Supplier Implementation
 
-This module implements the SupplierInterface for LCSC (lcsc.com), which is part of the
-JLC company family. LCSC uses the same C code numbering system as JLCPCB.
-
-LCSC may provide faster response times than JLCPCB for the same parts, making it
-useful for performance comparison and fallback searches.
-
-Features:
-    - Web scraping-based search (no API key required)
-    - Search by manufacturer part number
-    - Get details by C code (same as JLCPCB)
-    - Stock availability checking
-    - Part description extraction
-
-Usage:
-    >>> from supply_chain_monkey import create_supplier, SupplierType
-    >>>
-    >>> lcsc = create_supplier(SupplierType.LCSC)
-    >>>
-    >>> # Search by MPN
-    >>> results = lcsc.search_by_mpn("TPS543620RPYR")
-    >>> for part in results:
-    ...     log.info(f"{part.supplier_part_number}: {part.stock_quantity} in stock")
-    >>>
-    >>> # Get specific C code details
-    >>> part = lcsc.get_part_details("C2870085")
-    >>> if part:
-    ...     log.info(part.description)
+Uses LCSC's internal JSON API (same endpoints the website frontend calls).
+No API key required.
 """
-
 
 import logging
 
 from .base import SupplierInterface, SupplierPartInfo, SupplierType, resolve_stock
-from .lcsc_scraper import get_lcsc_part_details, search_lcsc_by_mpn
+from .lcsc_api import search_lcsc as _api_search, get_lcsc_detail as _api_detail
 
 log = logging.getLogger(__name__)
-
 
 
 class LCSCSupplier(SupplierInterface):
     """
     LCSC implementation of the supplier interface.
 
-    This wraps the lcsc_scraper.py functionality to provide a
-    standardized interface for LCSC part searches.
-
-    LCSC Notes:
-        - Uses web scraping (no API key required)
-        - Parts identified by "C codes" (same as JLCPCB: C1, C2040, C2870085, etc.)
-        - Part of the JLC company family
-        - May have faster response times than JLCPCB
-        - Search may return multiple C codes for same MPN
-        - Verification option available (slower but more accurate)
-
-    Credentials:
-        No credentials required for scraper-based implementation.
+    Uses LCSC's internal JSON API for search and detail lookups.
+    No credentials required.
     """
 
     def __init__(self, **credentials):
-        """
-        Initialize LCSC supplier client.
-
-        Args:
-            **credentials: Currently unused (scraper doesn't need auth)
-        """
         super().__init__(**credentials)
 
     @property
     def supplier_type(self) -> SupplierType:
-        """Return LCSC supplier type."""
         return SupplierType.LCSC
 
     @property
     def parameter_field_name(self) -> str:
-        """
-        Return the Part parameter field name for LCSC.
-
-        This is the stable downstream parameter field for LCSC.
-
-        Returns:
-            "LCSC Part #"
-        """
         return "LCSC Part #"
 
     def search_by_mpn(self, manufacturer_part_number: str, **kwargs) -> list[SupplierPartInfo]:
-        """
-        Search LCSC for parts matching a manufacturer part number.
-
-        This uses the web scraper to find all C codes matching the given MPN.
-        LCSC may have multiple entries for the same MPN (different packaging,
-        cut tape vs reel, etc.).
-
-        Args:
-            manufacturer_part_number: MPN to search for (e.g., "TPS543620RPYR")
-            **kwargs: Optional parameters
-                verify_parts: bool = True (verify each C code by fetching detail page)
-
-        Returns:
-            List of SupplierPartInfo objects (empty list if none found or error)
-
-        Example:
-            >>> lcsc = LCSCSupplier()
-            >>> results = lcsc.search_by_mpn("TPS543620RPYR", verify_parts=True)
-            >>> for part in results:
-            ...     log.info(f"{part.supplier_part_number}: {part.description}")
-        """
+        """Search LCSC by manufacturer part number."""
         try:
-            # Extract options
-            verify = kwargs.get('verify_parts', True)
-
-            # Use existing scraper
-            lcsc_results = search_lcsc_by_mpn(manufacturer_part_number, verify_parts=verify)
-
-            # Convert to standardized format
-            results = []
-            for lcsc_part in lcsc_results:
-                stock_qty, stock_status = resolve_stock(lcsc_part.stock)
-                results.append(SupplierPartInfo(
-                    supplier=SupplierType.LCSC,
-                    supplier_part_number=lcsc_part.lcsc_code,
-                    manufacturer=lcsc_part.manufacturer,
-                    manufacturer_part_number=lcsc_part.mpn,
-                    description=lcsc_part.description,
-                    product_url=lcsc_part.url,
-                    stock_quantity=stock_qty,
-                    stock_status=stock_status,
-                    datasheet_url="",
-                    price_breaks=[],
-                    lifecycle_status="",
-                    extra_data=lcsc_part.to_dict(),
-                ))
-
-            return results
-
+            products = _api_search(manufacturer_part_number)
+            return [self._convert(p) for p in products]
         except Exception as e:
-            # Log error but don't raise - return empty list for graceful degradation
-            log.info(f"Error searching LCSC for {manufacturer_part_number}: {str(e)}")
+            log.info("Error searching LCSC for %s: %s", manufacturer_part_number, e)
             return []
 
     def get_part_details(self, supplier_part_number: str, **kwargs) -> SupplierPartInfo | None:
-        """
-        Get detailed information for a specific LCSC C code.
-
-        This fetches the detail page for a specific C code and extracts all
-        available information (description, stock, etc.).
-
-        Args:
-            supplier_part_number: LCSC C code (e.g., "C2870085")
-            **kwargs: Optional parameters
-                expected_mpn: str (expected MPN for validation)
-
-        Returns:
-            SupplierPartInfo object if found, None if not found or error
-
-        Example:
-            >>> lcsc = LCSCSupplier()
-            >>> part = lcsc.get_part_details("C2870085")
-            >>> if part:
-            ...     log.info(f"Description: {part.description}")
-            ...     log.info(f"Stock: {part.stock_quantity}")
-        """
+        """Get detail for a specific LCSC C code."""
         try:
-            # Extract options
-            expected_mpn = kwargs.get('expected_mpn', '')
-
-            # Use existing scraper
-            lcsc_part = get_lcsc_part_details(supplier_part_number, expected_mpn=expected_mpn)
-
-            if not lcsc_part:
+            product = _api_detail(supplier_part_number)
+            if not product:
                 return None
 
-            # Convert to standardized format
-            stock_qty, stock_status = resolve_stock(lcsc_part.stock)
-            return SupplierPartInfo(
-                supplier=SupplierType.LCSC,
-                supplier_part_number=lcsc_part.lcsc_code,
-                manufacturer=lcsc_part.manufacturer,
-                manufacturer_part_number=lcsc_part.mpn,
-                description=lcsc_part.description,
-                product_url=lcsc_part.url,
-                stock_quantity=stock_qty,
-                stock_status=stock_status,
-                datasheet_url="",
-                price_breaks=[],
-                lifecycle_status="",
-                extra_data=lcsc_part.to_dict(),
-            )
+            expected_mpn = kwargs.get("expected_mpn", "")
+            if expected_mpn and product.product_model:
+                if (expected_mpn.upper().replace("-", "").replace(" ", "")
+                        != product.product_model.upper().replace("-", "").replace(" ", "")):
+                    return None
 
+            return self._convert(product)
         except Exception as e:
-            # Log error but don't raise - return None for graceful degradation
-            log.info(f"Error getting details for {supplier_part_number}: {str(e)}")
+            log.info("Error getting LCSC details for %s: %s", supplier_part_number, e)
             return None
 
     def validate_credentials(self) -> bool:
-        """
-        Validate LCSC access.
-
-        For scraper-based implementation, this just checks if LCSC website
-        is accessible. No credentials are required.
-
-        Returns:
-            True if LCSC is accessible, False otherwise
-        """
         try:
-            # Try to get details for a known part (C1 is usually a common resistor)
-            self.get_part_details("C1")
-            # If we got any result (even None), the scraper is working
-            return True
+            result = _api_detail("C1")
+            return result is not None
         except Exception:
             return False
 
-
-# Convenience function for backwards compatibility
-def search_lcsc(manufacturer_part_number: str, verify_parts: bool = True) -> list[SupplierPartInfo]:
-    """
-    Convenience function for quick LCSC searches.
-
-    This provides a simple function-based interface without needing to
-    instantiate the supplier class.
-
-    Args:
-        manufacturer_part_number: MPN to search for
-        verify_parts: Whether to verify each C code (slower but more accurate)
-
-    Returns:
-        List of SupplierPartInfo objects
-
-    Example:
-        >>> from supply_chain_monkey.lcsc_supplier import search_lcsc
-        >>> results = search_lcsc("TPS543620RPYR")
-        >>> for part in results:
-        ...     log.info(part.supplier_part_number)
-    """
-    lcsc = LCSCSupplier()
-    return lcsc.search_by_mpn(manufacturer_part_number, verify_parts=verify_parts)
-
-
-if __name__ == "__main__":
-    # Test the LCSC supplier implementation
-    log.info("=== LCSC Supplier Test ===\n")
-
-    lcsc = LCSCSupplier()
-
-    # Test 1: Validate credentials (check if scraper works)
-    log.info("1. Validating LCSC access...")
-    if lcsc.validate_credentials():
-        log.info("   [OK] LCSC is accessible\n")
-    else:
-        log.info("   [ERROR] Cannot access LCSC\n")
-
-    # Test 2: Search by MPN
-    test_mpn = "TPS543620RPYR"
-    log.info(f"2. Searching for MPN: {test_mpn}")
-    results = lcsc.search_by_mpn(test_mpn)
-    log.info(f"   Found {len(results)} results:")
-    for part in results:
-        log.info(f"   - {part.supplier_part_number}: {part.description}")
-        log.info(f"     Stock: {part.stock_quantity}")
-    log.info()
-
-    # Test 3: Get specific part details
-    test_c_code = "C2870085"
-    log.info(f"3. Getting details for C code: {test_c_code}")
-    part = lcsc.get_part_details(test_c_code)
-    if part:
-        log.info(f"   Supplier Part #: {part.supplier_part_number}")
-        log.info(f"   MPN: {part.manufacturer_part_number}")
-        log.info(f"   Description: {part.description}")
-        log.info(f"   Stock: {part.stock_quantity}")
-        log.info(f"   URL: {part.product_url}")
-    else:
-        log.info("   [ERROR] Part not found")
-    log.info()
-
-    # Test 4: Verify parameter field name
-    log.info(f"4. Parameter field name: {lcsc.parameter_field_name}")
-    log.info("   (This should stay stable for downstream consumers)")
+    @staticmethod
+    def _convert(product) -> SupplierPartInfo:
+        stock_qty, stock_status = resolve_stock(product.stock, product.lifecycle)
+        return SupplierPartInfo(
+            supplier=SupplierType.LCSC,
+            supplier_part_number=product.product_code,
+            manufacturer=product.brand,
+            manufacturer_part_number=product.product_model,
+            description=product.description,
+            product_url=product.product_url,
+            stock_quantity=stock_qty,
+            stock_status=stock_status,
+            datasheet_url=product.datasheet_url,
+            price_breaks=product.price_breaks,
+            lifecycle_status=product.lifecycle,
+            extra_data={"package": product.package},
+        )
