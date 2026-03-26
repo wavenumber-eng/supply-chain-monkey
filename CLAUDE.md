@@ -29,17 +29,31 @@ The repo contains three layers:
 **IMPORTANT: Do not change the build/deploy approach without testing a full
 Appliku deploy cycle. The constraints below exist because of hard-won lessons.**
 
-### pyproject.toml must use `package = false`
+### pyproject.toml must have BOTH `[build-system]` AND `package = false`
 
 ```toml
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+sources = ["src/py"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/py/scm"]
+
 [tool.uv]
 package = false
 ```
 
-Appliku's managed `python-3.13-uv` build image runs `uv sync --frozen` BEFORE
-copying source code. If the project has a `[build-system]`, hatchling tries to
-build the package and fails because the source isn't there yet. `package = false`
-makes `uv sync` skip the project and only install dependencies.
+Both are required:
+
+- `package = false` — tells Appliku's `uv sync --frozen` to skip building the
+  project (source isn't there yet during the deps step). PYTHONPATH handles
+  imports at runtime.
+- `[build-system]` — allows consumers (appz/lib_cruncher) to install `scm` as a
+  proper package via path or git reference. Without this, pinned mode and other
+  machines can't import `scm`.
 
 ### appliku.yml must use the managed build image
 
@@ -67,11 +81,18 @@ required because Docker exec mode can't handle inline env var assignment.
 
 Hatchling validates it during dependency resolution, before source is copied.
 
-### Consumers import via sys.path, not pip install
+### Consumers install scm as a package via path or git
 
-Since `package = false`, consumers (like lib_cruncher) add the scm `src/py`
-directory to `sys.path` at startup. The appz workspace lists scm as a dependency
-for dependency resolution, but the actual import path comes from sys.path.
+Despite `package = false` in this repo, consumers install `scm` normally. The
+`[build-system]` allows hatchling to build a wheel when another project depends
+on it. In appz, lib_cruncher's pyproject.toml has:
+
+```toml
+scm = { path = "../../supply-chain-monkey", editable = true }  # local
+scm = { git = "...", rev = "..." }                              # pinned
+```
+
+Both produce a proper `scm` package in site-packages. No sys.path hacks needed.
 
 ## Stack
 
