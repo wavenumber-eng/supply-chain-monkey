@@ -6,9 +6,9 @@ COPY --from=uv /uv /usr/local/bin/
 WORKDIR /code
 
 # Install deps first (cached layer) — skip installing the project itself
-COPY ./code/pyproject.toml ./code/uv.lock /code/
+COPY pyproject.toml uv.lock /code/
 RUN UV_PROJECT_ENVIRONMENT=/usr/local uv sync --frozen --no-install-project --no-dev
 
 # Copy source and install the project
-COPY ./code/ /code/
+COPY . /code/
 RUN UV_PROJECT_ENVIRONMENT=/usr/local uv sync --frozen --no-dev
