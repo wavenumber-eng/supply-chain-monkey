@@ -64,7 +64,13 @@ def _do_search(supplier_key: str, mpn: str, include_raw: bool, max_results: int)
     if len(results) > max_results:
         results = results[:max_results]
 
-    parts = [part_response_from_info(r, include_raw=include_raw) for r in results]
+    parts = []
+    for r in results:
+        try:
+            parts.append(part_response_from_info(r, include_raw=include_raw))
+        except Exception as exc:
+            log.warning("Failed to convert result %s: %s", r.supplier_part_number, exc)
+
     return ServiceEnvelope(
         status="ok",
         supplier=supplier_type.value,
