@@ -3,6 +3,7 @@
 import logging
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
 from .routers import detail, health, search
 
@@ -16,3 +17,9 @@ app = FastAPI(title="supply-chain-monkey", version="0.1.0")
 app.include_router(health.router)
 app.include_router(search.router)
 app.include_router(detail.router)
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    """Redirect root to the status page."""
+    return RedirectResponse(url="/v1/")
