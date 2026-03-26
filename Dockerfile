@@ -5,10 +5,13 @@ COPY --from=uv /uv /usr/local/bin/
 
 WORKDIR /code
 
-# Install deps first (cached layer) — skip installing the project itself
-COPY pyproject.toml uv.lock /code/
+# Install deps only (no project build — source isn't here yet)
+COPY ./code/pyproject.toml ./code/uv.lock /code/
 RUN UV_PROJECT_ENVIRONMENT=/usr/local uv sync --frozen --no-install-project --no-dev
 
 # Copy source and install the project
-COPY . /code/
+COPY ./code/ /code/
 RUN UV_PROJECT_ENVIRONMENT=/usr/local uv sync --frozen --no-dev
+
+# Copy env (Appliku provides this)
+COPY ./env/ /env/

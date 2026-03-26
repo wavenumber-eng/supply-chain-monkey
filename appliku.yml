@@ -1,7 +1,8 @@
 build_settings:
-  build_image: python-3.13-uv
+  build_image: dockerfile
+  dockerfile_path: Dockerfile
   container_port: 8000
 
 services:
   web:
-    command: bash -c 'PYTHONPATH=/code/src/py uvicorn scm.server.main:app --host 0.0.0.0 --port 8000'
+    command: uvicorn scm.server.main:app --host 0.0.0.0 --port 8000
