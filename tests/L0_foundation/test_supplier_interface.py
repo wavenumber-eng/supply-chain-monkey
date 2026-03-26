@@ -23,15 +23,12 @@ import time
 
 import pytest
 
-from supply_chain_monkey import (
+from scm.models import SupplierType
+from scm.server.providers.base import (
     SupplierPartInfo,
-    SupplierType,
     create_supplier,
     get_available_suppliers,
 )
-from supply_chain_monkey.env import ensure_env_loaded
-
-ensure_env_loaded()
 
 LIVE_SUPPLIER_TESTS_ENABLED = os.getenv("SUPPLY_CHAIN_ENABLE_LIVE_TESTS", "0") == "1"
 

@@ -1,7 +1,7 @@
 """Unit tests for provider utilities (no network calls)."""
 
-import pytest
-from supply_chain_monkey.providers.base import resolve_stock, SupplierPartInfo, SupplierType
+from scm.server.providers.base import resolve_stock, SupplierPartInfo
+from scm.models import SupplierType
 
 
 class TestResolveStock:

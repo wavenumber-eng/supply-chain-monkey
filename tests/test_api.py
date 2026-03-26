@@ -9,14 +9,15 @@ from unittest.mock import patch, MagicMock
 
 from fastapi.testclient import TestClient
 
-from supply_chain_monkey.main import app
-from supply_chain_monkey.providers.base import SupplierPartInfo, SupplierType
+from scm.server.main import app
+from scm.server.providers.base import SupplierPartInfo
+from scm.models import SupplierType
 
 
 @pytest.fixture
 def client():
     """TestClient with a known service token."""
-    with patch("supply_chain_monkey.auth.settings") as mock_settings:
+    with patch("scm.server.auth.settings") as mock_settings:
         mock_settings.service_token = "test-token"
         yield TestClient(app)
 
@@ -97,7 +98,7 @@ class TestSearch:
         r = client.get("/v1/search", headers=_auth_header())
         assert r.status_code == 422
 
-    @patch("supply_chain_monkey.routers.search.create_supplier")
+    @patch("scm.server.routers.search.create_supplier")
     def test_search_returns_envelope(self, mock_create, client):
         mock_supplier = MagicMock()
         mock_supplier.search_by_mpn.return_value = [_mock_part()]
@@ -115,7 +116,7 @@ class TestSearch:
         assert body["error"] is None
         assert len(body["data"]) == 1
 
-    @patch("supply_chain_monkey.routers.search.create_supplier")
+    @patch("scm.server.routers.search.create_supplier")
     def test_search_not_found(self, mock_create, client):
         mock_supplier = MagicMock()
         mock_supplier.search_by_mpn.return_value = []
@@ -127,7 +128,7 @@ class TestSearch:
         assert body["status"] == "not_found"
         assert body["data"] == []
 
-    @patch("supply_chain_monkey.routers.search.create_supplier")
+    @patch("scm.server.routers.search.create_supplier")
     def test_search_provider_error(self, mock_create, client):
         mock_supplier = MagicMock()
         mock_supplier.search_by_mpn.side_effect = RuntimeError("connection timeout")
@@ -139,7 +140,7 @@ class TestSearch:
         assert body["status"] == "provider_error"
         assert "connection timeout" in body["error"]
 
-    @patch("supply_chain_monkey.routers.search.create_supplier")
+    @patch("scm.server.routers.search.create_supplier")
     def test_search_part_shape(self, mock_create, client):
         mock_supplier = MagicMock()
         mock_supplier.search_by_mpn.return_value = [_mock_part()]
@@ -156,7 +157,7 @@ class TestSearch:
         # extra_data should be null when not requested
         assert part.get("extra_data") is None
 
-    @patch("supply_chain_monkey.routers.search.create_supplier")
+    @patch("scm.server.routers.search.create_supplier")
     def test_include_raw(self, mock_create, client):
         p = _mock_part()
         p.extra_data = {"debug": "info"}
@@ -175,7 +176,7 @@ class TestSearch:
 
     def test_supplier_case_insensitive(self, client):
         """Supplier name should be case-insensitive."""
-        with patch("supply_chain_monkey.routers.search.create_supplier") as mock_create:
+        with patch("scm.server.routers.search.create_supplier") as mock_create:
             mock_supplier = MagicMock()
             mock_supplier.search_by_mpn.return_value = [_mock_part()]
             mock_create.return_value = mock_supplier
@@ -190,7 +191,7 @@ class TestSearch:
 # ---------------------------------------------------------------------------
 
 class TestDetail:
-    @patch("supply_chain_monkey.routers.detail.create_supplier")
+    @patch("scm.server.routers.detail.create_supplier")
     def test_detail_returns_envelope(self, mock_create, client):
         mock_supplier = MagicMock()
         mock_supplier.get_part_details.return_value = _mock_part()
@@ -204,7 +205,7 @@ class TestDetail:
         assert isinstance(body["data"], dict)
         assert body["data"]["supplier_part_number"] == "C12345"
 
-    @patch("supply_chain_monkey.routers.detail.create_supplier")
+    @patch("scm.server.routers.detail.create_supplier")
     def test_detail_not_found(self, mock_create, client):
         mock_supplier = MagicMock()
         mock_supplier.get_part_details.return_value = None

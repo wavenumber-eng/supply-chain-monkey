@@ -1,24 +1,25 @@
-"""Search endpoint — find parts by MPN across a single supplier."""
+"""Detail endpoint — get full part info by supplier part number."""
 
 import logging
 import time
 
 from fastapi import APIRouter, Depends, Query
 
+from scm.models import PARAMETER_FIELD_NAMES, SUPPLIER_LOOKUP, ServiceEnvelope
 from ..auth import verify_token
-from ..models import PartResponse, ServiceEnvelope
+from ..models import part_response_from_info
 from ..providers.base import create_supplier
-from .common import SUPPLIER_LOOKUP, PARAMETER_FIELD_NAMES, get_supplier_credentials
+from .common import get_supplier_credentials
 
 log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1", dependencies=[Depends(verify_token)])
 
 
-@router.get("/search")
-async def search(
+@router.get("/detail")
+async def detail(
     supplier: str = Query(..., description="Supplier name (jlcpcb, lcsc, digikey, mouser)"),
-    mpn: str = Query(..., description="Manufacturer part number"),
+    part: str = Query(..., description="Supplier part number (e.g., C2870085, 296-xxx-ND)"),
     include_raw: bool = Query(False, description="Include extra_data in response"),
 ):
     supplier_key = supplier.strip().lower()
@@ -47,10 +48,10 @@ async def search(
 
     t0 = time.monotonic()
     try:
-        results = client.search_by_mpn(mpn)
+        result = client.get_part_details(part)
     except Exception as exc:
         latency = int((time.monotonic() - t0) * 1000)
-        log.warning("Search failed for %s on %s: %s", mpn, supplier_type.value, exc)
+        log.warning("Detail failed for %s on %s: %s", part, supplier_type.value, exc)
         return ServiceEnvelope(
             status="provider_error",
             supplier=supplier_type.value,
@@ -60,20 +61,20 @@ async def search(
         )
     latency = int((time.monotonic() - t0) * 1000)
 
-    if not results:
+    if result is None:
         return ServiceEnvelope(
             status="not_found",
             supplier=supplier_type.value,
             parameter_field_name=field_name,
             provider_latency_ms=latency,
-            data=[],
+            data=None,
         )
 
-    parts = [PartResponse.from_supplier_part_info(r, include_raw=include_raw) for r in results]
+    part_data = part_response_from_info(result, include_raw=include_raw)
     return ServiceEnvelope(
         status="ok",
         supplier=supplier_type.value,
         parameter_field_name=field_name,
         provider_latency_ms=latency,
-        data=[p.model_dump() for p in parts],
+        data=part_data.model_dump(),
     )

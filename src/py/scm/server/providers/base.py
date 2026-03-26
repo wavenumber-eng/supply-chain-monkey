@@ -33,27 +33,11 @@ Usage Example:
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Any
 
+from scm.models import SupplierType
+
 log = logging.getLogger(__name__)
-
-
-
-class SupplierType(Enum):
-    """
-    Enumeration of supported component suppliers.
-
-    Add new suppliers here as they are implemented.
-    """
-    JLCPCB = "JLCPCB"
-    LCSC = "LCSC"
-    DIGIKEY = "Digikey"
-    MOUSER = "Mouser"
-    # Future expansions:
-    # ARROW = "Arrow"
-    # NEWARK = "Newark"
-    # FARNELL = "Farnell"
 
 
 @dataclass

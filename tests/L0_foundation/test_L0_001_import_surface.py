@@ -1,19 +1,50 @@
-from supply_chain_monkey import (
-    IMPLEMENTED_SUPPLIERS,
-    SupplierInterface,
-    SupplierPartInfo,
+from scm import __version__
+from scm.models import (
+    PARAMETER_FIELD_NAMES,
+    SUPPLIERS,
+    SUPPLIER_LOOKUP,
+    PartResponse,
+    ServiceEnvelope,
     SupplierType,
-    __version__,
-    create_supplier,
-    get_available_suppliers,
 )
+from scm.client import SCMClient
 
 
-def test_import_surface_has_expected_exports() -> None:
+def test_version():
     assert __version__ == "1.0.0"
-    assert SupplierType.JLCPCB in IMPLEMENTED_SUPPLIERS
-    assert SupplierType.MOUSER in IMPLEMENTED_SUPPLIERS
-    assert SupplierPartInfo is not None
-    assert SupplierInterface is not None
-    assert create_supplier is not None
-    assert get_available_suppliers is not None
+
+
+def test_supplier_enum():
+    assert SupplierType.JLCPCB.value == "JLCPCB"
+    assert SupplierType.LCSC.value == "LCSC"
+    assert SupplierType.DIGIKEY.value == "Digikey"
+    assert SupplierType.MOUSER.value == "Mouser"
+
+
+def test_suppliers_list():
+    assert "jlcpcb" in SUPPLIERS
+    assert "lcsc" in SUPPLIERS
+    assert "digikey" in SUPPLIERS
+    assert "mouser" in SUPPLIERS
+    assert len(SUPPLIERS) == 4
+
+
+def test_supplier_lookup():
+    assert SUPPLIER_LOOKUP["jlcpcb"] == SupplierType.JLCPCB
+    assert SUPPLIER_LOOKUP["digikey"] == SupplierType.DIGIKEY
+
+
+def test_parameter_field_names():
+    assert PARAMETER_FIELD_NAMES[SupplierType.JLCPCB] == "JLCPCB Part #"
+    assert PARAMETER_FIELD_NAMES[SupplierType.LCSC] == "LCSC Part #"
+    assert PARAMETER_FIELD_NAMES[SupplierType.DIGIKEY] == "Digikey Part #"
+    assert PARAMETER_FIELD_NAMES[SupplierType.MOUSER] == "Mouser Part #"
+
+
+def test_contract_models_importable():
+    assert PartResponse is not None
+    assert ServiceEnvelope is not None
+
+
+def test_client_importable():
+    assert SCMClient is not None

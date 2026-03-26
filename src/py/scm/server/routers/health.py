@@ -6,8 +6,9 @@ from pathlib import Path
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
+from scm.models import SupplierType
 from ..auth import verify_token
-from ..providers.base import IMPLEMENTED_SUPPLIERS, SupplierType
+from ..providers.base import IMPLEMENTED_SUPPLIERS
 from ..settings import settings
 
 router = APIRouter(prefix="/v1")

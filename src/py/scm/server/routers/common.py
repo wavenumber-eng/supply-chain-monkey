@@ -1,17 +1,7 @@
 """Shared helpers for routers."""
 
-from ..providers.base import SupplierType, create_supplier
+from scm.models import PARAMETER_FIELD_NAMES, SUPPLIER_LOOKUP, SupplierType
 from ..settings import settings
-
-SUPPLIER_LOOKUP = {s.value.lower(): s for s in SupplierType}
-
-# Maps supplier type to the Part parameter field name consumers write back to
-PARAMETER_FIELD_NAMES = {
-    SupplierType.JLCPCB: "JLCPCB Part #",
-    SupplierType.LCSC: "LCSC Part #",
-    SupplierType.DIGIKEY: "Digikey Part #",
-    SupplierType.MOUSER: "Mouser Part #",
-}
 
 
 def get_supplier_credentials(supplier_type: SupplierType) -> dict:
