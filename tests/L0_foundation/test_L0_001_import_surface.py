@@ -10,7 +10,7 @@ from supply_chain_monkey import (
 
 
 def test_import_surface_has_expected_exports() -> None:
-    assert __version__ == "0.1.0"
+    assert __version__ == "1.0.0"
     assert SupplierType.JLCPCB in IMPLEMENTED_SUPPLIERS
     assert SupplierType.MOUSER in IMPLEMENTED_SUPPLIERS
     assert SupplierPartInfo is not None

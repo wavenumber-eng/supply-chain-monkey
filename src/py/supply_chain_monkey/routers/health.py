@@ -11,7 +11,7 @@ from ..settings import settings
 
 router = APIRouter(prefix="/v1")
 
-_VERSION = "0.1.0"
+_VERSION = "1.0.0"
 
 # Monkey ASCII art — dots are replaced with spaces by JS
 _MONKEY_ART = r"""

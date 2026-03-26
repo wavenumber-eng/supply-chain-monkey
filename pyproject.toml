@@ -1,6 +1,6 @@
 [project]
 name = "supply-chain-monkey"
-version = "0.1.0"
+version = "1.0.0"
 description = "Internal service for querying electronic component suppliers"
 requires-python = ">=3.11,<3.14"
 dependencies = [

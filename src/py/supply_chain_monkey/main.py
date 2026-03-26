@@ -12,7 +12,7 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
 
-app = FastAPI(title="supply-chain-monkey", version="0.1.0")
+app = FastAPI(title="supply-chain-monkey", version="1.0.0")
 
 app.include_router(health.router)
 app.include_router(search.router)
