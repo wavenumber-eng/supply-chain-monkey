@@ -386,38 +386,58 @@ def search_jlcpcb_by_mpn(mpn: str, verify_parts: bool = True, **kwargs) -> list[
 
         results = []
 
-        if verify_parts:
-            if structured_results:
-                results.extend(structured_results)
-            else:
-                # Verify each C code by fetching its detail page
-                # Cap at max_results to avoid verifying dozens of parts
-                limit = max_results if max_results > 0 else len(unique_c_codes)
-                log.info(f"[JLCPCB] Verifying up to {limit} of {len(unique_c_codes)} fallback C codes...")
-                verified = 0
-                for i, c_code in enumerate(unique_c_codes, 1):
-                    if verified >= limit:
-                        log.info(f"[JLCPCB] Reached max_results ({limit}), stopping verification")
-                        break
-                    log.info(f"[JLCPCB] Checking {c_code} ({i}/{len(unique_c_codes)})...")
-                    part_info = get_jlcpcb_part_details(c_code, expected_mpn=mpn)
-                    if part_info:
-                        log.info(f"[JLCPCB] Validated: {c_code} - {part_info.mpn}")
-                        results.append(part_info)
-                        verified += 1
-                    else:
-                        log.info(f"[JLCPCB] Rejected: {c_code} (MPN mismatch or error)")
+        if structured_results:
+            # Nuxt extraction succeeded — use these directly, no verification needed
+            results.extend(structured_results)
+        elif verify_parts:
+            # No structured data — verify C-codes via LCSC API (fast) then
+            # fall back to JLCPCB scraper for codes LCSC doesn't have
+            limit = max_results if max_results > 0 else len(unique_c_codes)
+            log.info(f"[JLCPCB] Verifying up to {limit} of {len(unique_c_codes)} C codes via LCSC API...")
+            verified = 0
+            for i, c_code in enumerate(unique_c_codes, 1):
+                if verified >= limit:
+                    log.info(f"[JLCPCB] Reached max_results ({limit}), stopping verification")
+                    break
+                try:
+                    from .lcsc_api import get_lcsc_detail
+                    lcsc_result = get_lcsc_detail(c_code)
+                    if lcsc_result and lcsc_result.product_model:
+                        # Check MPN match
+                        lcsc_mpn = lcsc_result.product_model.upper().replace("-", "").replace(" ", "")
+                        expected = mpn.upper().replace("-", "").replace(" ", "")
+                        if expected in lcsc_mpn or lcsc_mpn in expected:
+                            log.info(f"[JLCPCB] LCSC verified: {c_code} - {lcsc_result.product_model}")
+                            results.append(JLCPartInfo(
+                                jlcpcb_code=c_code,
+                                mpn=lcsc_result.product_model,
+                                description=lcsc_result.description,
+                                url=f"https://jlcpcb.com/partdetail/{c_code}",
+                                stock=lcsc_result.stock if isinstance(lcsc_result.stock, int) else 0,
+                                manufacturer=lcsc_result.brand,
+                            ))
+                            verified += 1
+                            continue
+                except Exception as exc:
+                    log.debug(f"[JLCPCB] LCSC lookup failed for {c_code}: {exc}")
+
+                # Fall back to JLCPCB scraper for this code
+                log.info(f"[JLCPCB] Scraper fallback for {c_code} ({i}/{len(unique_c_codes)})...")
+                part_info = get_jlcpcb_part_details(c_code, expected_mpn=mpn)
+                if part_info:
+                    log.info(f"[JLCPCB] Validated: {c_code} - {part_info.mpn}")
+                    results.append(part_info)
+                    verified += 1
+                else:
+                    log.info(f"[JLCPCB] Rejected: {c_code} (MPN mismatch or error)")
         else:
-            if structured_results:
-                results.extend(structured_results)
-            else:
-                # Return unverified results
-                for c_code in unique_c_codes:
-                    results.append(JLCPartInfo(
-                        jlcpcb_code=c_code,
-                        mpn=mpn,
-                        url=f"https://jlcpcb.com/partdetail/{c_code}"
-                    ))
+            # Return unverified results
+            for c_code in unique_c_codes:
+                results.append(JLCPartInfo(
+                    jlcpcb_code=c_code,
+                    mpn=mpn,
+                    url=f"https://jlcpcb.com/partdetail/{c_code}"
+                ))
 
         # If page-based methods found nothing, try Claude as fallback
         if not results:
