@@ -463,13 +463,14 @@
 
         searchBtn.addEventListener('click', doSearch);
 
-        function doSearch() {
+        async function doSearch() {
             const token = tokenInput.value.trim();
             const mpn = mpnInput.value.trim();
             if (!token || !mpn) return;
 
             searchBtn.disabled = true;
             resultsDiv.innerHTML = '';
+            const t0 = performance.now();
 
             // Create a section for each provider
             providers.forEach(provider => {
@@ -492,32 +493,56 @@
                 resultsDiv.appendChild(section);
             });
 
-            // Fire all searches in parallel
-            let completed = 0;
-            providers.forEach(provider => {
-                const t0 = performance.now();
-                const url = `/v1/search?supplier=${provider}&mpn=${encodeURIComponent(mpn)}`;
+            // Stream results via SSE
+            const url = `/v1/search/stream?mpn=${encodeURIComponent(mpn)}&token=${encodeURIComponent(token)}&max_results=10`;
 
-                fetch(url, {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                })
-                .then(r => r.json())
-                .then(data => {
-                    const elapsed = Math.round(performance.now() - t0);
-                    renderProviderResult(provider, data, elapsed);
-                })
-                .catch(err => {
-                    const elapsed = Math.round(performance.now() - t0);
-                    renderProviderError(provider, err.message, elapsed);
-                })
-                .finally(() => {
-                    completed++;
-                    if (completed === providers.length) {
-                        searchBtn.disabled = false;
-                        sortSections();
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.detail || `HTTP ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // keep incomplete line in buffer
+
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const jsonStr = line.slice(6);
+                        let data;
+                        try { data = JSON.parse(jsonStr); } catch { continue; }
+
+                        if (data.done) {
+                            searchBtn.disabled = false;
+                            return;
+                        }
+
+                        // Find which provider this is
+                        const supplierKey = (data.supplier || '').toLowerCase();
+                        const elapsed = Math.round(performance.now() - t0);
+                        renderProviderResult(supplierKey, data, elapsed);
+                    }
+                }
+            } catch (err) {
+                providers.forEach(provider => {
+                    const statusEl = document.getElementById('status-' + provider);
+                    if (statusEl && statusEl.classList.contains('loading')) {
+                        statusEl.className = 'provider-status error';
+                        statusEl.textContent = err.message;
                     }
                 });
-            });
+            }
+
+            searchBtn.disabled = false;
         }
 
         function renderProviderResult(provider, data, elapsed) {

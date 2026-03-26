@@ -1,7 +1,9 @@
 """Search endpoint — find parts by MPN across a single supplier."""
 
+import asyncio
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import APIRouter, Depends, Query
 
@@ -15,23 +17,12 @@ log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1", dependencies=[Depends(verify_token)])
 
+_executor = ThreadPoolExecutor(max_workers=4)
 
-@router.get("/search")
-async def search(
-    supplier: str = Query(..., description="Supplier name (jlcpcb, lcsc, digikey, mouser)"),
-    mpn: str = Query(..., description="Manufacturer part number"),
-    include_raw: bool = Query(False, description="Include extra_data in response"),
-):
-    supplier_key = supplier.strip().lower()
-    supplier_type = SUPPLIER_LOOKUP.get(supplier_key)
 
-    if supplier_type is None:
-        return ServiceEnvelope(
-            status="provider_error",
-            supplier=supplier,
-            error=f"Unknown supplier: {supplier}. Valid: {', '.join(SUPPLIER_LOOKUP)}",
-        )
-
+def _do_search(supplier_key: str, mpn: str, include_raw: bool, max_results: int) -> ServiceEnvelope:
+    """Synchronous search — runs in thread pool."""
+    supplier_type = SUPPLIER_LOOKUP[supplier_key]
     field_name = PARAMETER_FIELD_NAMES.get(supplier_type, "")
     creds = get_supplier_credentials(supplier_type)
 
@@ -48,7 +39,7 @@ async def search(
 
     t0 = time.monotonic()
     try:
-        results = client.search_by_mpn(mpn)
+        results = client.search_by_mpn(mpn, max_results=max_results)
     except Exception as exc:
         latency = int((time.monotonic() - t0) * 1000)
         log.warning("Search failed for %s on %s: %s", mpn, supplier_type.value, exc)
@@ -70,6 +61,9 @@ async def search(
             data=[],
         )
 
+    if len(results) > max_results:
+        results = results[:max_results]
+
     parts = [part_response_from_info(r, include_raw=include_raw) for r in results]
     return ServiceEnvelope(
         status="ok",
@@ -77,4 +71,25 @@ async def search(
         parameter_field_name=field_name,
         provider_latency_ms=latency,
         data=[p.model_dump() for p in parts],
+    )
+
+
+@router.get("/search")
+async def search(
+    supplier: str = Query(..., description="Supplier name (jlcpcb, lcsc, digikey, mouser)"),
+    mpn: str = Query(..., description="Manufacturer part number"),
+    include_raw: bool = Query(False, description="Include extra_data in response"),
+    max_results: int = Query(10, description="Max results to return"),
+):
+    supplier_key = supplier.strip().lower()
+    if supplier_key not in SUPPLIER_LOOKUP:
+        return ServiceEnvelope(
+            status="provider_error",
+            supplier=supplier,
+            error=f"Unknown supplier: {supplier}. Valid: {', '.join(SUPPLIER_LOOKUP)}",
+        )
+
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        _executor, _do_search, supplier_key, mpn, include_raw, max_results
     )
