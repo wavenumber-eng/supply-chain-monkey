@@ -22,6 +22,7 @@ class PartResponse(BaseModel):
     stock_status: str = "unknown"
     price_breaks: list[dict[str, Any]] = Field(default_factory=list)
     lifecycle_status: str = ""
+    extra_data: dict[str, Any] | None = None
 
     @classmethod
     def from_supplier_part_info(

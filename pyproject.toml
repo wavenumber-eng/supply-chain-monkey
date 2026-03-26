@@ -19,6 +19,7 @@ ai = [
 dev = [
     "pytest>=8.0.0",
     "pytest-json-report",
+    "httpx>=0.27.0",
     "wn-rack>=1.1.0",
     "pyright>=1.1.390",
     "ruff>=0.8.0",
