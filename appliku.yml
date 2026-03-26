@@ -1,7 +1,6 @@
 build_settings:
   build_image: dockerfile
-  dockerfile_path: code/Dockerfile
-  dockerfile_context_path: code
+  dockerfile_path: Dockerfile
   container_port: 8000
 
 services:
