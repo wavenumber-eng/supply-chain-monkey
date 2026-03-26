@@ -6,6 +6,14 @@ Internal service for querying electronic component suppliers. Provides a unified
 
 v1.0.0 — deployed at https://scm.wavenumber.net
 
+## Architecture
+
+The repo contains three layers:
+
+- **`scm.models`** — shared contract (Pydantic models, enums, supplier constants). Zero dependencies beyond pydantic.
+- **`scm.client`** — HTTP client library for consumers (lib_cruncher, bom_cruncher). Depends on requests.
+- **`scm.server`** — FastAPI server with provider adapters. Depends on fastapi, uvicorn, requests.
+
 ## Providers
 
 | Supplier | Backend | Credentials Required |
@@ -17,46 +25,49 @@ v1.0.0 — deployed at https://scm.wavenumber.net
 
 ## API
 
-All endpoints except health require a bearer token in the `Authorization` header.
+All endpoints except health require a bearer token.
 
 ```
 GET  /v1/health                              # no auth
 GET  /v1/providers/status                    # provider config status
 GET  /v1/search?supplier=jlcpcb&mpn=TPS543620RPYR
 GET  /v1/detail?supplier=jlcpcb&part=C2870085
+GET  /v1/search/stream?mpn=X&token=Y        # SSE streaming, all providers
 ```
 
-Responses are wrapped in an envelope:
-
-```json
-{
-    "status": "ok",
-    "supplier": "JLCPCB",
-    "parameter_field_name": "JLCPCB Part #",
-    "provider_latency_ms": 1035,
-    "service_timestamp": "2026-03-26T...",
-    "cached": false,
-    "data": [...]
-}
-```
+The streaming endpoint pushes results per provider as they complete via Server-Sent Events. Includes `max_results` (default 10) and per-provider `timeout` (default 15s).
 
 The root URL serves a status page with an interactive test panel.
 
-## Stack
+## Client Library
 
-- Python 3.13, FastAPI, uvicorn
-- Deployed via Appliku on DigitalOcean (push-to-deploy)
-- No database (stateless, env var config)
-- uv for dependency management
+```python
+from scm.client import SCMClient
+from scm.models import SUPPLIERS, SupplierType, PARAMETER_FIELD_NAMES
 
-## Development
+client = SCMClient(url="https://scm.wavenumber.net", token="...")
+
+# Search one supplier
+result = client.search("jlcpcb", "TPS543620RPYR")
+
+# Search all in parallel
+all_results = client.search_all("TPS543620RPYR")
+
+# Detail
+detail = client.detail("jlcpcb", "C2870085")
+
+# Enumerate
+print(SUPPLIERS)  # ['jlcpcb', 'lcsc', 'digikey', 'mouser']
+```
+
+## Local Development
 
 ```bash
 cp .env.template .env
 # fill in SCM_SERVICE_TOKEN and any provider credentials
 
 uv sync
-PYTHONPATH=src/py uv run uvicorn supply_chain_monkey.main:app --reload --env-file .env
+PYTHONPATH=src/py uv run uvicorn scm.server.main:app --reload --env-file .env
 ```
 
 ## Testing
@@ -72,8 +83,14 @@ uv run python tests/scripts/scm_test_cli.py --url https://scm.wavenumber.net --t
 
 ## Deployment
 
-Push to the `production` branch. Appliku builds and deploys automatically.
+Uses Appliku with the managed `python-3.13-uv` build image. Push to `production` triggers deploy.
 
 ```bash
 git checkout production && git merge main && git push && git checkout main
 ```
+
+**Important:** `pyproject.toml` must use `[tool.uv] package = false`. See CLAUDE.md for deployment constraints.
+
+## Consumer Integration
+
+Consumers (lib_cruncher, bom_cruncher) add the scm `src/py` directory to `sys.path` at startup and depend on `scm` in their pyproject.toml for dependency resolution. See `docs/plans/LIB_CRUNCHER_INTEGRATION_PLAN.md`.

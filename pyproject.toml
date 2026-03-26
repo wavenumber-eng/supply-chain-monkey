@@ -28,7 +28,6 @@ dev = [
     "pytest>=8.0.0",
     "pytest-json-report",
     "httpx>=0.27.0",
-    "wn-rack>=1.1.0",
     "pyright>=1.1.390",
     "ruff>=0.8.0",
 ]
@@ -37,7 +36,6 @@ dev = [
 package = false
 
 [tool.uv.sources]
-wn-rack = { git = "https://github.com/wavenumber-eng/wn-rack.git" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
