@@ -351,17 +351,19 @@ def _extract_structured_search_results(html_text: str, expected_mpn: str = "") -
     return results
 
 
-def search_jlcpcb_by_mpn(mpn: str, verify_parts: bool = True) -> list[JLCPartInfo]:
+def search_jlcpcb_by_mpn(mpn: str, verify_parts: bool = True, **kwargs) -> list[JLCPartInfo]:
     """
     Search JLCPCB for parts matching a manufacturer part number.
 
     Args:
         mpn: Manufacturer Part Number to search for
         verify_parts: If True, verify each C code by fetching detail page
+        max_results: Maximum number of results to return (default unlimited)
 
     Returns:
         List of JLCPartInfo objects for matching parts
     """
+    max_results = kwargs.get("max_results", 0)
     search_url = f"https://jlcpcb.com/parts/componentSearch?searchTxt={quote_plus(mpn)}"
 
     try:
@@ -389,13 +391,20 @@ def search_jlcpcb_by_mpn(mpn: str, verify_parts: bool = True) -> list[JLCPartInf
                 results.extend(structured_results)
             else:
                 # Verify each C code by fetching its detail page
-                log.info(f"[JLCPCB] Verifying {len(unique_c_codes)} fallback C codes...")
+                # Cap at max_results to avoid verifying dozens of parts
+                limit = max_results if max_results > 0 else len(unique_c_codes)
+                log.info(f"[JLCPCB] Verifying up to {limit} of {len(unique_c_codes)} fallback C codes...")
+                verified = 0
                 for i, c_code in enumerate(unique_c_codes, 1):
+                    if verified >= limit:
+                        log.info(f"[JLCPCB] Reached max_results ({limit}), stopping verification")
+                        break
                     log.info(f"[JLCPCB] Checking {c_code} ({i}/{len(unique_c_codes)})...")
                     part_info = get_jlcpcb_part_details(c_code, expected_mpn=mpn)
                     if part_info:
                         log.info(f"[JLCPCB] Validated: {c_code} - {part_info.mpn}")
                         results.append(part_info)
+                        verified += 1
                     else:
                         log.info(f"[JLCPCB] Rejected: {c_code} (MPN mismatch or error)")
         else:
@@ -419,7 +428,6 @@ def search_jlcpcb_by_mpn(mpn: str, verify_parts: bool = True) -> list[JLCPartInf
                 c_code = find_c_code_with_claude(html_text, mpn, supplier="JLCPCB")
                 if c_code:
                     log.info(f"[JLCPCB] Claude found C code: {c_code}")
-                    # Verify the C code Claude found
                     part_info = get_jlcpcb_part_details(c_code, expected_mpn=mpn)
                     if part_info:
                         results.append(part_info)
@@ -432,6 +440,10 @@ def search_jlcpcb_by_mpn(mpn: str, verify_parts: bool = True) -> list[JLCPartInf
                 log.warning("[JLCPCB] Claude helper not available (missing anthropic package)")
             except Exception as e:
                 log.error(f"[JLCPCB] Claude fallback error: {str(e)}")
+
+        # Apply max_results cap to final results (including structured)
+        if max_results > 0 and len(results) > max_results:
+            results = results[:max_results]
 
         if results:
             log.info(f"[JLCPCB] Search complete: Found {len(results)} valid part(s)")

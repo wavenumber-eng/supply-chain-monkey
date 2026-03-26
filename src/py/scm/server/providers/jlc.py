@@ -95,7 +95,8 @@ class JLCPCBSupplier(SupplierInterface):
         """
         try:
             verify = kwargs.get("verify_parts", True)
-            jlc_results = search_jlcpcb_by_mpn(manufacturer_part_number, verify_parts=verify)
+            max_results = kwargs.get("max_results", 0)
+            jlc_results = search_jlcpcb_by_mpn(manufacturer_part_number, verify_parts=verify, max_results=max_results)
             return [self._convert_scraper_part(jlc_part) for jlc_part in jlc_results]
         except Exception as exc:
             log.info(f"Error searching JLCPCB for {manufacturer_part_number}: {exc}")
