@@ -77,3 +77,42 @@ class TestSupplierPartInfoStockStatus:
         d = part.to_dict()
         assert d["stock_status"] == "in_stock"
         assert d["stock_quantity"] == 50
+
+
+class TestPartResponseConversion:
+    """Regression: part_response_from_info must handle None string fields."""
+
+    def test_none_datasheet_url_converts(self):
+        from scm.server.models import part_response_from_info
+        part = SupplierPartInfo(
+            supplier=SupplierType.DIGIKEY,
+            supplier_part_number="256-W25Q16RVSSJQTR-ND",
+            manufacturer="Winbond",
+            manufacturer_part_number="W25Q16RVSS",
+            datasheet_url=None,
+            product_url="https://digikey.com/...",
+            stock_quantity=0,
+            stock_status="out_of_stock",
+        )
+        pr = part_response_from_info(part)
+        assert pr.datasheet_url == ""
+
+    def test_all_none_strings_convert(self):
+        from scm.server.models import part_response_from_info
+        part = SupplierPartInfo(
+            supplier=SupplierType.DIGIKEY,
+            supplier_part_number="TEST-ND",
+            manufacturer=None,
+            manufacturer_part_number=None,
+            description=None,
+            datasheet_url=None,
+            product_url=None,
+            lifecycle_status=None,
+        )
+        pr = part_response_from_info(part)
+        assert pr.manufacturer == ""
+        assert pr.manufacturer_part_number == ""
+        assert pr.description == ""
+        assert pr.datasheet_url == ""
+        assert pr.product_url == ""
+        assert pr.lifecycle_status == ""

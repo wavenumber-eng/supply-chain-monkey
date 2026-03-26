@@ -187,6 +187,108 @@ class TestSearch:
 
 
 # ---------------------------------------------------------------------------
+# None field handling (regression: Digikey returns None for datasheet_url)
+# ---------------------------------------------------------------------------
+
+class TestNoneFields:
+    """Regression tests for providers returning None in string fields."""
+
+    @patch("scm.server.routers.search.create_supplier")
+    def test_none_datasheet_url(self, mock_create, client):
+        """Digikey can return DatasheetUrl: None for some variants."""
+        part = _mock_part(supplier=SupplierType.DIGIKEY, pn="256-W25Q16RVSSJQTR-ND")
+        part.datasheet_url = None
+        mock_supplier = MagicMock()
+        mock_supplier.search_by_mpn.return_value = [part]
+        mock_create.return_value = mock_supplier
+
+        r = client.get("/v1/search", params={"supplier": "digikey", "mpn": "W25Q16RVSS"}, headers=_auth_header())
+        assert r.status_code == 200
+        body = r.json()
+        assert body["status"] == "ok"
+        assert body["data"][0]["datasheet_url"] == ""
+
+    @patch("scm.server.routers.search.create_supplier")
+    def test_none_product_url(self, mock_create, client):
+        part = _mock_part()
+        part.product_url = None
+        mock_supplier = MagicMock()
+        mock_supplier.search_by_mpn.return_value = [part]
+        mock_create.return_value = mock_supplier
+
+        r = client.get("/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header())
+        assert r.status_code == 200
+        assert r.json()["data"][0]["product_url"] == ""
+
+    @patch("scm.server.routers.search.create_supplier")
+    def test_none_description(self, mock_create, client):
+        part = _mock_part()
+        part.description = None
+        mock_supplier = MagicMock()
+        mock_supplier.search_by_mpn.return_value = [part]
+        mock_create.return_value = mock_supplier
+
+        r = client.get("/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header())
+        assert r.status_code == 200
+        assert r.json()["data"][0]["description"] == ""
+
+    @patch("scm.server.routers.search.create_supplier")
+    def test_none_manufacturer(self, mock_create, client):
+        part = _mock_part()
+        part.manufacturer = None
+        mock_supplier = MagicMock()
+        mock_supplier.search_by_mpn.return_value = [part]
+        mock_create.return_value = mock_supplier
+
+        r = client.get("/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header())
+        assert r.status_code == 200
+        assert r.json()["data"][0]["manufacturer"] == ""
+
+    @patch("scm.server.routers.search.create_supplier")
+    def test_none_lifecycle_status(self, mock_create, client):
+        part = _mock_part()
+        part.lifecycle_status = None
+        mock_supplier = MagicMock()
+        mock_supplier.search_by_mpn.return_value = [part]
+        mock_create.return_value = mock_supplier
+
+        r = client.get("/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header())
+        assert r.status_code == 200
+        assert r.json()["data"][0]["lifecycle_status"] == ""
+
+    @patch("scm.server.routers.search.create_supplier")
+    def test_all_none_string_fields(self, mock_create, client):
+        """Worst case: every optional string field is None."""
+        part = SupplierPartInfo(
+            supplier=SupplierType.DIGIKEY,
+            supplier_part_number="TEST-ND",
+            manufacturer=None,
+            manufacturer_part_number=None,
+            description=None,
+            datasheet_url=None,
+            product_url=None,
+            stock_quantity=0,
+            stock_status="unknown",
+            lifecycle_status=None,
+        )
+        mock_supplier = MagicMock()
+        mock_supplier.search_by_mpn.return_value = [part]
+        mock_create.return_value = mock_supplier
+
+        r = client.get("/v1/search", params={"supplier": "digikey", "mpn": "X"}, headers=_auth_header())
+        assert r.status_code == 200
+        body = r.json()
+        assert body["status"] == "ok"
+        p = body["data"][0]
+        assert p["manufacturer"] == ""
+        assert p["manufacturer_part_number"] == ""
+        assert p["description"] == ""
+        assert p["datasheet_url"] == ""
+        assert p["product_url"] == ""
+        assert p["lifecycle_status"] == ""
+
+
+# ---------------------------------------------------------------------------
 # Detail
 # ---------------------------------------------------------------------------
 
