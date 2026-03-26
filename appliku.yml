@@ -1,9 +1,7 @@
 build_settings:
-  build_image: dockerfile
-  dockerfile_path: Dockerfile
-  dockerfile_context_path: .
+  build_image: python-3.13-uv
   container_port: 8000
 
 services:
   web:
-    command: uvicorn supply_chain_monkey.main:app --host 0.0.0.0 --port 8000
+    command: PYTHONPATH=/code/src/py uvicorn supply_chain_monkey.main:app --host 0.0.0.0 --port 8000
