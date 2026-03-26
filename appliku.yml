@@ -4,4 +4,4 @@ build_settings:
 
 services:
   web:
-    command: PYTHONPATH=/code/src/py uvicorn supply_chain_monkey.main:app --host 0.0.0.0 --port 8000
+    command: bash -c 'PYTHONPATH=/code/src/py uvicorn supply_chain_monkey.main:app --host 0.0.0.0 --port 8000'
