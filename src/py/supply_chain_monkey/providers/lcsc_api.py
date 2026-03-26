@@ -42,6 +42,7 @@ class LCSCProduct:
     price_breaks: list[dict[str, Any]]
     lifecycle: str
     package: str
+    packaging: str
     product_url: str
 
 
@@ -130,5 +131,6 @@ def _parse_product(item: dict) -> LCSCProduct:
         price_breaks=price_breaks,
         lifecycle=lifecycle,
         package=item.get("encapStandard") or "",
+        packaging=item.get("productArrange") or "",
         product_url=f"https://www.lcsc.com/product-detail/{product_code}.html" if product_code else "",
     )

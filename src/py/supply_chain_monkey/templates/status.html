@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>supply-chain-monkey</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-panel: #242424;
+            --bg-input: #2d2d2d;
+            --border: #3d3d3d;
+            --amber: #ffb000;
+            --amber-dim: #cc8800;
+            --amber-glow: rgba(255, 176, 0, 0.3);
+            --text: #e0e0e0;
+            --text-dim: #808080;
+            --green: #00ff00;
+            --red: #ff4444;
+        }
+
+        body {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.4;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
+        }
+
+        .panel-header {
+            background: var(--bg-input);
+            padding: 6px 10px;
+            border-bottom: 1px solid var(--border);
+            color: var(--amber);
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header::after {
+            content: '[-]';
+            color: var(--text-dim);
+        }
+
+        .panel.collapsed .panel-header {
+            border-bottom: none;
+        }
+
+        .panel.collapsed .panel-header::after {
+            content: '[+]';
+        }
+
+        .panel.collapsed .panel-content {
+            display: none;
+        }
+
+        .panel-content {
+            padding: 12px;
+        }
+
+        .monkey-container {
+            padding: 10px;
+            color: var(--amber);
+            text-shadow: 0 0 10px var(--amber-glow);
+            text-align: center;
+        }
+
+        .monkey-art {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 8px;
+            line-height: 1.1;
+            display: inline-block;
+            text-align: left;
+            white-space: pre;
+        }
+
+        .title {
+            color: var(--amber);
+            font-size: 14px;
+            margin-top: 6px;
+            letter-spacing: 2px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .status-row:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            color: var(--text-dim);
+            min-width: 120px;
+        }
+
+        .status-value {
+            color: var(--amber);
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .status-value.ok { color: var(--green); }
+        .status-value.error { color: var(--red); }
+
+        .footer {
+            color: var(--text-dim);
+            font-size: 11px;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        /* Test panel */
+        .test-input {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            padding: 6px 10px;
+            outline: none;
+            width: 100%;
+        }
+
+        .test-input:focus {
+            border-color: var(--amber);
+        }
+
+        .test-input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .test-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .test-row .test-input {
+            flex: 1;
+        }
+
+        .token-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+        }
+
+        .token-wrapper .test-input {
+            flex: 1;
+            padding-right: 36px;
+        }
+
+        .token-toggle {
+            position: absolute;
+            right: 1px;
+            top: 1px;
+            bottom: 1px;
+            width: 32px;
+            background: var(--bg-input);
+            border: none;
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .token-toggle:hover {
+            color: var(--amber);
+        }
+
+        .test-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--amber);
+            color: var(--amber);
+            font-family: inherit;
+            font-size: 14px;
+            padding: 6px 16px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .test-btn:hover {
+            background: var(--amber);
+            color: var(--bg-dark);
+        }
+
+        .test-btn:disabled {
+            border-color: var(--border);
+            color: var(--text-dim);
+            cursor: not-allowed;
+        }
+
+        .test-btn:disabled:hover {
+            background: var(--bg-input);
+            color: var(--text-dim);
+        }
+
+        /* Provider sections */
+        .provider-section {
+            margin-top: 10px;
+        }
+
+        .provider-section-header {
+            background: var(--bg-input);
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .provider-name {
+            color: var(--amber);
+        }
+
+        .provider-status {
+            font-size: 12px;
+        }
+
+        .provider-status.loading { color: var(--text-dim); }
+        .provider-status.ok { color: var(--green); }
+        .provider-status.error { color: var(--red); }
+        .provider-status.not-found { color: var(--amber-dim); }
+
+        .part-link {
+            color: var(--amber);
+            text-decoration: none;
+        }
+
+        .part-link:hover {
+            color: var(--text);
+            text-decoration: underline;
+        }
+
+        /* Results table — fixed layout for consistent columns across providers */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            table-layout: fixed;
+        }
+
+        .results-table col.col-mfr    { width: 12%; }
+        .results-table col.col-mpn    { width: 15%; }
+        .results-table col.col-pn     { width: 15%; }
+        .results-table col.col-desc   { width: auto; }
+        .results-table col.col-price  { width: 7%; }
+        .results-table col.col-stock  { width: 8%; }
+
+        .results-table th {
+            background: var(--bg-input);
+            color: var(--amber);
+            padding: 4px 8px;
+            text-align: left;
+            border: 1px solid var(--border);
+            font-weight: normal;
+            white-space: nowrap;
+        }
+
+        .results-table th.stock-th,
+        .results-table th.price-th {
+            text-align: center;
+        }
+
+        .results-table td {
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+            vertical-align: top;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .results-table tr.loading td {
+            color: var(--text-dim);
+        }
+
+        .results-table .pn-cell {
+            color: var(--text);
+        }
+
+        .results-table .mpn-cell {
+            color: var(--amber);
+        }
+
+        .results-table .stock-cell {
+            text-align: center;
+        }
+
+        .results-table .stock-cell.in_stock { color: var(--green); }
+        .results-table .stock-cell.out_of_stock { color: var(--red); }
+        .results-table .stock-cell.unknown { color: var(--text-dim); }
+
+        .results-table .price-cell {
+            text-align: center;
+            color: var(--text);
+        }
+
+        .results-table .desc-cell {
+            color: var(--text-dim);
+            white-space: normal;
+            font-size: 11px;
+        }
+
+        .results-table .status-cell {
+            white-space: nowrap;
+        }
+
+        .results-table .status-cell.ok { color: var(--green); }
+        .results-table .status-cell.error { color: var(--red); }
+        .results-table .status-cell.not-found { color: var(--amber-dim); }
+        .results-table .status-cell.loading { color: var(--text-dim); }
+
+        /* Side-by-side layout */
+        .panel-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .panel-row .panel {
+            flex: 1;
+            min-width: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <div class="monkey-container">
+                <pre class="monkey-art">{{MONKEY_ART}}</pre>
+                <div class="title">SUPPLY CHAIN MONKEY</div>
+            </div>
+        </div>
+
+        <div class="panel-row">
+            <div class="panel">
+                <div class="panel-header">API</div>
+                <div class="panel-content">
+                    <div class="status-row">
+                        <span class="status-label">status</span>
+                        <span class="status-value ok">running</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">version</span>
+                        <span class="status-value">{{VERSION}}</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">GET /v1/health</span>
+                        <span class="status-value">no auth</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">GET /v1/search</span>
+                        <span class="status-value">bearer token</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">GET /v1/detail</span>
+                        <span class="status-value">bearer token</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">PROVIDERS</div>
+                <div class="panel-content">{{PROVIDER_ROWS}}</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">TEST</div>
+            <div class="panel-content">
+                <div class="test-row">
+                    <div class="token-wrapper">
+                        <input type="password" id="token-input" class="test-input"
+                               placeholder="bearer token" autocomplete="off">
+                        <button class="token-toggle" id="token-toggle" title="show/hide token">&#9673;</button>
+                    </div>
+                </div>
+                <div class="test-row">
+                    <input type="text" id="mpn-input" class="test-input"
+                           placeholder="MPN (e.g. TPS543620RPYR)" autocomplete="off">
+                    <button id="search-btn" class="test-btn" disabled>SEARCH</button>
+                </div>
+                <div id="results"></div>
+            </div>
+        </div>
+
+        <div class="footer">{{TIMESTAMP}}</div>
+    </div>
+    <script>
+        // Clean up monkey art dots
+        const monkey = document.querySelector('.monkey-art');
+        monkey.innerHTML = monkey.textContent.replace(/\./g, ' ');
+
+        // Collapsible panels
+        document.querySelectorAll('.panel-header').forEach(header => {
+            header.addEventListener('click', () => {
+                header.parentElement.classList.toggle('collapsed');
+            });
+        });
+
+        // Test panel logic
+        const tokenInput = document.getElementById('token-input');
+        const mpnInput = document.getElementById('mpn-input');
+        const searchBtn = document.getElementById('search-btn');
+        const tokenToggle = document.getElementById('token-toggle');
+        const resultsDiv = document.getElementById('results');
+
+        const providers = ['jlcpcb', 'lcsc', 'digikey', 'mouser'];
+
+        // Toggle token visibility
+        tokenToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isHidden = tokenInput.type === 'password';
+            tokenInput.type = isHidden ? 'text' : 'password';
+            tokenToggle.innerHTML = isHidden ? '&#9679;' : '&#9673;';
+        });
+
+        // Persist token in sessionStorage
+        const savedToken = sessionStorage.getItem('scm_token');
+        if (savedToken) {
+            tokenInput.value = savedToken;
+            searchBtn.disabled = false;
+        }
+
+        tokenInput.addEventListener('input', () => {
+            searchBtn.disabled = !tokenInput.value.trim();
+            sessionStorage.setItem('scm_token', tokenInput.value.trim());
+        });
+
+        mpnInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !searchBtn.disabled) {
+                doSearch();
+            }
+        });
+
+        searchBtn.addEventListener('click', doSearch);
+
+        function doSearch() {
+            const token = tokenInput.value.trim();
+            const mpn = mpnInput.value.trim();
+            if (!token || !mpn) return;
+
+            searchBtn.disabled = true;
+            resultsDiv.innerHTML = '';
+
+            // Create a section for each provider
+            providers.forEach(provider => {
+                const section = document.createElement('div');
+                section.className = 'provider-section';
+                section.id = 'section-' + provider;
+
+                const header = document.createElement('div');
+                header.className = 'provider-section-header';
+                header.innerHTML = `
+                    <span class="provider-name">${provider.toUpperCase()}</span>
+                    <span class="provider-status loading" id="status-${provider}">searching...</span>
+                `;
+                section.appendChild(header);
+
+                const tableWrap = document.createElement('div');
+                tableWrap.id = 'table-' + provider;
+                section.appendChild(tableWrap);
+
+                resultsDiv.appendChild(section);
+            });
+
+            // Fire all searches in parallel
+            let completed = 0;
+            providers.forEach(provider => {
+                const t0 = performance.now();
+                const url = `/v1/search?supplier=${provider}&mpn=${encodeURIComponent(mpn)}`;
+
+                fetch(url, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    const elapsed = Math.round(performance.now() - t0);
+                    renderProviderResult(provider, data, elapsed);
+                })
+                .catch(err => {
+                    const elapsed = Math.round(performance.now() - t0);
+                    renderProviderError(provider, err.message, elapsed);
+                })
+                .finally(() => {
+                    completed++;
+                    if (completed === providers.length) {
+                        searchBtn.disabled = false;
+                        sortSections();
+                    }
+                });
+            });
+        }
+
+        function renderProviderResult(provider, data, elapsed) {
+            const statusEl = document.getElementById('status-' + provider);
+            const tableWrap = document.getElementById('table-' + provider);
+            const section = document.getElementById('section-' + provider);
+
+            if (data.status === 'ok' && data.data && data.data.length > 0) {
+                statusEl.className = 'provider-status ok';
+                statusEl.textContent = `${data.data.length} result(s) | ${data.provider_latency_ms}ms server | ${elapsed}ms total`;
+
+                // Track max stock for sorting
+                let maxStock = 0;
+                data.data.forEach(p => { if (p.stock_quantity > maxStock) maxStock = p.stock_quantity; });
+                section.dataset.stock = maxStock;
+
+                const table = document.createElement('table');
+                table.className = 'results-table';
+                table.innerHTML = `
+                    <colgroup>
+                        <col class="col-mfr">
+                        <col class="col-mpn">
+                        <col class="col-pn">
+                        <col class="col-desc">
+                        <col class="col-price">
+                        <col class="col-stock">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>manufacturer</th>
+                            <th>mpn</th>
+                            <th>supplier pn</th>
+                            <th>description</th>
+                            <th class="price-th">price</th>
+                            <th class="stock-th">stock</th>
+                        </tr>
+                    </thead>
+                `;
+                const tbody = document.createElement('tbody');
+
+                // Sort parts by stock descending within this provider
+                data.data.sort((a, b) => b.stock_quantity - a.stock_quantity);
+
+                data.data.forEach(part => {
+                    const row = document.createElement('tr');
+                    const stockClass = part.stock_status || 'unknown';
+                    const price = part.price_breaks && part.price_breaks.length > 0
+                        ? '$' + part.price_breaks[0].unit_price.toFixed(2)
+                        : '';
+                    const pnLink = part.product_url
+                        ? `<a href="${part.product_url}" target="_blank" class="part-link">${part.supplier_part_number}</a>`
+                        : part.supplier_part_number;
+
+                    row.innerHTML = `
+                        <td class="pn-cell">${part.manufacturer || ''}</td>
+                        <td class="mpn-cell">${part.manufacturer_part_number}</td>
+                        <td class="pn-cell">${pnLink}</td>
+                        <td class="desc-cell">${part.description || ''}</td>
+                        <td class="price-cell">${price}</td>
+                        <td class="stock-cell ${stockClass}">${part.stock_quantity.toLocaleString()}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                table.appendChild(tbody);
+                tableWrap.appendChild(table);
+                sortSections();
+
+            } else if (data.status === 'not_found') {
+                statusEl.className = 'provider-status not-found';
+                statusEl.textContent = `no results | ${data.provider_latency_ms}ms server | ${elapsed}ms total`;
+                section.dataset.stock = '-1';
+                sortSections();
+
+            } else if (data.status === 'provider_error') {
+                statusEl.className = 'provider-status error';
+                statusEl.textContent = `error | ${elapsed}ms`;
+                tableWrap.innerHTML = `<div style="padding: 4px 0; color: var(--red); font-size: 12px;">${data.error || 'unknown error'}</div>`;
+                section.dataset.stock = '-1';
+                sortSections();
+            }
+        }
+
+        function sortSections() {
+            const sections = Array.from(resultsDiv.querySelectorAll('.provider-section'));
+            sections.sort((a, b) => {
+                const sa = parseInt(a.dataset.stock || '0', 10);
+                const sb = parseInt(b.dataset.stock || '0', 10);
+                return sb - sa;
+            });
+            sections.forEach(s => resultsDiv.appendChild(s));
+        }
+
+        function renderProviderError(provider, message, elapsed) {
+            const statusEl = document.getElementById('status-' + provider);
+            const tableWrap = document.getElementById('table-' + provider);
+            const section = document.getElementById('section-' + provider);
+            statusEl.className = 'provider-status error';
+            statusEl.textContent = `fetch error | ${elapsed}ms`;
+            tableWrap.innerHTML = `<div style="padding: 4px 0; color: var(--red); font-size: 12px;">${message}</div>`;
+            section.dataset.stock = '-1';
+            sortSections();
+        }
+    </script>
+</body>
+</html>

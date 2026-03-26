@@ -81,5 +81,5 @@ class LCSCSupplier(SupplierInterface):
             datasheet_url=product.datasheet_url,
             price_breaks=product.price_breaks,
             lifecycle_status=product.lifecycle,
-            extra_data={"package": product.package},
+            extra_data={"package": product.package, "packaging": product.packaging},
         )

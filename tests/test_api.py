@@ -108,6 +108,7 @@ class TestSearch:
 
         assert body["status"] == "ok"
         assert body["supplier"] == "JLCPCB"
+        assert body["parameter_field_name"] == "JLCPCB Part #"
         assert isinstance(body["provider_latency_ms"], int)
         assert body["cached"] is False
         assert body["service_timestamp"]

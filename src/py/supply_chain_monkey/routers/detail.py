@@ -7,8 +7,8 @@ from fastapi import APIRouter, Depends, Query
 
 from ..auth import verify_token
 from ..models import PartResponse, ServiceEnvelope
-from ..providers.base import SupplierType, create_supplier
-from ..routers.search import _SUPPLIER_LOOKUP, _get_supplier_credentials
+from ..providers.base import create_supplier
+from .common import SUPPLIER_LOOKUP, PARAMETER_FIELD_NAMES, get_supplier_credentials
 
 log = logging.getLogger(__name__)
 
@@ -22,16 +22,17 @@ async def detail(
     include_raw: bool = Query(False, description="Include extra_data in response"),
 ):
     supplier_key = supplier.strip().lower()
-    supplier_type = _SUPPLIER_LOOKUP.get(supplier_key)
+    supplier_type = SUPPLIER_LOOKUP.get(supplier_key)
 
     if supplier_type is None:
         return ServiceEnvelope(
             status="provider_error",
             supplier=supplier,
-            error=f"Unknown supplier: {supplier}. Valid: {', '.join(_SUPPLIER_LOOKUP)}",
+            error=f"Unknown supplier: {supplier}. Valid: {', '.join(SUPPLIER_LOOKUP)}",
         )
 
-    creds = _get_supplier_credentials(supplier_type)
+    field_name = PARAMETER_FIELD_NAMES.get(supplier_type, "")
+    creds = get_supplier_credentials(supplier_type)
 
     try:
         client = create_supplier(supplier_type, **creds)
@@ -40,6 +41,7 @@ async def detail(
         return ServiceEnvelope(
             status="provider_error",
             supplier=supplier_type.value,
+            parameter_field_name=field_name,
             error=f"Supplier not available: {exc}",
         )
 
@@ -52,6 +54,7 @@ async def detail(
         return ServiceEnvelope(
             status="provider_error",
             supplier=supplier_type.value,
+            parameter_field_name=field_name,
             provider_latency_ms=latency,
             error=str(exc),
         )
@@ -61,6 +64,7 @@ async def detail(
         return ServiceEnvelope(
             status="not_found",
             supplier=supplier_type.value,
+            parameter_field_name=field_name,
             provider_latency_ms=latency,
             data=None,
         )
@@ -69,6 +73,7 @@ async def detail(
     return ServiceEnvelope(
         status="ok",
         supplier=supplier_type.value,
+        parameter_field_name=field_name,
         provider_latency_ms=latency,
         data=part_data.model_dump(),
     )

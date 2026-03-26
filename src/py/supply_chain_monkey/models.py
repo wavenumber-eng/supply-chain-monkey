@@ -22,6 +22,7 @@ class PartResponse(BaseModel):
     stock_status: str = "unknown"
     price_breaks: list[dict[str, Any]] = Field(default_factory=list)
     lifecycle_status: str = ""
+    packaging: str = ""
     extra_data: dict[str, Any] | None = None
 
     @classmethod
@@ -40,6 +41,7 @@ class PartResponse(BaseModel):
             "stock_status": part.stock_status,
             "price_breaks": part.price_breaks,
             "lifecycle_status": part.lifecycle_status,
+            "packaging": part.extra_data.get("packaging", "") if part.extra_data else "",
         }
         if include_raw:
             data["extra_data"] = part.extra_data
@@ -51,6 +53,7 @@ class ServiceEnvelope(BaseModel):
 
     status: str  # "ok", "not_found", "provider_error"
     supplier: str
+    parameter_field_name: str = ""  # e.g. "JLCPCB Part #" — tells consumers which field to write back
     provider_latency_ms: int = 0
     service_timestamp: str = Field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()

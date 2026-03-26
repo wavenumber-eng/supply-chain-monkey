@@ -7,31 +7,12 @@ from fastapi import APIRouter, Depends, Query
 
 from ..auth import verify_token
 from ..models import PartResponse, ServiceEnvelope
-from ..providers.base import SupplierType, create_supplier
-from ..settings import settings
+from ..providers.base import create_supplier
+from .common import SUPPLIER_LOOKUP, PARAMETER_FIELD_NAMES, get_supplier_credentials
 
 log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1", dependencies=[Depends(verify_token)])
-
-_SUPPLIER_LOOKUP = {s.value.lower(): s for s in SupplierType}
-
-
-def _get_supplier_credentials(supplier_type: SupplierType) -> dict:
-    if supplier_type == SupplierType.JLCPCB:
-        return {
-            "app_id": settings.jlcpcb_app_id,
-            "access_key": settings.jlcpcb_access_key,
-            "secret_key": settings.jlcpcb_secret_key,
-        }
-    if supplier_type == SupplierType.DIGIKEY:
-        return {
-            "client_id": settings.digikey_client_id,
-            "client_secret": settings.digikey_client_secret,
-        }
-    if supplier_type == SupplierType.MOUSER:
-        return {"api_key": settings.mouser_api_key}
-    return {}
 
 
 @router.get("/search")
@@ -41,16 +22,17 @@ async def search(
     include_raw: bool = Query(False, description="Include extra_data in response"),
 ):
     supplier_key = supplier.strip().lower()
-    supplier_type = _SUPPLIER_LOOKUP.get(supplier_key)
+    supplier_type = SUPPLIER_LOOKUP.get(supplier_key)
 
     if supplier_type is None:
         return ServiceEnvelope(
             status="provider_error",
             supplier=supplier,
-            error=f"Unknown supplier: {supplier}. Valid: {', '.join(_SUPPLIER_LOOKUP)}",
+            error=f"Unknown supplier: {supplier}. Valid: {', '.join(SUPPLIER_LOOKUP)}",
         )
 
-    creds = _get_supplier_credentials(supplier_type)
+    field_name = PARAMETER_FIELD_NAMES.get(supplier_type, "")
+    creds = get_supplier_credentials(supplier_type)
 
     try:
         client = create_supplier(supplier_type, **creds)
@@ -59,6 +41,7 @@ async def search(
         return ServiceEnvelope(
             status="provider_error",
             supplier=supplier_type.value,
+            parameter_field_name=field_name,
             error=f"Supplier not available: {exc}",
         )
 
@@ -71,6 +54,7 @@ async def search(
         return ServiceEnvelope(
             status="provider_error",
             supplier=supplier_type.value,
+            parameter_field_name=field_name,
             provider_latency_ms=latency,
             error=str(exc),
         )
@@ -80,6 +64,7 @@ async def search(
         return ServiceEnvelope(
             status="not_found",
             supplier=supplier_type.value,
+            parameter_field_name=field_name,
             provider_latency_ms=latency,
             data=[],
         )
@@ -88,6 +73,7 @@ async def search(
     return ServiceEnvelope(
         status="ok",
         supplier=supplier_type.value,
+        parameter_field_name=field_name,
         provider_latency_ms=latency,
         data=[p.model_dump() for p in parts],
     )

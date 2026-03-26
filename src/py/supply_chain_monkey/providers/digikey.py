@@ -452,6 +452,10 @@ class DigikeySupplier(SupplierInterface):
                 except (TypeError, ValueError):
                     pass
 
+            # Extract packaging type
+            package_type = product.get('PackageType', {})
+            packaging = package_type.get('Name', '') if isinstance(package_type, dict) else ''
+
             # Build SupplierPartInfo
             return SupplierPartInfo(
                 supplier=SupplierType.DIGIKEY,
@@ -465,7 +469,7 @@ class DigikeySupplier(SupplierInterface):
                 stock_status=stock_status,
                 price_breaks=price_breaks,
                 lifecycle_status=lifecycle,
-                extra_data=product,
+                extra_data={**product, "packaging": packaging},
             )
 
         except Exception as e:
