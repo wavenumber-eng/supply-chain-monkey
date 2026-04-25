@@ -1,34 +1,31 @@
 # JLCPCB API Research
 
-**Updated:** 2026-03-23  
-**Status:** Live probing completed; official component detail API confirmed
+**Updated:** 2026-04-25
+**Status:** Live probing reconfirmed against live server. See divergences from
+the 2026-04-25 PDF doc bundle below.
 
 ## Summary
 
-JLCPCB now exposes a real authenticated component API on:
+JLCPCB exposes an authenticated component API on:
 
 - `https://open.jlcpcb.com`
 
-The current official component surface is enough to stop scraping for
-component-detail lookup by C-number.
+Confirmed live on 2026-04-25:
 
-What is confirmed live:
+- `POST /overseas/openapi/component/getComponentDetailByCode`
+- `POST /overseas/openapi/component/getComponentInfos`         (legacy name, still works, richest row shape)
+- `POST /overseas/openapi/component/getComponentLibraryList`   (newer name, sparse rows)
+- `POST /overseas/openapi/component/getPrivateComponentLibrary`
 
-- public component feed:
-  - `POST /overseas/openapi/component/getComponentInfos`
-- private component library feed:
-  - `POST /overseas/openapi/component/getPrivateComponentLibrary`
-- component detail by C-number:
-  - `POST /overseas/openapi/component/getComponentDetailByCode`
-
-What is still not proven:
+Still not present:
 
 - official MPN / keyword search
 
-So the recommended split is now:
-
-- use official API for `get_part_details(Cxxxx)`
-- keep scraper for `search_by_mpn(...)` until an official search route is found
+The 2026-04-25 PDF bundle in this folder describes intended request/response
+shapes. The live server diverges from those PDFs in several places. The
+recorded shapes below are what the server actually returned during probing
+on 2026-04-25; current implementation in `scm/server/providers/jlc_openapi.py`
+matches the live server, not the PDFs.
 
 ## Authentication
 
@@ -38,11 +35,11 @@ All API requests use:
 - `POST`
 - `Content-Type: application/json`
 - UTF-8
-- `Authorization: JOP ...`
+- `Authorization: JOP appid="...",accesskey="...",nonce="...",timestamp="...",signature="..."`
 
-Signature format from the docs:
+Signature input:
 
-```text
+```
 <HTTP Method>\n
 <Request Path>\n
 <Timestamp>\n
@@ -50,115 +47,62 @@ Signature format from the docs:
 <Request Body>\n
 ```
 
-Signature algorithm:
+Algorithm: HMAC-SHA256, output base64.
 
-- HMAC-SHA256
-- Base64 output
-
-Current local env fields used for probing:
+Env fields used by `JLCOpenAPIClient`:
 
 - `JLCPCB_APP_ID`
 - `JLCPCB_ACCESS_KEY`
 - `JLCPCB_SECRET_KEY`
 
-Tokenization keys are separate from request signing:
+Tokenization keys (`JLCPCB_TOKENIZATION_PUBLIC_KEY_PATH`,
+`JLCPCB_TOKENIZATION_PRIVATE_KEY_PATH`) are RSA privacy/tokenization keys,
+unrelated to request signing.
 
-- `JLCPCB_TOKENIZATION_PUBLIC_KEY_PATH`
-- `JLCPCB_TOKENIZATION_PRIVATE_KEY_PATH`
+## Common response envelope
 
-Those are RSA privacy/tokenization keys, not the HMAC signing secret.
+All four `open.jlcpcb.com` endpoints return:
 
-## Official Component APIs
-
-### 1. Public Component Feed
-
-Endpoint:
-
-```text
-POST /overseas/openapi/component/getComponentInfos
+```json
+{
+  "success": true,
+  "code": 200,
+  "message": null,
+  "data": ...
+}
 ```
 
-Observed behavior:
+Note: the field is `success`, not `successful`. The 2026-04-25 PDF for
+`getComponentLibraryList` shows `successful` — the live server uses
+`success`. Our client at `_post()` checks `success == True` and that is
+correct.
 
-- works with valid auth
-- returns public library parts
-- SDK wraps this endpoint
-- request field `lastKey` is accepted for pagination
-- extra search-ish fields like `lcscPart`, `mfrPart`, `componentCode` were ignored in live probes
+## Endpoints
 
-Conclusion:
-
-- this is a paginated feed/list endpoint
-- not a true search endpoint
-
-Representative response fields:
-
-- `lcscPart`
-- `mfrPart`
-- `manufacturer`
-- `firstCategory`
-- `secondCategory`
-- `stock`
-- `price`
-- `datasheet`
-
-### 2. Private Component Library Feed
+### 1. `getComponentDetailByCode`
 
 Endpoint:
 
-```text
-POST /overseas/openapi/component/getPrivateComponentLibrary
 ```
-
-Observed behavior:
-
-- works with valid auth
-- returns authenticated private/library inventory rows
-- extra search-ish fields were ignored in live probes
-
-Representative response fields:
-
-- `componentModel`
-- `componentSpecification`
-- `componentCode`
-- `jlcpcbParts`
-- `globalSourcingParts`
-- `consignedParts`
-- `idleStock`
-
-Conclusion:
-
-- real endpoint
-- list/feed style, not proven as a search endpoint
-
-### 3. Component Detail by C-number
-
-Endpoint:
-
-```text
 POST /overseas/openapi/component/getComponentDetailByCode
 ```
 
-This endpoint was found by live route probing and is real.
-
-Correct request shape:
+Request body (live-confirmed):
 
 ```json
-{"componentCodes":["C2040"]}
+{"componentCodes": ["C2040", "C2870085"]}
 ```
 
-Important:
+- `componentCodes` must be an array; scalar fails.
+- Up to 1000 codes per request (per PDF).
 
-- `componentCodes` must be an array
-- scalar forms like `"C2040"` failed with a generic business error
-- guesses like `componentCode`, `lcscPart`, and `cNumber` were not accepted
+Response shape (live-confirmed 2026-04-25):
 
-Live probes succeeded for:
+- `data` is **a list of detail rows directly**.
+- The PDF claims `data.componentDetailResponseVOList[]`. The live server does
+  not wrap it; current code unwrapping `data` as a list is correct.
 
-- `C2040`
-- `C2870085`
-
-Representative response fields:
+Row fields (live):
 
 - `componentCode`
 - `componentModel`
@@ -169,109 +113,215 @@ Representative response fields:
 - `description`
 - `datasheetUrl`
 - `solderJointCount`
-- `priceRanges`
+- `priceRanges` (array of `{startQuantity, endQuantity, unitPrice}`)
 - `stockCount`
-- `parameters`
+- `parameters` (array of `{parameterName, parameterValue}`)
 - `assemblyComponentFlag`
 - `eccnCode`
 - `rohsFlag`
-- `dataManualUrl`
+- `dataManualUrl`               (present live, absent from new PDF)
+- `dataManualOfficialLink`      (present live, absent from new PDF)
+- `dataManualFileAccessId`      (present live, absent from new PDF)
 
-Conclusion:
+The `dataManualUrl` fallback in `jlc.py:241` is meaningful — keep it.
 
-- this is the official replacement for scraper-based C-number detail lookup
+### 2. `getComponentInfos` (legacy name, still live)
 
-## SDK Analysis
+Endpoint:
 
-JARs in this folder:
+```
+POST /overseas/openapi/component/getComponentInfos
+```
+
+Not in the 2026-04-25 PDF bundle but **live-confirmed working**.
+
+Request body:
+
+```json
+{}
+```
+
+or with pagination:
+
+```json
+{"lastKey": "<opaque key from previous response>"}
+```
+
+Response:
+
+```
+data.componentInfos = [ {row}, ... ]
+data.lastKey = "..."
+```
+
+Row fields (live):
+
+- `lcscPart`         (the JLC C-code, despite the name)
+- `firstCategory`
+- `secondCategory`
+- `mfrPart`
+- `solderJoint`
+- `manufacturer`
+- `libraryType`
+- `description`
+- `datasheet`
+- `price`            (string, e.g. `"1-9:0.804724,10-29:0.585827,..."`)
+- `stock`
+- `package`
+
+This is the richest list-style row shape JLC exposes, and it is the basis
+for the local MPN index proposed in ADR-010.
+
+Probe returned 1000 rows per page in a single call.
+
+### 3. `getComponentLibraryList` (new name in 2026-04-25 PDFs)
+
+Endpoint:
+
+```
+POST /overseas/openapi/component/getComponentLibraryList
+```
+
+Request body:
+
+```json
+{"pageSize": 30, "lastKey": "<optional>"}
+```
+
+Response:
+
+```
+data.componentLibraryInfoVOS = [ {row}, ... ]
+data.lastKey = "..."
+```
+
+Row fields (live, sparse):
+
+- `componentModel`
+- `componentSpecification`
+- `componentCode`
+
+Useful as a fast catalog enumeration when only model/code/package are
+needed. **Not** a replacement for `getComponentInfos` for MPN-search
+indexing; the 3-field row is too thin.
+
+Note: probe sent `pageSize: 30` and got back 1000 rows. Either the server
+ignores `pageSize`, or `pageSize` is interpreted differently from the
+PDF description. Treat the returned page size as authoritative and use
+`lastKey` to advance.
+
+### 4. `getPrivateComponentLibrary`
+
+Endpoint:
+
+```
+POST /overseas/openapi/component/getPrivateComponentLibrary
+```
+
+Request body — server is permissive:
+
+- `{}` works (defaults to ~30 rows).
+- `{"pageNum": 1, "pageSize": 10}` also works (returns 10 rows).
+
+Response shape (live-confirmed):
+
+- `data` is **a list of rows directly**.
+- The PDF claims `data.list[]` plus `pageNum`/`pageSize`/`total` siblings.
+  The live server returns a flat list. Current code unwrapping `data` as
+  a list is correct.
+
+Row fields (live):
+
+- `componentModel`
+- `componentSpecification`
+- `componentCode`
+- `jlcpcbParts`
+- `globalSourcingParts`
+- `consignedParts`
+- `idleStock`
+
+Recommendation: pass `{"pageNum": 1, "pageSize": N}` explicitly even though
+`{}` works today. The PDFs declare those fields required, and the server
+may tighten validation later.
+
+## Divergences: PDF docs vs. live server (2026-04-25)
+
+| | 2026-04-25 PDF | Live server |
+|---|---|---|
+| top-level success field | `successful` (list endpoint) | `success` (all endpoints) |
+| `getComponentDetailByCode` `data` | `{componentDetailResponseVOList:[...]}` | list directly |
+| `getPrivateComponentLibrary` `data` | `{list:[...], pageNum, pageSize, total}` | list directly |
+| `getPrivateComponentLibrary` body | `pageNum`+`pageSize` required | `{}` accepted, defaults to 30 rows |
+| `getComponentInfos` (legacy) | not documented | works, richest row shape |
+| detail row datasheet fields | `datasheetUrl` only | `datasheetUrl` + `dataManualUrl` + `dataManualOfficialLink` + `dataManualFileAccessId` |
+
+The PDFs appear to describe a future or aspirational shape. Implementation
+follows the live server.
+
+## SDK status
+
+JARs in this folder (March/August 2025):
 
 - `8633429564758577152-jlc-openapi-sdk-core-java-1.0.0.jar`
 - `8642398160330141696-overseas-openapi-sdk-java-1.0.jar`
 - `8642398872531484672-overseas-openapi-sdk-java-1.0.jar`
 - `8642399738286297088-overseas-openapi-sdk-java-1.0.jar`
 
-Important observations:
+The three overseas JARs are byte-identical and only expose
+`ComponentApiClient.getComponentInfo(...)` mapped to `/getComponentInfos`.
+They lag both the docs and the live API. Treat live HTTP probing as
+authoritative.
 
-- the three overseas JARs are byte-identical
-- core JAR metadata is from March 2025
-- overseas JAR metadata is from August 2025
-- the SDK is stale relative to the current docs/API list
+## Relationship to the existing scraper
 
-The overseas SDK only exposes one component client method:
+Current scraper paths in `jlc_scraper.py`:
 
-- `ComponentApiClient.getComponentInfo(...)`
+- `https://jlcpcb.com/parts/componentSearch?searchTxt=<mpn>` (search HTML)
+- `https://jlcpcb.com/partdetail/<C-code>` (detail HTML)
 
-Mapped URI:
+The HTML pages are Nuxt/SSR-backed; the public OpenAPI on `open.jlcpcb.com`
+is a separate surface and does not expose a keyword search route.
 
-- `/overseas/openapi/component/getComponentInfos`
+The MPN-search path currently borrows the LCSC API to verify candidate
+C-codes scraped from the JLC search HTML (`jlc_scraper.py:402-422`). This
+is the LCSC-borrow that ADR-010 proposes to remove by indexing
+`getComponentInfos` locally.
 
-The shipped request object only exposes:
+## Recommended implementation direction
 
-- `lastKey`
+Short term (no code change required):
 
-So the SDK does **not** currently expose:
-
-- `getPrivateComponentLibrary`
-- `getComponentDetailByCode`
-
-Conclusion:
-
-- do not treat the Java SDK as authoritative for current component coverage
-- treat the docs + live HTTP probing as authoritative
-
-## Relationship To The Existing Scraper
-
-Current scraper:
-
-- search page:
-  - `https://jlcpcb.com/parts/componentSearch?searchTxt=<mpn>`
-- detail page:
-  - `https://jlcpcb.com/partdetail/<C-code>`
-
-The search/detail pages are Nuxt/SSR-backed and contain structured page data,
-including fields like:
-
-- `componentCode`
-- `componentModelEn`
-- `componentBrandEn`
-- `lcscComponentId`
-- `urlSuffix`
-
-This strongly suggests the website is backed by an internal structured data
-service, but the page HTML did not directly reveal the same public
-`open.jlcpcb.com` routes.
-
-Current best interpretation:
-
-- scraper is using website SSR/internal backend data
-- public Open Platform API is separate
-
-## Recommended Implementation Direction
-
-Short term:
-
-- switch JLC `get_part_details()` to:
-  - `getComponentDetailByCode`
-- keep JLC `search_by_mpn()` on the scraper path
+- Current `jlc_openapi.py` matches the live server. No urgent fixes.
+- Document the divergence between PDFs and live server (this file).
 
 Medium term:
 
-- optionally build a local searchable cache/index from `getComponentInfos`
-- then use scraper only as fallback or retire it if official search emerges
+- Per ADR-010, build a local JLC index from `getComponentInfos` and use
+  it to resolve MPN -> C-code, replacing the LCSC verification block in
+  the scraper.
+- Continue using `getComponentDetailByCode` for authoritative current
+  stock/price after an index hit.
 
-## Files In This Directory
+Future:
 
-- `JLCPCB_API_RESEARCH.md`
+- If JLC retires `getComponentInfos`, fall back to `getComponentLibraryList`
+  for catalog enumeration plus per-row `getComponentDetailByCode` to
+  reconstitute the richer fields.
+- Continue to monitor for an official keyword/MPN search endpoint.
+
+## Files in this directory
+
+- `JLCPCB_API_RESEARCH.md` (this file)
+- `Component information interface 2026-04-25.pdf`            (legacy `api.jlcpcb.com/demo/component/info` multipart endpoint)
+- `Get Component list 2026-04-25.pdf`                          (`getComponentLibraryList`)
+- `Query Component Detail Data Interface 2026-04-25.pdf`       (`getComponentDetailByCode`)
+- `Query Private Component Library Interface 2026-04-25.pdf`   (`getPrivateComponentLibrary`)
 - `8633429564758577152-jlc-openapi-sdk-core-java-1.0.0.jar`
 - `8642398160330141696-overseas-openapi-sdk-java-1.0.jar`
 - `8642398872531484672-overseas-openapi-sdk-java-1.0.jar`
 - `8642399738286297088-overseas-openapi-sdk-java-1.0.jar`
 
-## Next Steps
+## Probe artifact
 
-1. Implement an official JLC client path for:
-   - `getComponentDetailByCode`
-2. Keep scraper-based MPN search in place for now
-3. Continue route discovery only if we want:
-   - official MPN search
-   - official filtering on the public/private feed endpoints
+The 2026-04-25 probe script lives at `temp/probe_jlc_2026_04_25.py` and
+can be re-run to confirm shapes after future API changes.
