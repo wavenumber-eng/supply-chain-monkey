@@ -41,13 +41,13 @@ Usage:
 import logging
 import os
 import time
+from pathlib import Path
 
 import requests
 
-log = logging.getLogger(__name__)
-
-
 from .base import SupplierInterface, SupplierPartInfo, SupplierType, resolve_stock
+
+log = logging.getLogger(__name__)
 
 
 class DigikeySupplier(SupplierInterface):
@@ -79,6 +79,10 @@ class DigikeySupplier(SupplierInterface):
     DEFAULT_LOCALE_SITE = "US"
     DEFAULT_LOCALE_LANGUAGE = "en"
     DEFAULT_LOCALE_CURRENCY = "USD"
+    RATE_LIMIT_HEADERS = {
+        "X-RateLimit-Limit": "limit",
+        "X-RateLimit-Remaining": "remaining",
+    }
 
     def __init__(self, **credentials):
         """
@@ -120,6 +124,7 @@ class DigikeySupplier(SupplierInterface):
         # Rate limiting
         self._last_request_time = 0
         self._min_request_interval = 0.2  # Minimum 200ms between requests
+        self._last_rate_limit = {}
 
     @property
     def supplier_type(self) -> SupplierType:
@@ -219,6 +224,7 @@ class DigikeySupplier(SupplierInterface):
                     response = requests.post(url, headers=headers, json=json_data, timeout=15)
                 else:
                     response = requests.get(url, headers=headers, timeout=15)
+                self._capture_rate_limit(response.headers)
 
                 # Handle rate limiting (429)
                 if response.status_code == 429:
@@ -245,6 +251,24 @@ class DigikeySupplier(SupplierInterface):
                     wait_time *= 2
 
         return None
+
+    @property
+    def rate_limit_status(self) -> dict:
+        """Return the latest DigiKey rate-limit metadata seen by this client."""
+        return dict(self._last_rate_limit)
+
+    def _capture_rate_limit(self, headers) -> None:
+        rate_limit = {}
+        for header_name, field_name in self.RATE_LIMIT_HEADERS.items():
+            raw_value = headers.get(header_name)
+            if raw_value is None:
+                continue
+            try:
+                rate_limit[field_name] = int(str(raw_value).strip())
+            except ValueError:
+                log.info("Ignoring non-integer Digikey rate limit header %s=%r", header_name, raw_value)
+        if rate_limit:
+            self._last_rate_limit = rate_limit
 
     def search_by_mpn(self, manufacturer_part_number: str, **kwargs) -> list[SupplierPartInfo]:
         """

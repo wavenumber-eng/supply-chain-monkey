@@ -5,13 +5,13 @@ import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 
 from scm.models import PARAMETER_FIELD_NAMES, SUPPLIER_LOOKUP, ServiceEnvelope
 from ..auth import verify_token
 from ..models import part_response_from_info
 from ..providers.base import create_supplier
-from .common import get_supplier_credentials
+from .common import apply_rate_limit_headers, get_supplier_credentials, rate_limit_from_supplier
 
 log = logging.getLogger(__name__)
 
@@ -48,9 +48,11 @@ def _do_search(supplier_key: str, mpn: str, include_raw: bool, max_results: int)
             supplier=supplier_type.value,
             parameter_field_name=field_name,
             provider_latency_ms=latency,
+            rate_limit=rate_limit_from_supplier(client),
             error=str(exc),
         )
     latency = int((time.monotonic() - t0) * 1000)
+    rate_limit = rate_limit_from_supplier(client)
 
     if not results:
         return ServiceEnvelope(
@@ -58,6 +60,7 @@ def _do_search(supplier_key: str, mpn: str, include_raw: bool, max_results: int)
             supplier=supplier_type.value,
             parameter_field_name=field_name,
             provider_latency_ms=latency,
+            rate_limit=rate_limit,
             data=[],
         )
 
@@ -76,12 +79,14 @@ def _do_search(supplier_key: str, mpn: str, include_raw: bool, max_results: int)
         supplier=supplier_type.value,
         parameter_field_name=field_name,
         provider_latency_ms=latency,
+        rate_limit=rate_limit,
         data=[p.model_dump() for p in parts],
     )
 
 
 @router.get("/search")
 async def search(
+    response: Response,
     supplier: str = Query(..., description="Supplier name (jlcpcb, lcsc, digikey, mouser)"),
     mpn: str = Query(..., description="Manufacturer part number"),
     include_raw: bool = Query(False, description="Include extra_data in response"),
@@ -96,6 +101,8 @@ async def search(
         )
 
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
+    envelope = await loop.run_in_executor(
         _executor, _do_search, supplier_key, mpn, include_raw, max_results
     )
+    apply_rate_limit_headers(response, envelope)
+    return envelope

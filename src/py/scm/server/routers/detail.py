@@ -5,13 +5,13 @@ import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 
 from scm.models import PARAMETER_FIELD_NAMES, SUPPLIER_LOOKUP, ServiceEnvelope
 from ..auth import verify_token
 from ..models import part_response_from_info
 from ..providers.base import create_supplier
-from .common import get_supplier_credentials
+from .common import apply_rate_limit_headers, get_supplier_credentials, rate_limit_from_supplier
 
 log = logging.getLogger(__name__)
 
@@ -48,9 +48,11 @@ def _do_detail(supplier_key: str, part: str, include_raw: bool) -> ServiceEnvelo
             supplier=supplier_type.value,
             parameter_field_name=field_name,
             provider_latency_ms=latency,
+            rate_limit=rate_limit_from_supplier(client),
             error=str(exc),
         )
     latency = int((time.monotonic() - t0) * 1000)
+    rate_limit = rate_limit_from_supplier(client)
 
     if result is None:
         return ServiceEnvelope(
@@ -58,6 +60,7 @@ def _do_detail(supplier_key: str, part: str, include_raw: bool) -> ServiceEnvelo
             supplier=supplier_type.value,
             parameter_field_name=field_name,
             provider_latency_ms=latency,
+            rate_limit=rate_limit,
             data=None,
         )
 
@@ -67,12 +70,14 @@ def _do_detail(supplier_key: str, part: str, include_raw: bool) -> ServiceEnvelo
         supplier=supplier_type.value,
         parameter_field_name=field_name,
         provider_latency_ms=latency,
+        rate_limit=rate_limit,
         data=part_data.model_dump(),
     )
 
 
 @router.get("/detail")
 async def detail(
+    response: Response,
     supplier: str = Query(..., description="Supplier name (jlcpcb, lcsc, digikey, mouser)"),
     part: str = Query(..., description="Supplier part number (e.g., C2870085, 296-xxx-ND)"),
     include_raw: bool = Query(False, description="Include extra_data in response"),
@@ -86,6 +91,8 @@ async def detail(
         )
 
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
+    envelope = await loop.run_in_executor(
         _executor, _do_detail, supplier_key, part, include_raw
     )
+    apply_rate_limit_headers(response, envelope)
+    return envelope
