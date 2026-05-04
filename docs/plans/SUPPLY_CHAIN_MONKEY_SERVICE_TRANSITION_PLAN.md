@@ -2,13 +2,11 @@
 
 ## Purpose
 
-This document captures the planned transition of `supply_chain_monkey` from a
-private `toolz` package into a standalone deployed internal service.
+This document captures the planned transition of the supplier provider package
+from an embedded workspace package into a standalone deployed internal service.
 
 This is a planning document only. It does **not** mean the migration has
-started. Current active code still lives in:
-
-- [C:\eli\toolz\supply_chain_monkey](C:/eli/toolz/supply_chain_monkey)
+started. The active code now lives in the standalone `supply-chain-monkey` repo.
 
 Target end state:
 
@@ -33,7 +31,7 @@ The current package works, but it has structural limits:
 
 The centralization goal is:
 
-- one Wavenumber-owned API
+- one organization-owned API
 - one stable outbound IP / deployment surface
 - one cache/rate-limit point
 - one place to keep vendor credentials

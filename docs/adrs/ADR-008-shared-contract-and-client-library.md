@@ -70,7 +70,7 @@ server = ["fastapi>=0.115.0", "uvicorn[standard]>=0.34.0", "requests>=2.32.0"]
 ```toml
 # lib_cruncher / bom_cruncher
 [tool.uv.sources]
-scm = { git = "https://github.com/wavenumber-eng/supply-chain-monkey.git" }
+scm = { git = "https://github.com/<org>/supply-chain-monkey.git" }
 
 [project]
 dependencies = ["scm[client]"]
@@ -80,7 +80,7 @@ dependencies = ["scm[client]"]
 from scm.models import PartResponse, ServiceEnvelope
 from scm.client import SCMClient
 
-client = SCMClient(url="https://scm.wavenumber.net", token="...")
+client = SCMClient(url="https://your-scm.example.com", token="...")
 results = client.search_all("TPS543620RPYR")
 ```
 
