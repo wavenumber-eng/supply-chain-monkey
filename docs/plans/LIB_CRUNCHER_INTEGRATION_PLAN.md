@@ -31,7 +31,8 @@ Key files:
 - lib_cruncher depends on `scm[client]` from git (shared contract + HTTP client)
 - `routers/supplier.py` uses `SCMClient` for all supplier operations
 - No vendor credentials in lib_cruncher — only `SCM_URL` and `SCM_TOKEN`
-- Default URL: `https://scm.wavenumber.net`
+- Service URL is configured with `SCM_URL`; no company deployment URL is
+  hardcoded.
 - Frontend unchanged — same endpoints, same response shapes
 - Users can configure the SCM token through a settings page in the UI
 
@@ -53,7 +54,7 @@ supply-chain-monkey = { path = "../../toolz/supply_chain_monkey", editable = tru
 
 With:
 ```toml
-scm = { git = "https://github.com/wavenumber-eng/supply-chain-monkey.git", extras = ["client"] }
+scm = { git = "https://github.com/<org>/supply-chain-monkey.git", extras = ["client"] }
 ```
 
 ### 2. routers/supplier.py — Rewrite
@@ -74,7 +75,7 @@ from scm.models import SUPPLIERS, PARAMETER_FIELD_NAMES, SupplierType
 
 def _get_scm_client() -> SCMClient:
     return SCMClient(
-        url=os.environ.get("SCM_URL", "https://scm.wavenumber.net"),
+        url=os.environ["SCM_URL"],
         token=os.environ.get("SCM_TOKEN", ""),
     )
 ```
@@ -100,7 +101,7 @@ ANTHROPIC_API_KEY=
 Add:
 ```
 # Supply Chain Monkey service
-SCM_URL=https://scm.wavenumber.net
+SCM_URL=https://your-scm.example.com
 SCM_TOKEN=
 ```
 
@@ -215,7 +216,7 @@ Frontend renders results
 On Appliku, lib_cruncher needs two new env vars:
 
 ```
-SCM_URL=https://scm.wavenumber.net
+SCM_URL=https://your-scm.example.com
 SCM_TOKEN=<the service token>
 ```
 

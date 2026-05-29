@@ -4,7 +4,7 @@ SCM HTTP client for querying the supply-chain-monkey service.
 Usage:
     from scm.client import SCMClient
 
-    client = SCMClient(url="https://scm.wavenumber.net", token="your-token")
+    client = SCMClient(url="https://your-scm.example.com", token="your-token")
 
     # Search one supplier
     result = client.search("jlcpcb", "TPS543620RPYR")

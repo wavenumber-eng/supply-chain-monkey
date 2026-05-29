@@ -443,7 +443,7 @@ def test_jlcpcb_search_by_mpn():
 
 **Manual Testing**:
 ```bash
-cd C:\eli\toolz\supply_chain_monkey
+cd C:\path\to\supply-chain-monkey
 
 # Parallel search performance test
 uv run python tests/scripts/demo_parallel_search.py
