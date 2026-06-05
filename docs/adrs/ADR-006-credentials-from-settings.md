@@ -1,49 +1,26 @@
-# ADR-006: Credentials Loaded from Settings, Not Module Import
+# ADR-006: Credentials Loaded from Settings
 
 ## Status
 
-Proposed
-
-## Context
-
-Currently, `digikey_supplier.py` and `mouser_supplier.py` call `ensure_env_loaded()`
-at module import time. This scans the filesystem for `.env` files and sets
-`os.environ` as a side effect of importing the module.
-
-In a service context this is wrong:
-
-- The service gets env vars from the container runtime (Appliku dashboard)
-- Scanning for `.env` files is a local dev concern, not a production behavior
-- Side effects on import make testing harder
-- Multiple modules racing to load `.env` is fragile
+Accepted.
 
 ## Decision
 
-- Remove `env.py` and all `ensure_env_loaded()` calls from provider modules
-- Create `settings.py` that reads all configuration from `os.environ` once at startup
-- Provider instances receive credentials from settings, not from `os.environ` directly
-- For local development, use a `.env` file loaded by uvicorn or a wrapper script
+Supplier credentials and service authentication values are read through
+`scm.server.settings`.
 
-```python
-# settings.py
-import os
+Provider modules must not:
 
-class Settings:
-    digikey_client_id: str = os.environ.get("DIGIKEY_CLIENT_ID", "")
-    digikey_client_secret: str = os.environ.get("DIGIKEY_CLIENT_SECRET", "")
-    mouser_api_key: str = os.environ.get("MOUSER_API_KEY", "")
-    jlcpcb_app_id: str = os.environ.get("JLCPCB_APP_ID", "")
-    jlcpcb_access_key: str = os.environ.get("JLCPCB_ACCESS_KEY", "")
-    jlcpcb_secret_key: str = os.environ.get("JLCPCB_SECRET_KEY", "")
-    service_token: str = os.environ.get("SCM_SERVICE_TOKEN", "")
-```
+- scan the filesystem for `.env` files
+- mutate `os.environ` at import time
+- load credentials independently of service settings
 
-Provider instantiation happens at app startup using these settings.
+Local development may use `uvicorn --env-file .env` or equivalent process-level
+environment setup.
 
 ## Consequences
 
-- No filesystem scanning in production
-- Single source of truth for all configuration
-- Providers are easier to test (pass credentials explicitly)
-- Local dev uses `--env-file .env` with uvicorn or a dotenv loader in dev only
-- `env.py` is removed from the codebase
+- Production configuration is owned by the deployment host.
+- Provider adapters are easier to test because credentials are passed through
+  construction/configuration.
+- Importing provider modules has no credential-loading side effects.

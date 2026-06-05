@@ -1,14 +1,12 @@
 # Supply Chain Monkey Plans
 
-Execution plans for `supply-chain-monkey`.
+No active implementation plan is tracked here.
 
-Current near-term goals:
+Completed planning notes:
 
-- stabilize the core supplier interface
-- keep live provider tests explicit and opt-in
-- preserve the current service package while planning deployment and consumer
-  integration work
+- [Lib Cruncher SCM Integration](LIB_CRUNCHER_INTEGRATION_PLAN.md)
+- [Standalone Service Transition](SUPPLY_CHAIN_MONKEY_SERVICE_TRANSITION_PLAN.md)
 
-Current canonical transition plan:
-
-- [SUPPLY_CHAIN_MONKEY_SERVICE_TRANSITION_PLAN.md](SUPPLY_CHAIN_MONKEY_SERVICE_TRANSITION_PLAN.md)
+Current requirements live in `docs/requirements/`. Current architecture and
+contract documentation lives in `docs/architecture.html`, `docs/design/`, and
+`docs/contracts/`.

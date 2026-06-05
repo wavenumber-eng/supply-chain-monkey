@@ -296,7 +296,7 @@ if __name__ == "__main__":
     for part in results:
         log.info(f"   - {part.supplier_part_number}: {part.description}")
         log.info(f"     Stock: {part.stock_quantity}")
-    log.info()
+    log.info("")
 
     test_c_code = "C2040"
     log.info(f"3. Getting hybrid details for C code: {test_c_code}")
@@ -310,7 +310,7 @@ if __name__ == "__main__":
         log.info(f"   Backend: {part.extra_data.get('detail_backend')}")
     else:
         log.info("   [ERROR] Part not found")
-    log.info()
+    log.info("")
 
     log.info(f"4. Parameter field name: {jlc.parameter_field_name}")
     log.info("   (This should stay stable for downstream consumers)")
