@@ -7,19 +7,30 @@
 <body data-doc="architecture" data-profile="python-package">
   <h1>Architecture</h1>
   <p>
-    Supply Chain Monkey centralizes electronic component supplier access behind
-    a FastAPI service and exposes shared Pydantic contracts plus a small Python
-    HTTP client.
+    Supply Chain Monkey is one repository and one PyPI distribution with two
+    supported surfaces: a consumer client library and a deployed FastAPI
+    supplier service.
+  </p>
+  <p>
+    The PyPI distribution is <code>supply-chain-monkey</code>. The import
+    package is <code>scm</code>.
   </p>
 
   <h2>Boundaries</h2>
   <ul>
     <li><code>src/py/scm/models.py</code> owns public response contracts.</li>
-    <li><code>src/py/scm/client.py</code> owns consumer HTTP access.</li>
-    <li><code>src/py/scm/server/</code> owns the FastAPI app and providers.</li>
+    <li><code>src/py/scm/client.py</code> owns the reusable consumer HTTP client.</li>
+    <li><code>src/py/scm/server/</code> owns the FastAPI app, credentials, and providers.</li>
     <li><code>tests/L0_foundation/</code> owns fast contract coverage.</li>
     <li><code>tests/L99_signoff/</code> owns release and deployment gates.</li>
   </ul>
+
+  <h2>Branch Model</h2>
+  <p>
+    <code>dev</code> is the integration branch. <code>main</code> is the public
+    source branch. <code>production</code> is the Wavenumber Appliku deployment
+    branch and must be updated only through protected PR/merge flow.
+  </p>
 
   <h2>Deployment Boundary</h2>
   <p>

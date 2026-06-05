@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [2026.6.5] - 2026-06-05
+
+### Changed
+
+- Switched release identity to date-based version `2026.6.5` and tag
+  `v2026-06-05`.
+- Renamed the PyPI distribution to `supply-chain-monkey` while keeping the
+  public import package as `scm`.
+- Documented the two repo surfaces: `scm.client` for consumers and
+  `scm.server` for the deployed Appliku service.
+
+### Added
+
+- Added a PyPI Trusted Publishing workflow for the `pypi` GitHub environment.
+- Added release metadata checks for date-based versioning and trusted
+  publisher workflow configuration.
+
 ## [1.0.1] - 2026-06-05
 
 ### Changed

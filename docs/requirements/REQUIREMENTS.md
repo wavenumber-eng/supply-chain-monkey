@@ -1,6 +1,8 @@
 # Supply Chain Monkey Requirements
 
-This document defines numbered requirements for the `supply_chain_monkey` module. Requirements can be referenced in code, tests, and commits using their IDs.
+This document defines numbered requirements for Supply Chain Monkey. The PyPI
+distribution is `supply-chain-monkey`; the Python import package is `scm`.
+Requirements can be referenced in code, tests, and commits using their IDs.
 
 ## Requirement Categories
 

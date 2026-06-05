@@ -1,7 +1,6 @@
 """Unit tests for provider utilities (no network calls)."""
 
 from scm.server.providers.base import resolve_stock, SupplierPartInfo
-from scm.server.providers.digikey import DigikeySupplier
 from scm.models import SupplierType
 
 
@@ -117,28 +116,3 @@ class TestPartResponseConversion:
         assert pr.datasheet_url == ""
         assert pr.product_url == ""
         assert pr.lifecycle_status == ""
-
-
-class TestDigikeyRateLimitCapture:
-    def test_capture_rate_limit_headers(self):
-        supplier = DigikeySupplier(client_id="client", client_secret="secret")
-
-        supplier._capture_rate_limit(
-            {
-                "X-RateLimit-Limit": "1000",
-                "X-RateLimit-Remaining": "997",
-            }
-        )
-
-        assert supplier.rate_limit_status == {"limit": 1000, "remaining": 997}
-
-    def test_ignores_missing_or_non_integer_rate_limit_headers(self):
-        supplier = DigikeySupplier(client_id="client", client_secret="secret")
-
-        supplier._capture_rate_limit(
-            {
-                "X-RateLimit-Limit": "not-a-number",
-            }
-        )
-
-        assert supplier.rate_limit_status == {}

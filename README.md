@@ -1,11 +1,33 @@
-# supply-chain-monkey
+# Supply Chain Monkey
+
+```text
+          ▓▓▓▓▓▓▓▓▓▓
+        ▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+      ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+    ▓▓▓▓░░░░░░▓▓░░░░░░▓▓▓▓
+░░░░▓▓░░░░░░░░░░░░░░░░░░▓▓░░░░
+░░░░▓▓░░██  ░░░░░░██  ░░▓▓░░░░
+  ░░▓▓░░████░░░░░░████░░▓▓░░
+    ▓▓░░░░░░░░░░░░░░░░░░▓▓
+      ▓▓░░░░░░░░░░░░░░▓▓
+        ▓▓▓▓░░░░░░▓▓▓▓
+            ▓▓▓▓▓▓          ░░
+          ▓▓▓▓▓▓▓▓▓▓      ▓▓
+          ▓▓▓▓▓▓▓▓▓▓    ▓▓▓▓
+        ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+        ▓▓▓▓░░▓▓░░▓▓▓▓
+```
 
 Internal service for querying electronic component suppliers. It provides a
 unified HTTP API that centralizes vendor credentials and provider routing.
 
 ## Status
 
-v1.0.1 - standalone service, Python client, and Appliku deployment signoff.
+`2026.6.5` - standalone service, Python client, Appliku deployment signoff, and
+PyPI publishing setup.
+
+The PyPI distribution is `supply-chain-monkey`. The Python import package is
+`scm`.
 
 ## Architecture
 
@@ -44,6 +66,12 @@ The root URL serves a status page with an interactive test panel.
 
 ## Client Library
 
+Install the consumer client from PyPI:
+
+```bash
+python -m pip install "supply-chain-monkey[client]==2026.6.5"
+```
+
 ```python
 from scm.client import SCMClient
 from scm.models import PARAMETER_FIELD_NAMES, SUPPLIERS, SupplierType
@@ -81,15 +109,19 @@ The included `appliku.yml` uses Appliku's managed `python-3.13-uv` build image.
 Pushing `production` can trigger deployment.
 
 ```bash
-git checkout production && git merge main && git push && git checkout main
+git checkout dev
+# merge through PRs; do not develop directly on production
 ```
 
 `pyproject.toml` must keep `[tool.uv] package = false` and
 `default-groups = []`. The Dockerfile is inactive unless `appliku.yml` changes
 to `build_image: dockerfile`. See `CLAUDE.md` for deployment constraints.
 
+`dev` is the integration branch. `main` is the public source branch.
+`production` is the Wavenumber deployment branch and must be updated only by
+protected PR/merge flow.
+
 ## Consumer Integration
 
-Consumers should depend on the `scm` package and configure service URL and token
-outside source control. See `docs/plans/LIB_CRUNCHER_INTEGRATION_PLAN.md` for
-one integration example.
+Consumers should depend on the `supply-chain-monkey[client]` distribution and
+import `scm`. Configure service URL and token outside source control.

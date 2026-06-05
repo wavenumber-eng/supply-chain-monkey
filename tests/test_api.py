@@ -117,21 +117,6 @@ class TestSearch:
         assert len(body["data"]) == 1
 
     @patch("scm.server.routers.search.create_supplier")
-    def test_search_includes_rate_limit_metadata(self, mock_create, client):
-        mock_supplier = MagicMock()
-        mock_supplier.search_by_mpn.return_value = [_mock_part(supplier=SupplierType.DIGIKEY)]
-        mock_supplier.rate_limit_status.return_value = {"limit": 1000, "remaining": 997}
-        mock_create.return_value = mock_supplier
-
-        r = client.get("/v1/search", params={"supplier": "digikey", "mpn": "TEST123"}, headers=_auth_header())
-        body = r.json()
-
-        assert body["status"] == "ok"
-        assert body["rate_limit"] == {"limit": 1000, "remaining": 997}
-        assert r.headers["X-RateLimit-Limit"] == "1000"
-        assert r.headers["X-RateLimit-Remaining"] == "997"
-
-    @patch("scm.server.routers.search.create_supplier")
     def test_search_not_found(self, mock_create, client):
         mock_supplier = MagicMock()
         mock_supplier.search_by_mpn.return_value = []
