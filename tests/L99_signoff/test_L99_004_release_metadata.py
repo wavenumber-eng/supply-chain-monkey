@@ -53,12 +53,13 @@ def test_release_note_matches_date_version() -> None:
 
 
 def test_pypi_trusted_publisher_workflow_is_configured() -> None:
-    workflow_path = ROOT / ".github" / "workflows" / "publish-pypi.yml"
+    workflow_path = ROOT / ".github" / "workflows" / "release.yml"
     workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
     publish_job = workflow["jobs"]["publish"]
+    permissions = publish_job.get("permissions", workflow.get("permissions", {}))
 
     assert publish_job["environment"] == "pypi"
-    assert publish_job["permissions"]["id-token"] == "write"
+    assert permissions["id-token"] == "write"
 
     steps_text = "\n".join(str(step) for step in publish_job["steps"])
     assert "pypa/gh-action-pypi-publish@release/v1" in steps_text

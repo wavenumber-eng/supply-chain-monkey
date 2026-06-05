@@ -29,7 +29,7 @@ deployment branch the development path.
 - PyPI must be configured with a pending or normal trusted publisher for:
   - owner: `wavenumber-eng`
   - repository: `supply-chain-monkey`
-  - workflow: `publish-pypi.yml`
+  - workflow: `release.yml`
   - environment: `pypi`
 - Release signoff must verify the date-version/tag relationship and trusted
   publishing workflow configuration.
