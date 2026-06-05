@@ -17,9 +17,9 @@ Features:
     - Rate limit handling with exponential backoff
 
 Usage:
-    >>> from supply_chain_monkey import create_supplier, SupplierType
+    >>> from scm.server.providers import create_supplier, SupplierType
     >>>
-    >>> # Create with credentials from .env
+    >>> # Create with configured credentials
     >>> digikey = create_supplier(SupplierType.DIGIKEY)
     >>>
     >>> # Or provide credentials explicitly
@@ -44,10 +44,9 @@ import time
 
 import requests
 
-log = logging.getLogger(__name__)
-
-
 from .base import SupplierInterface, SupplierPartInfo, SupplierType, resolve_stock
+
+log = logging.getLogger(__name__)
 
 
 class DigikeySupplier(SupplierInterface):
@@ -177,7 +176,7 @@ class DigikeySupplier(SupplierInterface):
         except Exception as e:
             raise Exception(f"Failed to get Digikey access token: {str(e)}")
 
-    def _make_request(self, url: str, method: str = "GET", json_data: dict = None,
+    def _make_request(self, url: str, method: str = "GET", json_data: dict | None = None,
                       max_retries: int = 3) -> dict | None:
         """
         Make an authenticated API request with rate limiting and retry logic.
@@ -503,7 +502,7 @@ def search_digikey(manufacturer_part_number: str, **kwargs) -> list[SupplierPart
         List of SupplierPartInfo objects
 
     Example:
-        >>> from supply_chain_monkey.digikey_supplier import search_digikey
+        >>> from scm.server.providers.digikey import search_digikey
         >>> results = search_digikey("STM32F407VGT6")
         >>> for part in results:
         ...     log.info(part.supplier_part_number)
@@ -516,29 +515,9 @@ if __name__ == "__main__":
     # Test the Digikey supplier implementation
     log.info("=== Digikey Supplier Test ===\n")
 
-    # Load .env file if not already loaded
-    def load_env():
-        """Load .env file from project root"""
-        env_paths = [
-            Path.cwd() / ".env",
-            Path(__file__).parent.parent.parent.parent / ".env"
-        ]
-        for env_path in env_paths:
-            if env_path.exists():
-                log.info(f"Loading .env from: {env_path}\n")
-                with open(env_path) as f:
-                    for line in f:
-                        line = line.strip()
-                        if '=' in line and not line.startswith('#'):
-                            key, value = line.split('=', 1)
-                            os.environ[key.strip()] = value.strip().strip('"').strip("'")
-                return True
-        return False
-
     if not os.getenv('DIGIKEY_CLIENT_ID'):
-        if not load_env():
-            log.info("[ERROR] Could not find .env file!")
-            exit(1)
+        log.info("[ERROR] DIGIKEY_CLIENT_ID is not configured in the process environment.")
+        exit(1)
 
     try:
         digikey = DigikeySupplier()
@@ -562,7 +541,7 @@ if __name__ == "__main__":
             log.info(f"      Mfr: {part.manufacturer}")
             log.info(f"      Stock: {part.stock_quantity}")
             log.info(f"      Status: {part.lifecycle_status}")
-        log.info()
+        log.info("")
 
         # Test 3: Verify parameter field name
         log.info(f"3. Parameter field name: {digikey.parameter_field_name}")

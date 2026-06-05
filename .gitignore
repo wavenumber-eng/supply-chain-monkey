@@ -8,6 +8,8 @@ __pycache__/
 .ruff_cache/
 .pyright/
 .mypy_cache/
+rack_results/
+tests/rack_results/
 build/
 dist/
 *.egg-info/

@@ -1,0 +1,39 @@
+name = "Release Signoff"
+order = 99
+description = "Final quality and deployment gate for production release"
+enabled = true
+concerns = ["release", "deployment", "signoff"]
+
+objectives = [
+    "Ruff, Pyright, and uv lock checks pass",
+    "The wheel builds and passes twine metadata checks",
+    "Appliku deployment config stays compatible with the managed uv build path",
+    "Retired compatibility imports and environment loaders stay removed",
+]
+
+[dependencies]
+strata = ["L0_foundation"]
+
+[[subtests]]
+id = "L99_001"
+file = "test_L99_001_quality_tools.py"
+name = "Quality Tools"
+description = "Run Ruff, Pyright, uv lock, wheel build, and twine check"
+concerns = ["release", "signoff"]
+test_case_type = "audit_meta"
+
+[[subtests]]
+id = "L99_002"
+file = "test_L99_002_appliku_deployment.py"
+name = "Appliku Deployment"
+description = "Validate Appliku config, managed uv sync, and PYTHONPATH runtime import"
+concerns = ["deployment", "signoff"]
+test_case_type = "deployment"
+
+[[subtests]]
+id = "L99_003"
+file = "test_L99_003_compatibility_pruning.py"
+name = "Compatibility Pruning"
+description = "Prevent retired package aliases and provider env loaders from returning"
+concerns = ["release", "signoff"]
+test_case_type = "audit_meta"

@@ -3,7 +3,7 @@
 Re-exports shared contract models and adds the from_supplier_part_info bridge.
 """
 
-from scm.models import PartResponse, ServiceEnvelope
+from scm.models import PartResponse
 from .providers.base import SupplierPartInfo
 
 

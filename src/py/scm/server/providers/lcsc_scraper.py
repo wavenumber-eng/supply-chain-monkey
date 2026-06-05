@@ -9,13 +9,13 @@ LCSC may have faster response times than JLCPCB for the same parts.
 
 Example Usage:
     # Simple search by MPN
-    >>> from supply_chain_monkey.lcsc_scraper import search_lcsc_by_mpn
+    >>> from scm.server.providers.lcsc_scraper import search_lcsc_by_mpn
     >>> results = search_lcsc_by_mpn("TPS543620RPYR")
     >>> for part in results:
     ...     log.info(f"{part.lcsc_code}: {part.description}")
 
     # Get details for a specific C code
-    >>> from supply_chain_monkey.lcsc_scraper import get_lcsc_part_details
+    >>> from scm.server.providers.lcsc_scraper import get_lcsc_part_details
     >>> part = get_lcsc_part_details("C2870085")
     >>> log.info(part.description)
 """
@@ -111,7 +111,7 @@ def search_lcsc_by_mpn(mpn: str, verify_parts: bool = True) -> list[LCSCPartInfo
         if not results:
             log.info("[LCSC] No valid parts found with regex, trying Claude AI fallback...")
             try:
-                from .claude_scraper_helper import find_c_code_with_claude
+                from .claude_helper import find_c_code_with_claude
 
                 c_code = find_c_code_with_claude(response.text, mpn, supplier="LCSC")
                 if c_code:
@@ -384,7 +384,7 @@ if __name__ == "__main__":
     log.info(f"Found {len(results)} results:")
     for part in results:
         log.info(f"  {part.lcsc_code}: {part.description}")
-    log.info()
+    log.info("")
 
     # Test 2: Get specific part details
     c_code = "C2870085"

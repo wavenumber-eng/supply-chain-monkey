@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
+from scm import __version__
 from scm.models import SupplierType
 from ..auth import verify_token
 from ..providers.base import IMPLEMENTED_SUPPLIERS
@@ -13,7 +14,7 @@ from ..settings import settings
 
 router = APIRouter(prefix="/v1")
 
-_VERSION = "1.0.0"
+_VERSION = __version__
 _TEMPLATE_DIR = Path(__file__).parent.parent / "templates"
 
 _MONKEY_ART = r"""

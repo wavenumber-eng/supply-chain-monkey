@@ -19,7 +19,7 @@ API Documentation:
     https://www.mouser.com/api-hub/
 
 Usage:
-    >>> from supply_chain_monkey import create_supplier, SupplierType
+    >>> from scm.server.providers import create_supplier, SupplierType
     >>>
     >>> mouser = create_supplier(SupplierType.MOUSER, api_key="your-api-key")
     >>>
@@ -314,7 +314,7 @@ class MouserSupplier(SupplierInterface):
 
 
 # Convenience function for backwards compatibility
-def search_mouser(manufacturer_part_number: str, api_key: str = None) -> list[SupplierPartInfo]:
+def search_mouser(manufacturer_part_number: str, api_key: str | None = None) -> list[SupplierPartInfo]:
     """
     Convenience function for quick Mouser searches.
 
@@ -326,7 +326,7 @@ def search_mouser(manufacturer_part_number: str, api_key: str = None) -> list[Su
         List of SupplierPartInfo objects
 
     Example:
-        >>> from supply_chain_monkey.mouser_supplier import search_mouser
+        >>> from scm.server.providers.mouser import search_mouser
         >>> results = search_mouser("STM32F407VGT6")
         >>> for part in results:
         ...     log.info(part.supplier_part_number)
@@ -359,8 +359,8 @@ if __name__ == "__main__":
         log.info(f"     Stock: {part.stock_quantity}")
         log.info(f"     Lifecycle: {part.lifecycle_status}")
         if part.price_breaks:
-            log.info(f"     Price (1pc): ${part.price_breaks[0][1]:.4f}")
-    log.info()
+            log.info(f"     Price (1pc): ${part.price_breaks[0].get('unit_price', 0.0):.4f}")
+    log.info("")
 
     # Test 3: Get specific part details
     if results:
@@ -377,7 +377,7 @@ if __name__ == "__main__":
             log.info(f"   Datasheet: {part.datasheet_url}")
         else:
             log.info("   [ERROR] Part not found")
-        log.info()
+        log.info("")
 
     # Test 4: Verify parameter field name
     log.info(f"4. Parameter field name: {mouser.parameter_field_name}")

@@ -35,7 +35,7 @@ The repo contains three layers:
 Do not change the build/deploy approach without testing a full Appliku deploy
 cycle.
 
-### pyproject.toml must have both `[build-system]` and `package = false`
+### pyproject.toml must have build metadata, base runtime deps, and package=false
 
 ```toml
 [build-system]
@@ -50,16 +50,21 @@ packages = ["src/py/scm"]
 
 [tool.uv]
 package = false
+default-groups = []
 ```
 
-Both are required:
+These are required:
 
 - `package = false`: tells Appliku's `uv sync --frozen` to skip building the
   project during dependency resolution. `PYTHONPATH` handles imports at runtime.
+- `default-groups = []`: keeps the managed Appliku `uv sync --frozen` path from
+  installing development-only tools.
 - `[build-system]`: allows consumers to install `scm` as a proper package via
   path or git reference.
+- Base `[project.dependencies]` must include the service runtime dependencies:
+  pydantic, requests, FastAPI, and Uvicorn.
 
-### appliku.yml must use the managed build image
+### appliku.yml currently uses the managed build image
 
 ```yaml
 build_settings:
@@ -71,8 +76,10 @@ services:
     command: bash -c 'PYTHONPATH=/code/src/py uvicorn scm.server.main:app --host 0.0.0.0 --port 8000'
 ```
 
-Do not use `build_image: dockerfile`. Custom Dockerfiles have context path
-issues with Appliku's build system.
+The Dockerfile is an inactive fallback unless `appliku.yml` explicitly changes
+to `build_image: dockerfile`. Do not switch deployment modes without updating
+the Dockerfile, docs, L99 Appliku tests, and running a full Appliku deploy
+cycle.
 
 ### The web command must use `bash -c` with PYTHONPATH
 
@@ -126,7 +133,7 @@ supply-chain-monkey/
 cp .env.template .env
 # fill in SCM_SERVICE_TOKEN and provider credentials
 
-uv sync
+uv sync --group dev
 PYTHONPATH=src/py uv run uvicorn scm.server.main:app --reload --env-file .env
 ```
 
