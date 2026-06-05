@@ -19,7 +19,7 @@ Features:
 Usage:
     >>> from scm.server.providers import create_supplier, SupplierType
     >>>
-    >>> # Create with credentials from .env
+    >>> # Create with configured credentials
     >>> digikey = create_supplier(SupplierType.DIGIKEY)
     >>>
     >>> # Or provide credentials explicitly
@@ -44,10 +44,9 @@ import time
 
 import requests
 
-log = logging.getLogger(__name__)
-
-
 from .base import SupplierInterface, SupplierPartInfo, SupplierType, resolve_stock
+
+log = logging.getLogger(__name__)
 
 
 class DigikeySupplier(SupplierInterface):
@@ -516,29 +515,9 @@ if __name__ == "__main__":
     # Test the Digikey supplier implementation
     log.info("=== Digikey Supplier Test ===\n")
 
-    # Load .env file if not already loaded
-    def load_env():
-        """Load .env file from project root"""
-        env_paths = [
-            Path.cwd() / ".env",
-            Path(__file__).parent.parent.parent.parent / ".env"
-        ]
-        for env_path in env_paths:
-            if env_path.exists():
-                log.info(f"Loading .env from: {env_path}\n")
-                with open(env_path) as f:
-                    for line in f:
-                        line = line.strip()
-                        if '=' in line and not line.startswith('#'):
-                            key, value = line.split('=', 1)
-                            os.environ[key.strip()] = value.strip().strip('"').strip("'")
-                return True
-        return False
-
     if not os.getenv('DIGIKEY_CLIENT_ID'):
-        if not load_env():
-            log.info("[ERROR] Could not find .env file!")
-            exit(1)
+        log.info("[ERROR] DIGIKEY_CLIENT_ID is not configured in the process environment.")
+        exit(1)
 
     try:
         digikey = DigikeySupplier()

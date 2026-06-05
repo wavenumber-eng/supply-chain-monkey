@@ -1,6 +1,6 @@
 """Shared helpers for routers."""
 
-from scm.models import PARAMETER_FIELD_NAMES, SUPPLIER_LOOKUP, SupplierType
+from scm.models import SupplierType
 from ..settings import settings
 
 
