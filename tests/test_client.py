@@ -4,15 +4,16 @@ Runs the client against the real server via TestClient (in-process, no network).
 This validates the contract — the client deserializes what the server serializes.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from fastapi.testclient import TestClient
 
+from scm.client import SCMClient
+from scm.models import SUPPLIERS, ServiceEnvelope, SupplierType
 from scm.server.main import app
 from scm.server.providers.base import SupplierPartInfo
-from scm.models import SupplierType, ServiceEnvelope, SUPPLIERS
-from scm.client import SCMClient
 
 
 class _InProcessClient(SCMClient):
@@ -28,19 +29,12 @@ class _InProcessClient(SCMClient):
         return self._tc.get(path, params=params, headers=headers)
 
 
-# Override the requests.get calls to use TestClient
-import requests as _requests
-
-
 @pytest.fixture
 def scm_client():
     """SCMClient wired to the FastAPI app in-process."""
     with patch("scm.server.auth.settings") as mock_settings:
         mock_settings.service_token = "test-token"
         tc = TestClient(app)
-
-        # Patch requests.get in the client module to use TestClient
-        original_get = _requests.get
 
         def mock_get(url, **kwargs):
             # Strip the base URL prefix (empty for in-process)

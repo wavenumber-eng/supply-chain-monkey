@@ -139,13 +139,18 @@ def validate_supplier_part_info(part_info: SupplierPartInfo, supplier_type: Supp
     assert part_info.stock_quantity >= 0, f"Stock should be >= 0, got {part_info.stock_quantity}"
 
 
+def ascii_preview(value: str | None, limit: int = 80) -> str:
+    """Return an ASCII-safe preview for live supplier debug output."""
+    return (value or "")[:limit].encode("ascii", "replace").decode("ascii")
+
+
 # ============================================================================
 # Import Tests
 # ============================================================================
 
 def test_supplier_interface_imports():
     """Test that supplier interface module can be imported without errors."""
-    from supply_chain_monkey import (
+    from scm.server.providers import (
         SupplierInterface,
         SupplierPartInfo,
         SupplierType,
@@ -162,7 +167,10 @@ def test_supplier_interface_imports():
 
 def test_supplier_implementations_importable():
     """Test that all supplier implementations can be imported."""
-    from supply_chain_monkey import DigikeySupplier, JLCPCBSupplier, LCSCSupplier, MouserSupplier
+    from scm.server.providers.digikey import DigikeySupplier
+    from scm.server.providers.jlc import JLCPCBSupplier
+    from scm.server.providers.lcsc import LCSCSupplier
+    from scm.server.providers.mouser import MouserSupplier
 
     assert JLCPCBSupplier is not None
     assert LCSCSupplier is not None
@@ -184,8 +192,11 @@ def test_create_jlcpcb_supplier():
 
 def test_create_jlcpcb_supplier_legacy_detail_backend():
     """Test creating JLCPCB supplier with explicit legacy scraper detail mode."""
+    from scm.server.providers.jlc import JLCPCBSupplier
+
     supplier = create_supplier(SupplierType.JLCPCB, detail_backend="legacy_scraper")
     assert supplier is not None
+    assert isinstance(supplier, JLCPCBSupplier)
     assert supplier.supplier_type == SupplierType.JLCPCB
     assert supplier.parameter_field_name == "JLCPCB Part #"
     assert supplier.detail_backend == "legacy_scraper"
@@ -268,7 +279,7 @@ def test_jlcpcb_search_by_mpn():
     print(f"[JLCPCB] Part {expected_part}:")
     print(f"  MPN: {matching_part.manufacturer_part_number}")
     # Handle Unicode characters in description
-    desc = matching_part.description[:80].encode('ascii', 'replace').decode('ascii')
+    desc = ascii_preview(matching_part.description)
     print(f"  Description: {desc}")
     print(f"  Stock: {matching_part.stock_quantity}")
 
@@ -299,7 +310,7 @@ def test_jlcpcb_get_part_details():
 
     print(f"[JLCPCB] Part details for {expected_part}:")
     print(f"  MPN: {result.manufacturer_part_number}")
-    desc = result.description[:80].encode('ascii', 'replace').decode('ascii')
+    desc = ascii_preview(result.description)
     print(f"  Description: {desc}")
     print(f"  Stock: {result.stock_quantity}")
 
@@ -390,7 +401,7 @@ def test_lcsc_search_by_mpn():
     print(f"[LCSC] Part {expected_part}:")
     print(f"  MPN: {matching_part.manufacturer_part_number}")
     # Handle Unicode characters in description
-    desc = matching_part.description[:80].encode('ascii', 'replace').decode('ascii')
+    desc = ascii_preview(matching_part.description)
     print(f"  Description: {desc}")
     print(f"  Stock: {matching_part.stock_quantity}")
 
@@ -420,7 +431,7 @@ def test_lcsc_get_part_details():
 
     print(f"[LCSC] Part details for {expected_part}:")
     print(f"  MPN: {result.manufacturer_part_number}")
-    desc = result.description[:80].encode('ascii', 'replace').decode('ascii')
+    desc = ascii_preview(result.description)
     print(f"  Description: {desc}")
     print(f"  Stock: {result.stock_quantity}")
 
@@ -484,7 +495,7 @@ def test_digikey_search_by_mpn():
     print(f"[Digikey] Part {matching_part.supplier_part_number}:")
     print(f"  MPN: {matching_part.manufacturer_part_number}")
     print(f"  Manufacturer: {matching_part.manufacturer}")
-    desc = matching_part.description[:80].encode('ascii', 'replace').decode('ascii')
+    desc = ascii_preview(matching_part.description)
     print(f"  Description: {desc}")
     print(f"  Stock: {matching_part.stock_quantity}")
     print(f"  Lifecycle: {matching_part.lifecycle_status}")
@@ -539,7 +550,7 @@ def test_digikey_get_part_details():
     print(f"[Digikey] Part details for {test_part_number}:")
     print(f"  MPN: {result.manufacturer_part_number}")
     print(f"  Manufacturer: {result.manufacturer}")
-    desc = result.description[:80].encode('ascii', 'replace').decode('ascii')
+    desc = ascii_preview(result.description)
     print(f"  Description: {desc}")
     print(f"  Stock: {result.stock_quantity}")
 
@@ -600,7 +611,7 @@ def test_mouser_search_by_mpn():
     print(f"[Mouser] Part {matching_part.supplier_part_number}:")
     print(f"  MPN: {matching_part.manufacturer_part_number}")
     print(f"  Manufacturer: {matching_part.manufacturer}")
-    desc = matching_part.description[:80].encode('ascii', 'replace').decode('ascii')
+    desc = ascii_preview(matching_part.description)
     print(f"  Description: {desc}")
     print(f"  Stock: {matching_part.stock_quantity}")
     print(f"  Lifecycle: {matching_part.lifecycle_status}")
@@ -610,7 +621,7 @@ def test_mouser_search_by_mpn():
         print(f"  Datasheet: {matching_part.datasheet_url}")
     if matching_part.price_breaks:
         print(f"  Pricing: {len(matching_part.price_breaks)} price break(s)")
-        print(f"  Price (1pc): ${matching_part.price_breaks[0][1]:.4f}")
+        print(f"  Price (1pc): ${matching_part.price_breaks[0].get('unit_price', 0.0):.4f}")
 
 
 @pytest.mark.supplier
@@ -649,7 +660,7 @@ def test_mouser_get_part_details():
     print(f"[Mouser] Part details for {test_part_number}:")
     print(f"  MPN: {result.manufacturer_part_number}")
     print(f"  Manufacturer: {result.manufacturer}")
-    desc = result.description[:80].encode('ascii', 'replace').decode('ascii')
+    desc = ascii_preview(result.description)
     print(f"  Description: {desc}")
     print(f"  Stock: {result.stock_quantity}")
 

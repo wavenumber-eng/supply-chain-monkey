@@ -4,13 +4,13 @@ Provides functions to search for parts on JLCPCB and extract part details.
 
 Example Usage:
     # Simple search by MPN
-    >>> from supply_chain_monkey.jlc_scraper import search_jlcpcb_by_mpn
+    >>> from scm.server.providers.jlc_scraper import search_jlcpcb_by_mpn
     >>> results = search_jlcpcb_by_mpn("GCM1555C1H100FA16D")
     >>> for part in results:
     ...     log.info(f"{part.jlcpcb_code}: {part.description}")
 
     # Get details for a specific C code
-    >>> from supply_chain_monkey.jlc_scraper import get_jlcpcb_part_details
+    >>> from scm.server.providers.jlc_scraper import get_jlcpcb_part_details
     >>> part = get_jlcpcb_part_details("C161145")
     >>> log.info(part.description)
 
@@ -329,7 +329,7 @@ def _extract_structured_search_results(html_text: str, expected_mpn: str = "") -
         url_suffix = str(_resolve_js_token(row.get("urlSuffix", ""), alias_map) or "").strip()
         stock_value = _resolve_js_token(row.get("stockCount", "0"), alias_map)
         try:
-            stock = int(stock_value)
+            stock = int(str(stock_value))
         except (TypeError, ValueError):
             stock = 0
 
@@ -443,7 +443,7 @@ def search_jlcpcb_by_mpn(mpn: str, verify_parts: bool = True, **kwargs) -> list[
         if not results:
             log.info("[JLCPCB] No valid parts found with regex, trying Claude AI fallback...")
             try:
-                from .claude_scraper_helper import find_c_code_with_claude
+                from .claude_helper import find_c_code_with_claude
 
                 c_code = find_c_code_with_claude(html_text, mpn, supplier="JLCPCB")
                 if c_code:
@@ -706,7 +706,7 @@ if __name__ == "__main__":
     log.info(f"Found {len(results)} results:")
     for part in results:
         log.info(f"  {part.jlcpcb_code}: {part.description}")
-    log.info()
+    log.info("")
 
     # Test 2: Get specific part details
     c_code = "C161145"

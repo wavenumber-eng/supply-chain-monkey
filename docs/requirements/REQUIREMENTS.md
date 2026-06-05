@@ -394,7 +394,9 @@ def update_status(status: str):
 | **Priority** | HIGH |
 | **Added** | 2025-12-19 |
 
-**Requirement**: Supplier credentials MUST be loaded from environment variables via a local `.env` helper in `supply_chain_monkey`.
+**Requirement**: Supplier credentials MUST be read from process environment
+variables through the central `scm.server.settings` module. Provider modules
+must not scan the filesystem or load `.env` files at import time.
 
 **Environment Variables**:
 - `DIGIKEY_CLIENT_ID` - Digikey OAuth client ID
@@ -403,14 +405,14 @@ def update_status(status: str):
 
 **Loading**:
 ```python
-import os
-from supply_chain_monkey.env import ensure_env_loaded
+from scm.server.settings import settings
 
-ensure_env_loaded()
-client_id = os.getenv("DIGIKEY_CLIENT_ID")
+client_id = settings.digikey_client_id
 ```
 
-**Rationale**: `.env` file in `.gitignore` prevents committing secrets to repo.
+**Rationale**: Appliku and other service hosts inject credentials at container
+runtime. Local development can still pass `.env` through `uvicorn --env-file`,
+but credential loading is not a provider side effect.
 
 **Verification**:
 - [x] Credentials loaded from environment

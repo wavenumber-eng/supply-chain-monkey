@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Supply Chain Monkey Setup</title>
+</head>
+<body data-doc="setup" data-profile="python-package">
+  <h1>Setup</h1>
+  <p>
+    Supply Chain Monkey is a Python service and client package managed with uv.
+    The deployed Appliku path uses the managed <code>python-3.13-uv</code>
+    image and imports source through <code>PYTHONPATH=/code/src/py</code>.
+  </p>
+
+  <h2>Required Tools</h2>
+  <ul>
+    <li>Python 3.11 through 3.13.</li>
+    <li>uv for dependency management and tool execution.</li>
+    <li>Rack for stratum-based test orchestration.</li>
+  </ul>
+
+  <h2>Development Commands</h2>
+  <pre><code>uv sync --group dev
+uv run pytest -q
+uv run rack run L99_signoff
+PYTHONPATH=src/py uv run uvicorn scm.server.main:app --reload --env-file .env</code></pre>
+
+  <h2>Deployment</h2>
+  <p>
+    <code>appliku.yml</code> is the deployment contract. The custom Dockerfile
+    is inactive unless <code>build_image: dockerfile</code> is selected in that
+    file and the full Appliku deploy cycle is revalidated.
+  </p>
+</body>
+</html>

@@ -5,6 +5,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
+from scm import __version__
 from .routers import detail, health, search, stream
 
 logging.basicConfig(
@@ -12,7 +13,7 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
 
-app = FastAPI(title="supply-chain-monkey", version="1.0.0")
+app = FastAPI(title="supply-chain-monkey", version=__version__)
 
 app.include_router(health.router)
 app.include_router(search.router)

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Supply Chain Monkey Architecture</title>
+</head>
+<body data-doc="architecture" data-profile="python-package">
+  <h1>Architecture</h1>
+  <p>
+    Supply Chain Monkey centralizes electronic component supplier access behind
+    a FastAPI service and exposes shared Pydantic contracts plus a small Python
+    HTTP client.
+  </p>
+
+  <h2>Boundaries</h2>
+  <ul>
+    <li><code>src/py/scm/models.py</code> owns public response contracts.</li>
+    <li><code>src/py/scm/client.py</code> owns consumer HTTP access.</li>
+    <li><code>src/py/scm/server/</code> owns the FastAPI app and providers.</li>
+    <li><code>tests/L0_foundation/</code> owns fast contract coverage.</li>
+    <li><code>tests/L99_signoff/</code> owns release and deployment gates.</li>
+  </ul>
+
+  <h2>Deployment Boundary</h2>
+  <p>
+    Runtime credentials are environment variables owned by the deployment host.
+    Provider modules must not load local files or mutate environment state at
+    import time.
+  </p>
+</body>
+</html>

@@ -35,9 +35,11 @@ and fails because the source files aren't there yet.
 ```toml
 [tool.uv]
 package = false
+default-groups = []
 ```
 
-This tells uv to only install dependencies, not the project itself.
+This tells uv to install dependencies, not the project itself, and prevents the
+managed build image from installing development tools by default.
 
 ### 2. Do not reference README.md
 
@@ -53,9 +55,10 @@ description = "Your description"
 # NO readme = "README.md" line
 requires-python = ">=3.11,<3.14"
 dependencies = [
+    "pydantic>=2.0",
+    "requests>=2.32.0",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.34.0",
-    # your other deps
 ]
 ```
 
@@ -68,9 +71,10 @@ version = "0.1.0"
 description = "Your description"
 requires-python = ">=3.11,<3.14"
 dependencies = [
+    "pydantic>=2.0",
+    "requests>=2.32.0",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.34.0",
-    "requests>=2.32.0",
 ]
 
 [dependency-groups]
@@ -81,6 +85,7 @@ dev = [
 
 [tool.uv]
 package = false
+default-groups = []
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -101,10 +106,11 @@ services:
 
 ### Important notes
 
-**Use the managed `python-3.13-uv` build image.** It handles uv installation,
-dependency resolution, and Docker layer caching automatically. Avoid custom
-Dockerfiles unless you have a specific reason — the build context paths are
-confusing and easy to get wrong.
+**Use the managed `python-3.13-uv` build image by default.** It handles uv
+installation, dependency resolution, and Docker layer caching automatically.
+Custom Dockerfiles are allowed only when `appliku.yml`, Dockerfile, docs, and
+L99 deployment tests are updated together and the full deploy cycle is
+validated.
 
 **Wrap the command in `bash -c '...'`.** Docker interprets the command as an
 exec-style array. If you write `PYTHONPATH=/code/src/py uvicorn ...` without

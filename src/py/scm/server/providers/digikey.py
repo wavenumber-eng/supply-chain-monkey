@@ -17,7 +17,7 @@ Features:
     - Rate limit handling with exponential backoff
 
 Usage:
-    >>> from supply_chain_monkey import create_supplier, SupplierType
+    >>> from scm.server.providers import create_supplier, SupplierType
     >>>
     >>> # Create with credentials from .env
     >>> digikey = create_supplier(SupplierType.DIGIKEY)
@@ -177,7 +177,7 @@ class DigikeySupplier(SupplierInterface):
         except Exception as e:
             raise Exception(f"Failed to get Digikey access token: {str(e)}")
 
-    def _make_request(self, url: str, method: str = "GET", json_data: dict = None,
+    def _make_request(self, url: str, method: str = "GET", json_data: dict | None = None,
                       max_retries: int = 3) -> dict | None:
         """
         Make an authenticated API request with rate limiting and retry logic.
@@ -503,7 +503,7 @@ def search_digikey(manufacturer_part_number: str, **kwargs) -> list[SupplierPart
         List of SupplierPartInfo objects
 
     Example:
-        >>> from supply_chain_monkey.digikey_supplier import search_digikey
+        >>> from scm.server.providers.digikey import search_digikey
         >>> results = search_digikey("STM32F407VGT6")
         >>> for part in results:
         ...     log.info(part.supplier_part_number)
@@ -562,7 +562,7 @@ if __name__ == "__main__":
             log.info(f"      Mfr: {part.manufacturer}")
             log.info(f"      Stock: {part.stock_quantity}")
             log.info(f"      Status: {part.lifecycle_status}")
-        log.info()
+        log.info("")
 
         # Test 3: Verify parameter field name
         log.info(f"3. Parameter field name: {digikey.parameter_field_name}")
