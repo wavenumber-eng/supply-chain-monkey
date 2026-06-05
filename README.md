@@ -1,5 +1,23 @@
 # Supply Chain Monkey
 
+```text
+          ▓▓▓▓▓▓▓▓▓▓
+        ▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+      ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+    ▓▓▓▓░░░░░░▓▓░░░░░░▓▓▓▓
+░░░░▓▓░░░░░░░░░░░░░░░░░░▓▓░░░░
+░░░░▓▓░░██  ░░░░░░██  ░░▓▓░░░░
+  ░░▓▓░░████░░░░░░████░░▓▓░░
+    ▓▓░░░░░░░░░░░░░░░░░░▓▓
+      ▓▓░░░░░░░░░░░░░░▓▓
+        ▓▓▓▓░░░░░░▓▓▓▓
+            ▓▓▓▓▓▓          ░░
+          ▓▓▓▓▓▓▓▓▓▓      ▓▓
+          ▓▓▓▓▓▓▓▓▓▓    ▓▓▓▓
+        ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+        ▓▓▓▓░░▓▓░░▓▓▓▓
+```
+
 Internal service for querying electronic component suppliers. It provides a
 unified HTTP API that centralizes vendor credentials and provider routing.
 
