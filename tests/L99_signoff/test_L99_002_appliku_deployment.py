@@ -43,7 +43,7 @@ def test_appliku_managed_build_contract() -> None:
 
     assert pyproject["tool"]["uv"]["package"] is False
     assert pyproject["tool"]["uv"]["default-groups"] == []
-    assert "readme" not in pyproject["project"]
+    assert pyproject["project"]["readme"] == "README.md"
 
     dependencies = "\n".join(pyproject["project"]["dependencies"])
     for dependency in ("pydantic", "requests", "fastapi", "uvicorn"):

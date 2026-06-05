@@ -31,7 +31,9 @@ def test_uv_lock_is_current() -> None:
 
 def test_wheel_builds_and_checks(tmp_path: Path) -> None:
     wheelhouse = tmp_path / "wheelhouse"
-    run_checked([sys.executable, "-m", "build", "--wheel", "--outdir", str(wheelhouse)])
+    run_checked([sys.executable, "-m", "build", "--sdist", "--wheel", "--outdir", str(wheelhouse)])
     wheels = sorted(wheelhouse.glob("*.whl"))
+    sdists = sorted(wheelhouse.glob("*.tar.gz"))
     assert wheels, "wheel build did not produce a wheel"
-    run_checked(["twine", "check", *[str(path) for path in wheels]])
+    assert sdists, "sdist build did not produce a source distribution"
+    run_checked(["twine", "check", *[str(path) for path in [*sdists, *wheels]]])

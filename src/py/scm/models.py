@@ -61,7 +61,6 @@ class ServiceEnvelope(BaseModel):
     supplier: str
     parameter_field_name: str = ""
     provider_latency_ms: int = 0
-    rate_limit: dict[str, int] | None = None
     service_timestamp: str = Field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )

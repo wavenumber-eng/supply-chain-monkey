@@ -6,6 +6,10 @@ Maintained design records live in:
 - `docs/requirements/REQUIREMENTS.md`
 - `docs/guides/APPLIKU_FASTAPI_DEPLOYMENT.md`
 
-The current active package name is `scm`. Historical references to
-`supply_chain_monkey` in ADRs and migration plans describe the migration source,
-not an active compatibility surface.
+The PyPI distribution name is `supply-chain-monkey`; the Python import package
+is `scm`. No alternate import package is supported.
+
+The repo intentionally keeps client and server code together:
+
+- `scm.models` and `scm.client` are the consumer-facing library surface.
+- `scm.server` is the deployed Appliku service surface.

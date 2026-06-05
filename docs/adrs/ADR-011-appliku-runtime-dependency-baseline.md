@@ -2,36 +2,43 @@
 
 ## Status
 
-Accepted
-
-## Context
-
-Appliku's managed Python uv image copies `pyproject.toml` and `uv.lock` before
-copying source, then runs `uv sync --frozen`. This repo also keeps
-`[tool.uv] package = false` so the source package is not built during that
-manifest-only dependency install.
-
-The previous dependency shape placed FastAPI, Uvicorn, and Requests in optional
-extras and the development group. That worked only because uv installed the
-default development group during the managed build. It made production depend on
-development dependency behavior and made the inactive Dockerfile path diverge.
+Accepted.
 
 ## Decision
 
-- Keep `[tool.uv] package = false`.
-- Set `[tool.uv] default-groups = []`.
-- Put runtime service dependencies in `[project.dependencies]`: Pydantic,
-  Requests, FastAPI, and Uvicorn.
-- Keep test, lint, type, build, Rack, and optional AI dependencies out of the
-  managed production dependency sync unless explicitly requested.
-- Keep `appliku.yml` on `build_image: python-3.13-uv` until a full custom
-  Dockerfile deployment cycle is intentionally tested.
+The Appliku deployment uses the managed `python-3.13-uv` build image.
+
+`pyproject.toml` keeps:
+
+```toml
+[tool.uv]
+package = false
+default-groups = []
+```
+
+Base project dependencies include the runtime service dependencies required by
+the managed `uv sync --frozen` path:
+
+- Pydantic
+- Requests
+- FastAPI
+- Uvicorn
+
+Development-only tools stay in the `dev` dependency group.
+
+The project may declare `readme = "README.md"` for PyPI metadata. The managed
+Appliku dependency sync remains safe because the project itself is not installed
+while `package = false`.
+
+## Policy
+
+`appliku.yml` remains on `build_image: python-3.13-uv` unless a full Dockerfile
+deployment cycle is intentionally tested. If `build_image: dockerfile` is
+selected, the Dockerfile, docs, and L99 Appliku tests must change together.
 
 ## Consequences
 
-- The managed Appliku build can install runtime dependencies without dev tools.
+- Appliku can install runtime dependencies without dev tools.
 - `PYTHONPATH=/code/src/py` remains the runtime import mechanism.
-- The custom Dockerfile can use `uv sync --frozen --no-dev` if it is selected in
-  `appliku.yml` later.
-- Consumers still install the `scm` package through Hatchling when using a path
-  or git dependency.
+- The inactive Dockerfile is a controlled fallback, not the active deployment
+  contract.

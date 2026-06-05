@@ -19,7 +19,7 @@ Features:
 Usage:
     >>> from scm.server.providers import create_supplier, SupplierType
     >>>
-    >>> # Create with credentials from .env
+    >>> # Create with configured credentials
     >>> digikey = create_supplier(SupplierType.DIGIKEY)
     >>>
     >>> # Or provide credentials explicitly
@@ -41,7 +41,6 @@ Usage:
 import logging
 import os
 import time
-from pathlib import Path
 
 import requests
 
@@ -79,10 +78,6 @@ class DigikeySupplier(SupplierInterface):
     DEFAULT_LOCALE_SITE = "US"
     DEFAULT_LOCALE_LANGUAGE = "en"
     DEFAULT_LOCALE_CURRENCY = "USD"
-    RATE_LIMIT_HEADERS = {
-        "X-RateLimit-Limit": "limit",
-        "X-RateLimit-Remaining": "remaining",
-    }
 
     def __init__(self, **credentials):
         """
@@ -124,7 +119,6 @@ class DigikeySupplier(SupplierInterface):
         # Rate limiting
         self._last_request_time = 0
         self._min_request_interval = 0.2  # Minimum 200ms between requests
-        self._last_rate_limit = {}
 
     @property
     def supplier_type(self) -> SupplierType:
@@ -224,7 +218,6 @@ class DigikeySupplier(SupplierInterface):
                     response = requests.post(url, headers=headers, json=json_data, timeout=15)
                 else:
                     response = requests.get(url, headers=headers, timeout=15)
-                self._capture_rate_limit(response.headers)
 
                 # Handle rate limiting (429)
                 if response.status_code == 429:
@@ -251,24 +244,6 @@ class DigikeySupplier(SupplierInterface):
                     wait_time *= 2
 
         return None
-
-    @property
-    def rate_limit_status(self) -> dict:
-        """Return the latest DigiKey rate-limit metadata seen by this client."""
-        return dict(self._last_rate_limit)
-
-    def _capture_rate_limit(self, headers) -> None:
-        rate_limit = {}
-        for header_name, field_name in self.RATE_LIMIT_HEADERS.items():
-            raw_value = headers.get(header_name)
-            if raw_value is None:
-                continue
-            try:
-                rate_limit[field_name] = int(str(raw_value).strip())
-            except ValueError:
-                log.info("Ignoring non-integer Digikey rate limit header %s=%r", header_name, raw_value)
-        if rate_limit:
-            self._last_rate_limit = rate_limit
 
     def search_by_mpn(self, manufacturer_part_number: str, **kwargs) -> list[SupplierPartInfo]:
         """
@@ -540,29 +515,9 @@ if __name__ == "__main__":
     # Test the Digikey supplier implementation
     log.info("=== Digikey Supplier Test ===\n")
 
-    # Load .env file if not already loaded
-    def load_env():
-        """Load .env file from project root"""
-        env_paths = [
-            Path.cwd() / ".env",
-            Path(__file__).parent.parent.parent.parent / ".env"
-        ]
-        for env_path in env_paths:
-            if env_path.exists():
-                log.info(f"Loading .env from: {env_path}\n")
-                with open(env_path) as f:
-                    for line in f:
-                        line = line.strip()
-                        if '=' in line and not line.startswith('#'):
-                            key, value = line.split('=', 1)
-                            os.environ[key.strip()] = value.strip().strip('"').strip("'")
-                return True
-        return False
-
     if not os.getenv('DIGIKEY_CLIENT_ID'):
-        if not load_env():
-            log.info("[ERROR] Could not find .env file!")
-            exit(1)
+        log.info("[ERROR] DIGIKEY_CLIENT_ID is not configured in the process environment.")
+        exit(1)
 
     try:
         digikey = DigikeySupplier()

@@ -13,3 +13,4 @@ ADRs for the `scm` service, client, and supplier/distributor package.
 - [ADR-009 Async Providers And SSE Streaming](ADR-009-async-providers-and-sse-streaming.md)
 - [ADR-010 JLC Local Index For MPN Search](ADR-010-jlc-local-index-for-mpn-search.md)
 - [ADR-011 Appliku Runtime Dependency Baseline](ADR-011-appliku-runtime-dependency-baseline.md)
+- [ADR-012 Date-Based PyPI Publishing](ADR-012-date-based-pypi-publishing.md)
