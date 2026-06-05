@@ -11,7 +11,7 @@ Architecture:
     - create_supplier(): Factory function for creating supplier instances
 
 Usage Example:
-    >>> from supply_chain_monkey import create_supplier, SupplierType
+    >>> from scm.server.providers import create_supplier, SupplierType
     >>>
     >>> # Create JLCPCB supplier instance
     >>> jlc = create_supplier(SupplierType.JLCPCB)
@@ -82,19 +82,19 @@ class SupplierPartInfo:
     # Core identification
     supplier: SupplierType
     supplier_part_number: str
-    manufacturer: str
-    manufacturer_part_number: str
+    manufacturer: str | None
+    manufacturer_part_number: str | None
 
     # Details
-    description: str = ""
-    datasheet_url: str = ""
-    product_url: str = ""
+    description: str | None = ""
+    datasheet_url: str | None = ""
+    product_url: str | None = ""
 
     # Availability & pricing
     stock_quantity: int = 0
     stock_status: str = "unknown"  # "in_stock", "out_of_stock", "unknown", "discontinued"
     price_breaks: list[dict[str, Any]] = field(default_factory=list)
-    lifecycle_status: str = ""
+    lifecycle_status: str | None = ""
 
     # Additional metadata (supplier-specific fields)
     extra_data: dict[str, Any] = field(default_factory=dict)
@@ -362,7 +362,7 @@ def create_supplier(supplier_type: SupplierType, **credentials) -> SupplierInter
         )
 
 
-def resolve_stock(raw_value, lifecycle_status: str = "") -> tuple[int, str]:
+def resolve_stock(raw_value, lifecycle_status: str | None = "") -> tuple[int, str]:
     """Convert a raw stock value into (stock_quantity, stock_status).
 
     Handles numeric, string, None, and edge cases like "--".

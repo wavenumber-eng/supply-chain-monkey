@@ -9,27 +9,27 @@ Usage:
 """
 
 import logging
+import os
 import threading
 import time
 
-from supply_chain_monkey import SupplierType, create_supplier, get_available_suppliers
-from supply_chain_monkey.env import load_env_file
+from scm.server.providers import SupplierType, create_supplier, get_available_suppliers
 
 log = logging.getLogger(__name__)
 
 # Test part
 TEST_MPN = "TPS543620RPYR"
 
-def search_supplier(supplier_type, mpn, results_dict, env_vars):
+def search_supplier(supplier_type, mpn, results_dict):
     """Search a single supplier (runs in thread)"""
     try:
         # Get credentials
         credentials = {}
         if supplier_type == SupplierType.DIGIKEY:
-            client_id = env_vars.get('DIGIKEY_CLIENT_ID')
-            client_secret = env_vars.get('DIGIKEY_CLIENT_SECRET')
+            client_id = os.environ.get("DIGIKEY_CLIENT_ID")
+            client_secret = os.environ.get("DIGIKEY_CLIENT_SECRET")
             if not client_id or not client_secret:
-                log.error(f"[{supplier_type.value}] Skipped - no credentials in .env")
+                log.error(f"[{supplier_type.value}] Skipped - missing Digikey credentials")
                 return
             credentials = {'client_id': client_id, 'client_secret': client_secret}
 
@@ -64,9 +64,6 @@ def main():
     print(f"Searching for MPN: {TEST_MPN}")
     print()
 
-    # Load environment
-    env_vars = load_env_file()
-
     # Get available suppliers
     suppliers = get_available_suppliers()
     print(f"Available suppliers: {[s.value for s in suppliers]}")
@@ -85,7 +82,7 @@ def main():
     for supplier_type in suppliers:
         thread = threading.Thread(
             target=search_supplier,
-            args=(supplier_type, TEST_MPN, results, env_vars),
+            args=(supplier_type, TEST_MPN, results),
             daemon=True
         )
         threads.append(thread)

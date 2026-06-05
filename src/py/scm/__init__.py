@@ -7,4 +7,4 @@ Shared contract, client library, and server for querying electronic component su
     from scm.client import SCMClient
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"

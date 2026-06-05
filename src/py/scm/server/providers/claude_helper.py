@@ -5,7 +5,7 @@ Uses Claude API to intelligently parse HTML and extract part data,
 which is more robust than regex patterns.
 
 Usage:
-    >>> from supply_chain_monkey.claude_scraper_helper import extract_part_info_with_claude
+    >>> from scm.server.providers.claude_helper import extract_part_info_with_claude
     >>> html = "<html>...</html>"
     >>> part_info = extract_part_info_with_claude(html, expected_mpn="STM32F407")
     >>> if part_info:
@@ -18,10 +18,6 @@ import os
 from typing import Any
 
 log = logging.getLogger(__name__)
-
-from .env import ensure_env_loaded
-
-ensure_env_loaded()
 
 
 def extract_part_info_with_claude(
@@ -126,7 +122,7 @@ HTML content:
                 )
 
                 # Parse response
-                response_text = message.content[0].text.strip()
+                response_text = str(getattr(message.content[0], "text", "")).strip()
 
                 # Try to parse the result
                 result, found_mpn = _parse_claude_response(response_text, expected_mpn, return_mpn_status=True)
@@ -157,7 +153,11 @@ HTML content:
         return None
 
 
-def _parse_claude_response(response_text: str, expected_mpn: str = "", return_mpn_status: bool = False):
+def _parse_claude_response(
+    response_text: str,
+    expected_mpn: str = "",
+    return_mpn_status: bool = False,
+) -> Any:
     """
     Parse Claude's response and validate the extracted data.
 
@@ -301,7 +301,7 @@ HTML content:
             ]
         )
 
-        response_text = message.content[0].text.strip()
+        response_text = str(getattr(message.content[0], "text", "")).strip()
 
         # Parse response
         import json

@@ -24,12 +24,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 
 from .models import (
-    PARAMETER_FIELD_NAMES,
-    SUPPLIER_LOOKUP,
     SUPPLIERS,
-    PartResponse,
     ServiceEnvelope,
-    SupplierType,
 )
 
 

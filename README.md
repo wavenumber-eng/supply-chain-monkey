@@ -5,17 +5,16 @@ unified HTTP API that centralizes vendor credentials and provider routing.
 
 ## Status
 
-v1.0.0 - standalone service and Python client.
+v1.0.1 - standalone service, Python client, and Appliku deployment signoff.
 
 ## Architecture
 
 The repo contains three layers:
 
 - `scm.models`: shared contract with Pydantic models, enums, and supplier
-  constants. Zero dependencies beyond pydantic.
-- `scm.client`: HTTP client library for consumers. Depends on requests.
-- `scm.server`: FastAPI server with provider adapters. Depends on fastapi,
-  uvicorn, and requests.
+  constants.
+- `scm.client`: HTTP client library for consumers.
+- `scm.server`: FastAPI server with provider adapters and the status page.
 
 ## Providers
 
@@ -63,30 +62,31 @@ print(SUPPLIERS)
 cp .env.template .env
 # fill in SCM_SERVICE_TOKEN and any provider credentials
 
-uv sync
+uv sync --group dev
 PYTHONPATH=src/py uv run uvicorn scm.server.main:app --reload --env-file .env
 ```
 
 ## Testing
 
 ```bash
-uv run pytest
+uv run pytest -q
+uv run rack run L99_signoff
 uv run python tests/scripts/scm_test_cli.py --token YOUR_TOKEN
 uv run python tests/scripts/scm_test_cli.py --url https://your-scm.example.com --token YOUR_TOKEN
 ```
 
 ## Deployment
 
-The included `appliku.yml` supports Appliku with the managed
-`python-3.13-uv` build image. If you use that deployment path, pushing to a
-deployment branch such as `production` can trigger deploy.
+The included `appliku.yml` uses Appliku's managed `python-3.13-uv` build image.
+Pushing `production` can trigger deployment.
 
 ```bash
 git checkout production && git merge main && git push && git checkout main
 ```
 
-`pyproject.toml` must keep `[tool.uv] package = false`. See `CLAUDE.md` for
-deployment constraints.
+`pyproject.toml` must keep `[tool.uv] package = false` and
+`default-groups = []`. The Dockerfile is inactive unless `appliku.yml` changes
+to `build_image: dockerfile`. See `CLAUDE.md` for deployment constraints.
 
 ## Consumer Integration
 

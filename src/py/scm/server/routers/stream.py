@@ -1,7 +1,6 @@
 """SSE streaming search endpoint — results pushed per provider as they complete."""
 
 import asyncio
-import json
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor

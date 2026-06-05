@@ -1,0 +1,42 @@
+[rack]
+name = "supply-chain-monkey Public Tests"
+version = "1.0"
+description = "Rack suite for the Supply Chain Monkey service and client package"
+default_lane = "fast"
+
+[strata]
+order = [
+    "L0_foundation",
+    "L99_signoff",
+]
+default_enabled = [
+    "L0_foundation",
+    "L99_signoff",
+]
+
+[concerns.contracts]
+description = "Public Python and HTTP contracts"
+
+[concerns.deployment]
+description = "Appliku service deployment contract"
+
+[concerns.release]
+description = "Release metadata and package validation"
+
+[concerns.signoff]
+description = "Final quality gates"
+
+[lanes.fast]
+description = "Default fast local development checks"
+
+[lanes.strict]
+description = "Release signoff lane"
+
+[dependencies]
+python_packages = [
+    "pytest",
+    "pytest-json-report",
+    "pyright",
+    "ruff",
+    "wn-rack",
+]

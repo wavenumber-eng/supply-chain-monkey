@@ -1,0 +1,30 @@
+name = "Foundation"
+order = 0
+description = "Fast public contract and provider interface checks"
+enabled = true
+concerns = ["contracts"]
+
+objectives = [
+    "The package exposes its expected public version",
+    "Shared contracts and client imports remain stable",
+    "Provider interface fixtures remain valid",
+]
+
+[dependencies]
+strata = []
+
+[[subtests]]
+id = "L0_001"
+file = "test_L0_001_import_surface.py"
+name = "Import Surface"
+description = "Validate package version, public models, and client import surface"
+concerns = ["contracts"]
+test_case_type = "contract"
+
+[[subtests]]
+id = "L0_002"
+file = "test_supplier_interface.py"
+name = "Supplier Interface"
+description = "Validate supplier provider contracts; live supplier tests are opt-in"
+concerns = ["contracts"]
+test_case_type = "contract"
