@@ -513,7 +513,6 @@ def test_digikey_search_by_mpn():
     not has_credentials_for_supplier(SupplierType.DIGIKEY),
     reason="Digikey credentials not available (set DIGIKEY_CLIENT_ID and DIGIKEY_CLIENT_SECRET)"
 )
-@pytest.mark.xfail(reason="Digikey get_part_details not populating supplier_part_number - API integration issue")
 def test_digikey_get_part_details():
     """Test Digikey get_part_details for a specific Digikey part number."""
     supplier = create_supplier(SupplierType.DIGIKEY)

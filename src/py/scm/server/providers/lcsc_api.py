@@ -14,7 +14,7 @@ import requests
 log = logging.getLogger(__name__)
 
 LCSC_API_BASE = "https://wmsc.lcsc.com"
-LCSC_SEARCH_PATH = "/ftps/wm/search/v2/global"
+LCSC_SEARCH_PATH = "/ftps/wm/search/v3/global"
 LCSC_DETAIL_PATH = "/ftps/wm/product/detail"
 
 _HEADERS = {
@@ -65,7 +65,11 @@ def search_lcsc(keyword: str, page: int = 1, page_size: int = 25) -> list[LCSCPr
 
     result = data.get("result") or {}
     search_vo = result.get("productSearchResultVO") or {}
-    product_list = search_vo.get("productList") or []
+    product_list = list(search_vo.get("productList") or [])
+    if not product_list:
+        product_list = list(result.get("exactMatchResult") or [])
+    if not product_list and isinstance(result.get("tipProductDetailUrlVO"), dict):
+        product_list = [result["tipProductDetailUrlVO"]]
 
     products = []
     for item in product_list:
@@ -121,6 +125,10 @@ def _parse_product(item: dict) -> LCSCProduct:
     cycle = item.get("productCycle") or ""
     lifecycle = "Active" if cycle == "normal" else cycle
 
+    product_url = item.get("url") or (
+        f"https://www.lcsc.com/product-detail/{product_code}.html" if product_code else ""
+    )
+
     return LCSCProduct(
         product_code=product_code,
         product_model=item.get("productModel") or "",
@@ -132,5 +140,5 @@ def _parse_product(item: dict) -> LCSCProduct:
         lifecycle=lifecycle,
         package=item.get("encapStandard") or "",
         packaging=item.get("productArrange") or "",
-        product_url=f"https://www.lcsc.com/product-detail/{product_code}.html" if product_code else "",
+        product_url=product_url,
     )

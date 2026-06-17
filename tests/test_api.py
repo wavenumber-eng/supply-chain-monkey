@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from scm.server.main import app
 from scm.server.providers.base import SupplierPartInfo
-from scm.models import SupplierType
+from scm.models import SupplierCapabilities, SupplierType
 
 
 @pytest.fixture
@@ -68,6 +68,7 @@ class TestProviderStatus:
         assert "LCSC" in providers
         assert "Digikey" in providers
         assert "Mouser" in providers
+        assert providers["JLCPCB"]["capabilities"]["supports_spn_lookup"] is True
 
 
 # ---------------------------------------------------------------------------
@@ -325,4 +326,69 @@ class TestDetail:
 
     def test_detail_missing_params(self, client):
         r = client.get("/v1/detail", headers=_auth_header())
+        assert r.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# SPN
+# ---------------------------------------------------------------------------
+
+class TestSpn:
+    @patch("scm.server.routers.spn.create_supplier")
+    def test_spn_returns_envelope(self, mock_create, client):
+        mock_supplier = MagicMock()
+        mock_supplier.capabilities = SupplierCapabilities(supplier="JLCPCB")
+        mock_supplier.get_rate_limit_snapshot.return_value = None
+        mock_supplier.get_part_details.return_value = _mock_part()
+        mock_create.return_value = mock_supplier
+
+        r = client.get("/v1/spn", params={"supplier": "jlcpcb", "spn": "C12345"}, headers=_auth_header())
+        body = r.json()
+
+        assert body["status"] == "ok"
+        assert body["supplier"] == "JLCPCB"
+        assert body["data"]["supplier_part_number"] == "C12345"
+        assert body["data"]["source_provider"] == ""
+        assert body["provider_capabilities"]["supports_spn_lookup"] is True
+
+    @patch("scm.server.routers.spn.create_supplier")
+    def test_spn_batch_returns_item_statuses(self, mock_create, client):
+        mock_supplier = MagicMock()
+        mock_supplier.capabilities = SupplierCapabilities(
+            supplier="JLCPCB",
+            supports_native_spn_batch=True,
+            max_spn_batch_size=1000,
+        )
+        mock_supplier.get_rate_limit_snapshot.return_value = None
+        mock_supplier.get_part_details_batch.return_value = {
+            "C12345": _mock_part(),
+            "C404": None,
+        }
+        mock_create.return_value = mock_supplier
+
+        r = client.post(
+            "/v1/spn/batch",
+            json={"supplier": "jlcpcb", "spns": ["C12345", "C404"]},
+            headers=_auth_header(),
+        )
+        body = r.json()
+
+        assert body["status"] == "partial"
+        assert body["provider_capabilities"]["max_spn_batch_size"] == 1000
+        assert body["data"][0]["spn"] == "C12345"
+        assert body["data"][0]["status"] == "ok"
+        assert body["data"][0]["part"]["supplier_part_number"] == "C12345"
+        assert body["data"][1] == {
+            "spn": "C404",
+            "status": "not_found",
+            "part": None,
+            "error": None,
+        }
+
+    def test_spn_unknown_supplier(self, client):
+        r = client.get("/v1/spn", params={"supplier": "nope", "spn": "X"}, headers=_auth_header())
+        assert r.json()["status"] == "provider_error"
+
+    def test_spn_batch_missing_body(self, client):
+        r = client.post("/v1/spn/batch", headers=_auth_header())
         assert r.status_code == 422

@@ -11,7 +11,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 from scm.client import SCMClient
-from scm.models import SUPPLIERS, ServiceEnvelope, SupplierType
+from scm.models import (
+    SUPPLIERS,
+    RateLimitSnapshot,
+    ServiceEnvelope,
+    SupplierCapabilities,
+    SupplierType,
+)
 from scm.server.main import app
 from scm.server.providers.base import SupplierPartInfo
 
@@ -44,7 +50,17 @@ def scm_client():
             response = tc.get(path, params=params, headers=headers)
             return response
 
-        with patch("scm.client.requests.get", side_effect=mock_get):
+        def mock_post(url, **kwargs):
+            path = url
+            json_body = kwargs.get("json")
+            headers = kwargs.get("headers")
+            response = tc.post(path, json=json_body, headers=headers)
+            return response
+
+        with (
+            patch("scm.client.requests.get", side_effect=mock_get),
+            patch("scm.client.requests.post", side_effect=mock_post),
+        ):
             yield SCMClient(url="", token="test-token")
 
 
@@ -66,6 +82,15 @@ class TestClientHealth:
     def test_health(self, scm_client):
         result = scm_client.health()
         assert result["status"] == "ok"
+
+
+class TestClientProviderStatus:
+    def test_providers_status_returns_capabilities(self, scm_client):
+        result = scm_client.providers_status()
+
+        assert "providers" in result
+        assert "JLCPCB" in result["providers"]
+        assert result["providers"]["JLCPCB"]["capabilities"]["supports_spn_lookup"] is True
 
 
 class TestClientSearch:
@@ -135,6 +160,53 @@ class TestClientDetail:
         assert isinstance(result, ServiceEnvelope)
         assert result.status == "ok"
         assert result.data["supplier_part_number"] == "C2870085"
+
+
+class TestClientSpn:
+    @patch("scm.server.routers.spn.create_supplier")
+    def test_spn_returns_envelope(self, mock_create, scm_client):
+        mock_supplier = MagicMock()
+        mock_supplier.capabilities = SupplierCapabilities(supplier="JLCPCB")
+        mock_supplier.get_rate_limit_snapshot.return_value = RateLimitSnapshot(
+            request_limit=1000,
+            requests_remaining=999,
+        )
+        mock_supplier.get_part_details.return_value = _mock_part()
+        mock_create.return_value = mock_supplier
+
+        result = scm_client.spn("jlcpcb", "C2870085")
+
+        assert isinstance(result, ServiceEnvelope)
+        assert result.status == "ok"
+        assert result.data["supplier_part_number"] == "C2870085"
+        assert result.provider_capabilities is not None
+        assert result.provider_capabilities.supports_spn_lookup is True
+        assert result.rate_limit is not None
+        assert result.rate_limit.requests_remaining == 999
+
+    @patch("scm.server.routers.spn.create_supplier")
+    def test_spn_batch_returns_envelope(self, mock_create, scm_client):
+        mock_supplier = MagicMock()
+        mock_supplier.capabilities = SupplierCapabilities(
+            supplier="JLCPCB",
+            supports_native_spn_batch=True,
+            max_spn_batch_size=1000,
+        )
+        mock_supplier.get_rate_limit_snapshot.return_value = None
+        mock_supplier.get_part_details_batch.return_value = {
+            "C2870085": _mock_part(),
+            "C404": None,
+        }
+        mock_create.return_value = mock_supplier
+
+        result = scm_client.spn_batch("jlcpcb", ["C2870085", "C404"])
+
+        assert isinstance(result, ServiceEnvelope)
+        assert result.status == "partial"
+        assert result.provider_capabilities is not None
+        assert result.provider_capabilities.max_spn_batch_size == 1000
+        assert result.data[0]["status"] == "ok"
+        assert result.data[1]["status"] == "not_found"
 
 
 class TestClientEnumeration:

@@ -71,6 +71,7 @@ class LCSCSupplier(SupplierInterface):
         stock_qty, stock_status = resolve_stock(product.stock, product.lifecycle)
         return SupplierPartInfo(
             supplier=SupplierType.LCSC,
+            source_provider="lcsc",
             supplier_part_number=product.product_code,
             manufacturer=product.brand,
             manufacturer_part_number=product.product_model,

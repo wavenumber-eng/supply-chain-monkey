@@ -33,9 +33,10 @@ Usage Example:
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any
+from datetime import datetime, timezone
+from typing import Any, Mapping
 
-from scm.models import SupplierType
+from scm.models import RateLimitSnapshot, SupplierCapabilities, SupplierType
 
 log = logging.getLogger(__name__)
 
@@ -84,6 +85,7 @@ class SupplierPartInfo:
     supplier_part_number: str
     manufacturer: str | None
     manufacturer_part_number: str | None
+    source_provider: str = ""
 
     # Details
     description: str | None = ""
@@ -108,6 +110,7 @@ class SupplierPartInfo:
         """
         return {
             'supplier': self.supplier.value,
+            'source_provider': self.source_provider,
             'supplier_part_number': self.supplier_part_number,
             'manufacturer': self.manufacturer,
             'manufacturer_part_number': self.manufacturer_part_number,
@@ -173,6 +176,12 @@ class SupplierInterface(ABC):
                     - username="...", password="..."  (Basic auth)
         """
         self.credentials = credentials
+        self._rate_limit_snapshot: RateLimitSnapshot | None = None
+
+    @property
+    def capabilities(self) -> SupplierCapabilities:
+        """Return provider capabilities for planning batch and quota behavior."""
+        return get_default_supplier_capabilities(self.supplier_type)
 
     @property
     @abstractmethod
@@ -308,6 +317,148 @@ class SupplierInterface(ABC):
             return True
         except Exception:
             return False
+
+    def get_part_details_batch(
+        self, supplier_part_numbers: list[str], **kwargs
+    ) -> dict[str, SupplierPartInfo | None]:
+        """Get details for multiple exact supplier part numbers.
+
+        Providers with a native batch API should override this method. The
+        default implementation preserves compatibility by looping single lookups.
+        """
+        results: dict[str, SupplierPartInfo | None] = {}
+        for supplier_part_number in supplier_part_numbers:
+            cleaned = supplier_part_number.strip()
+            if cleaned:
+                results[cleaned] = self.get_part_details(cleaned, **kwargs)
+        return results
+
+    def get_rate_limit_snapshot(self) -> RateLimitSnapshot | None:
+        """Return the latest observed provider quota state, if known."""
+        return self._rate_limit_snapshot
+
+
+def _header_value(headers: Mapping[str, str], *names: str) -> str | None:
+    normalized = {key.lower(): value for key, value in headers.items()}
+    for name in names:
+        value = normalized.get(name.lower())
+        if value not in (None, ""):
+            return value
+    return None
+
+
+def _parse_int_header(headers: Mapping[str, str], *names: str) -> int | None:
+    value = _header_value(headers, *names)
+    if value is None:
+        return None
+    try:
+        return int(float(value))
+    except ValueError:
+        return None
+
+
+def rate_limit_snapshot_from_headers(
+    headers: Mapping[str, str],
+) -> RateLimitSnapshot | None:
+    """Parse common provider quota headers into a normalized snapshot."""
+    request_limit = _parse_int_header(headers, "X-RateLimit-Limit", "RateLimit-Limit")
+    requests_remaining = _parse_int_header(
+        headers,
+        "X-RateLimit-Remaining",
+        "RateLimit-Remaining",
+    )
+    burst_limit = _parse_int_header(headers, "X-BurstLimit-Limit")
+    burst_remaining = _parse_int_header(headers, "X-BurstLimit-Remaining")
+    reset_seconds = _parse_int_header(
+        headers,
+        "X-RateLimit-Reset",
+        "X-BurstLimit-Reset",
+        "RateLimit-Reset",
+    )
+    retry_after_seconds = _parse_int_header(headers, "Retry-After")
+    reset_time = _header_value(
+        headers,
+        "X-RateLimit-ResetTime",
+        "X-BurstLimit-ResetTime",
+    )
+
+    if not any(
+        value is not None
+        for value in (
+            request_limit,
+            requests_remaining,
+            burst_limit,
+            burst_remaining,
+            reset_seconds,
+            retry_after_seconds,
+            reset_time,
+        )
+    ):
+        return None
+
+    return RateLimitSnapshot(
+        request_limit=request_limit,
+        requests_remaining=requests_remaining,
+        burst_limit=burst_limit,
+        burst_remaining=burst_remaining,
+        reset_seconds=reset_seconds,
+        reset_time=reset_time,
+        retry_after_seconds=retry_after_seconds,
+        observed_at=datetime.now(timezone.utc).isoformat(),
+    )
+
+
+def get_default_supplier_capabilities(
+    supplier_type: SupplierType,
+) -> SupplierCapabilities:
+    """Return static capabilities without requiring provider credentials."""
+    if supplier_type == SupplierType.JLCPCB:
+        return SupplierCapabilities(
+            supplier=supplier_type.value,
+            supports_mpn_search=True,
+            supports_spn_lookup=True,
+            supports_native_spn_batch=False,
+            max_spn_batch_size=1,
+            usage_unit="requests",
+            notes=[
+                "MPN search is scraper-backed.",
+                "Native SPN batch is available when JLC OpenAPI credentials are configured.",
+            ],
+        )
+    if supplier_type == SupplierType.LCSC:
+        return SupplierCapabilities(
+            supplier=supplier_type.value,
+            supports_mpn_search=True,
+            supports_spn_lookup=True,
+            supports_native_spn_batch=False,
+            max_spn_batch_size=1,
+            usage_unit="requests",
+            notes=["Current adapter uses LCSC JSON endpoints."],
+        )
+    if supplier_type == SupplierType.DIGIKEY:
+        return SupplierCapabilities(
+            supplier=supplier_type.value,
+            supports_mpn_search=True,
+            supports_spn_lookup=True,
+            supports_native_spn_batch=False,
+            max_spn_batch_size=1,
+            min_request_interval_seconds=0.2,
+            rate_limit_per_minute=120,
+            rate_limit_per_day=1000,
+            usage_unit="requests",
+            supports_quota_headers=True,
+        )
+    if supplier_type == SupplierType.MOUSER:
+        return SupplierCapabilities(
+            supplier=supplier_type.value,
+            supports_mpn_search=True,
+            supports_spn_lookup=True,
+            supports_native_spn_batch=True,
+            max_spn_batch_size=10,
+            usage_unit="requests",
+            notes=["Native exact SPN batch uses pipe-separated part numbers."],
+        )
+    return SupplierCapabilities(supplier=supplier_type.value)
 
 
 def create_supplier(supplier_type: SupplierType, **credentials) -> SupplierInterface:

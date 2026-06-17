@@ -13,6 +13,7 @@ def part_response_from_info(
     """Convert an internal SupplierPartInfo to the API contract PartResponse."""
     data = {
         "supplier": part.supplier.value,
+        "source_provider": part.source_provider or "",
         "supplier_part_number": part.supplier_part_number or "",
         "manufacturer": part.manufacturer or "",
         "manufacturer_part_number": part.manufacturer_part_number or "",
