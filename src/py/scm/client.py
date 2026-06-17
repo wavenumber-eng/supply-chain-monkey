@@ -15,6 +15,9 @@ Usage:
     # Get detail for a specific part
     detail = client.detail("jlcpcb", "C2870085")
 
+    # Canonical exact supplier part number lookup
+    result = client.spn("jlcpcb", "C2870085")
+
     # Enumerate suppliers
     from scm.models import SUPPLIERS, SupplierType, PARAMETER_FIELD_NAMES
 """
@@ -136,6 +139,51 @@ class SCMClient:
         r = requests.get(
             f"{self.url}/v1/detail",
             params=params,
+            headers=self._headers(),
+            timeout=self.timeout,
+        )
+        r.raise_for_status()
+        return ServiceEnvelope(**r.json())
+
+    def spn(
+        self, supplier: str, spn: str, *, include_raw: bool = False
+    ) -> ServiceEnvelope:
+        """Get detail for an exact supplier part number.
+
+        Args:
+            supplier: Supplier name (jlcpcb, lcsc, digikey, mouser)
+            spn: Exact supplier part number
+            include_raw: Include extra_data in response
+
+        Returns:
+            ServiceEnvelope with part detail
+        """
+        params = {"supplier": supplier, "spn": spn}
+        if include_raw:
+            params["include_raw"] = "true"
+
+        r = requests.get(
+            f"{self.url}/v1/spn",
+            params=params,
+            headers=self._headers(),
+            timeout=self.timeout,
+        )
+        r.raise_for_status()
+        return ServiceEnvelope(**r.json())
+
+    def spn_batch(
+        self, supplier: str, spns: list[str], *, include_raw: bool = False
+    ) -> ServiceEnvelope:
+        """Get detail for multiple exact supplier part numbers."""
+        payload = {
+            "supplier": supplier,
+            "spns": spns,
+            "include_raw": include_raw,
+        }
+
+        r = requests.post(
+            f"{self.url}/v1/spn/batch",
+            json=payload,
             headers=self._headers(),
             timeout=self.timeout,
         )

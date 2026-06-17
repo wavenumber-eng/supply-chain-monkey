@@ -1,9 +1,9 @@
 [project]
 name = "supply-chain-monkey"
-version = "2026.6.5"
+version = "2026.6.16"
 description = "Supply Chain Monkey contract, client, and server"
 readme = "README.md"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.12,<3.14"
 dependencies = [
     "pydantic>=2.0",
     "requests>=2.32.0",
@@ -52,6 +52,9 @@ sources = ["src/py"]
 packages = ["src/py/scm"]
 
 [tool.uv]
+# Copy instead of hardlink: venv may live on a different volume than the uv
+# cache, where hardlinking fails (os error 396).
+link-mode = "copy"
 package = false
 default-groups = []
 

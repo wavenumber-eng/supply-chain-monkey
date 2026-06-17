@@ -40,6 +40,7 @@ class PartResponse(BaseModel):
     """Serialized part data in API responses."""
 
     supplier: str
+    source_provider: str = ""
     supplier_part_number: str
     manufacturer: str
     manufacturer_part_number: str
@@ -54,13 +55,65 @@ class PartResponse(BaseModel):
     extra_data: dict[str, Any] | None = None
 
 
+class RateLimitSnapshot(BaseModel):
+    """Latest observed provider rate/quota state."""
+
+    request_limit: int | None = None
+    requests_remaining: int | None = None
+    burst_limit: int | None = None
+    burst_remaining: int | None = None
+    reset_seconds: int | None = None
+    reset_time: str | None = None
+    retry_after_seconds: int | None = None
+    observed_at: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
+
+
+class SupplierCapabilities(BaseModel):
+    """Static provider capabilities exposed to clients and GUI tools."""
+
+    supplier: str
+    provider_kind: str = "direct_supplier"
+    supports_mpn_search: bool = True
+    supports_keyword_search: bool = False
+    supports_spn_lookup: bool = True
+    supports_native_spn_batch: bool = False
+    max_spn_batch_size: int = 1
+    min_request_interval_seconds: float = 0.0
+    rate_limit_per_minute: int | None = None
+    rate_limit_per_day: int | None = None
+    usage_unit: str = "requests"
+    supports_quota_headers: bool = False
+    notes: list[str] = Field(default_factory=list)
+
+
+class SpnBatchRequest(BaseModel):
+    """Request body for exact supplier part number batch lookups."""
+
+    supplier: str
+    spns: list[str] = Field(..., min_length=1, max_length=1000)
+    include_raw: bool = False
+
+
+class SpnBatchItem(BaseModel):
+    """One exact supplier part number lookup result."""
+
+    spn: str
+    status: str
+    part: PartResponse | None = None
+    error: str | None = None
+
+
 class ServiceEnvelope(BaseModel):
     """Standard response wrapper for all API endpoints."""
 
-    status: str  # "ok", "not_found", "provider_error"
+    status: str  # "ok", "partial", "not_found", "provider_error"
     supplier: str
     parameter_field_name: str = ""
     provider_latency_ms: int = 0
+    provider_capabilities: SupplierCapabilities | None = None
+    rate_limit: RateLimitSnapshot | None = None
     service_timestamp: str = Field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )

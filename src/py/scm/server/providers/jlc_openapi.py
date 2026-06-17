@@ -16,6 +16,7 @@ import requests
 log = logging.getLogger(__name__)
 
 JLCPCB_OPENAPI_ENDPOINT = "https://open.jlcpcb.com"
+JLC_COMPONENT_DETAIL_BATCH_LIMIT = 1000
 
 
 class JLCOpenAPIError(RuntimeError):
@@ -118,6 +119,37 @@ class JLCOpenAPIClient:
             return data
         raise JLCOpenAPIRequestError("JLC private component library response was not a list.")
 
+    def get_component_library_list(
+        self, *, page_size: int = 1000, last_key: str = ""
+    ) -> dict[str, Any]:
+        """Return one page from the JLC component library feed."""
+        payload: dict[str, Any] = {"pageSize": page_size}
+        if last_key:
+            payload["lastKey"] = last_key
+
+        response = self._post(
+            "/overseas/openapi/component/getComponentLibraryList",
+            payload,
+        )
+        data = response.get("data")
+        if isinstance(data, dict):
+            items = (
+                data.get("componentLibraryInfoVOS")
+                or data.get("componentLibraryInfos")
+                or data.get("list")
+                or []
+            )
+            if not isinstance(items, list):
+                items = []
+            return {
+                "items": items,
+                "last_key": str(data.get("lastKey") or ""),
+                "raw": data,
+            }
+        if isinstance(data, list):
+            return {"items": data, "last_key": "", "raw": data}
+        raise JLCOpenAPIRequestError("JLC component library response was not recognized.")
+
     def get_component_detail_by_code(self, component_code: str) -> dict[str, Any] | None:
         details = self.get_component_detail_by_codes([component_code])
         return details[0] if details else None
@@ -126,6 +158,11 @@ class JLCOpenAPIClient:
         cleaned_codes = [code.strip() for code in component_codes if code and code.strip()]
         if not cleaned_codes:
             raise ValueError("component_codes must contain at least one non-empty code.")
+        if len(cleaned_codes) > JLC_COMPONENT_DETAIL_BATCH_LIMIT:
+            raise ValueError(
+                "component_codes must contain no more than "
+                f"{JLC_COMPONENT_DETAIL_BATCH_LIMIT} codes."
+            )
 
         response = self._post(
             "/overseas/openapi/component/getComponentDetailByCode",
@@ -135,7 +172,16 @@ class JLCOpenAPIClient:
         data = response.get("data")
         if isinstance(data, list):
             return data
-        raise JLCOpenAPIRequestError("JLC component detail response was not a list.")
+        if isinstance(data, dict):
+            detail_list = (
+                data.get("componentDetailResponseVOList")
+                or data.get("componentDetailList")
+                or data.get("list")
+                or []
+            )
+            if isinstance(detail_list, list):
+                return detail_list
+        raise JLCOpenAPIRequestError("JLC component detail response was not recognized.")
 
     def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         self._require_configured()
