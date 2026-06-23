@@ -4,14 +4,18 @@ from scm.models import (
     SUPPLIERS,
     SUPPLIER_LOOKUP,
     PartResponse,
+    RateLimitSnapshot,
     ServiceEnvelope,
+    SpnBatchItem,
+    SpnBatchRequest,
+    SupplierCapabilities,
     SupplierType,
 )
 from scm.client import SCMClient
 
 
 def test_version():
-    assert __version__ == "2026.6.5"
+    assert __version__ == "2026.6.16"
 
 
 def test_supplier_enum():
@@ -43,7 +47,11 @@ def test_parameter_field_names():
 
 def test_contract_models_importable():
     assert PartResponse is not None
+    assert RateLimitSnapshot is not None
     assert ServiceEnvelope is not None
+    assert SpnBatchItem is not None
+    assert SpnBatchRequest is not None
+    assert SupplierCapabilities is not None
 
 
 def test_client_importable():

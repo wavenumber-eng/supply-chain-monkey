@@ -44,7 +44,15 @@ import time
 
 import requests
 
-from .base import SupplierInterface, SupplierPartInfo, SupplierType, resolve_stock
+from scm.models import SupplierCapabilities
+
+from .base import (
+    SupplierInterface,
+    SupplierPartInfo,
+    SupplierType,
+    rate_limit_snapshot_from_headers,
+    resolve_stock,
+)
 
 log = logging.getLogger(__name__)
 
@@ -135,6 +143,21 @@ class DigikeySupplier(SupplierInterface):
         """
         return "Digikey Part #"
 
+    @property
+    def capabilities(self) -> SupplierCapabilities:
+        return SupplierCapabilities(
+            supplier=self.supplier_type.value,
+            supports_mpn_search=True,
+            supports_spn_lookup=True,
+            supports_native_spn_batch=False,
+            max_spn_batch_size=1,
+            min_request_interval_seconds=self._min_request_interval,
+            rate_limit_per_minute=120,
+            rate_limit_per_day=1000,
+            usage_unit="requests",
+            supports_quota_headers=True,
+        )
+
     def _get_access_token(self) -> str:
         """
         Get a valid OAuth2 access token.
@@ -218,6 +241,10 @@ class DigikeySupplier(SupplierInterface):
                     response = requests.post(url, headers=headers, json=json_data, timeout=15)
                 else:
                     response = requests.get(url, headers=headers, timeout=15)
+
+                snapshot = rate_limit_snapshot_from_headers(response.headers)
+                if snapshot:
+                    self._rate_limit_snapshot = snapshot
 
                 # Handle rate limiting (429)
                 if response.status_code == 429:
@@ -332,7 +359,14 @@ class DigikeySupplier(SupplierInterface):
 
             # Parse product
             expected_mpn = kwargs.get('expected_mpn', '')
-            return self._parse_product(data, expected_mpn)
+            product = data.get('Product') if isinstance(data, dict) else None
+            if not product:
+                product = data
+
+            parsed = self._parse_product(product, expected_mpn)
+            if parsed and not parsed.supplier_part_number:
+                parsed.supplier_part_number = supplier_part_number
+            return parsed
 
         except Exception as e:
             log.info(f"Error getting Digikey details for {supplier_part_number}: {str(e)}")
@@ -403,11 +437,12 @@ class DigikeySupplier(SupplierInterface):
                 ""
             )
 
+            variations = product.get('ProductVariations', [])
+            selected_variation = variations[0] if variations else None
+
             # If not found at top level, check ProductVariations
-            if not digikey_pn:
-                variations = product.get('ProductVariations', [])
-                if variations and len(variations) > 0:
-                    digikey_pn = variations[0].get('DigiKeyProductNumber', '')
+            if not digikey_pn and selected_variation:
+                digikey_pn = selected_variation.get('DigiKeyProductNumber', '')
 
             # Extract description
             description_obj = product.get('Description', {})
@@ -453,11 +488,14 @@ class DigikeySupplier(SupplierInterface):
 
             # Extract packaging type
             package_type = product.get('PackageType', {})
+            if not package_type and selected_variation:
+                package_type = selected_variation.get('PackageType', {})
             packaging = package_type.get('Name', '') if isinstance(package_type, dict) else ''
 
             # Build SupplierPartInfo
             return SupplierPartInfo(
                 supplier=SupplierType.DIGIKEY,
+                source_provider="digikey",
                 supplier_part_number=digikey_pn,
                 manufacturer=manufacturer,
                 manufacturer_part_number=mpn,

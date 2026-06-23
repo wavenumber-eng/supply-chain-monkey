@@ -40,6 +40,8 @@ from typing import Any
 
 import requests
 
+from scm.models import SupplierCapabilities
+
 from .base import SupplierInterface, SupplierPartInfo, SupplierType, resolve_stock
 
 log = logging.getLogger(__name__)
@@ -99,6 +101,18 @@ class MouserSupplier(SupplierInterface):
         """
         return "Mouser Part #"
 
+    @property
+    def capabilities(self) -> SupplierCapabilities:
+        return SupplierCapabilities(
+            supplier=self.supplier_type.value,
+            supports_mpn_search=True,
+            supports_spn_lookup=True,
+            supports_native_spn_batch=True,
+            max_spn_batch_size=10,
+            usage_unit="requests",
+            notes=["Native exact SPN batch uses pipe-separated part numbers."],
+        )
+
     def search_by_mpn(self, manufacturer_part_number: str, **kwargs) -> list[SupplierPartInfo]:
         """
         Search Mouser for parts matching a manufacturer part number.
@@ -134,7 +148,7 @@ class MouserSupplier(SupplierInterface):
             request_body = {
                 "SearchByPartRequest": {
                     "mouserPartNumber": manufacturer_part_number,
-                    "partSearchOptions": "None"  # Can be "None" or "Exact"
+                    "partSearchOptions": kwargs.get("part_search_options", "None")
                 }
             }
 
@@ -202,14 +216,72 @@ class MouserSupplier(SupplierInterface):
         """
         # Mouser's API searches by part number, so we use search_by_mpn
         # and filter for exact match
-        results = self.search_by_mpn(supplier_part_number)
+        return self.get_part_details_batch([supplier_part_number]).get(supplier_part_number)
 
-        # Find exact match
-        for part in results:
-            if part.supplier_part_number == supplier_part_number:
-                return part
+    def get_part_details_batch(
+        self, supplier_part_numbers: list[str], **kwargs
+    ) -> dict[str, SupplierPartInfo | None]:
+        """Get exact Mouser part details for up to 10 SPNs per API request."""
+        cleaned_numbers = [
+            number.strip() for number in supplier_part_numbers if number and number.strip()
+        ]
+        results: dict[str, SupplierPartInfo | None] = {
+            number: None for number in cleaned_numbers
+        }
+        if not cleaned_numbers:
+            return results
+        if not self.api_key:
+            log.error("[Mouser] Cannot get part details: API key not configured")
+            return results
 
-        return None
+        for start in range(0, len(cleaned_numbers), 10):
+            chunk = cleaned_numbers[start:start + 10]
+            try:
+                url = f"{self.BASE_URL}/search/partnumber"
+                request_body = {
+                    "SearchByPartRequest": {
+                        "mouserPartNumber": "|".join(chunk),
+                        "partSearchOptions": "Exact",
+                    }
+                }
+                params = {"apiKey": self.api_key}
+                headers = {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                }
+
+                response = requests.post(
+                    url,
+                    json=request_body,
+                    params=params,
+                    headers=headers,
+                    timeout=10,
+                )
+                response.raise_for_status()
+                data = response.json()
+
+                errors = data.get("Errors")
+                if errors:
+                    for error in errors:
+                        log.error(
+                            "[Mouser] API Error: %s",
+                            error.get("Message", "Unknown error"),
+                        )
+                    continue
+
+                search_results = data.get("SearchResults", {})
+                parts = search_results.get("Parts", [])
+                for mouser_part in parts:
+                    part_info = self._convert_mouser_part(mouser_part)
+                    if part_info and part_info.supplier_part_number:
+                        results[part_info.supplier_part_number] = part_info
+
+            except requests.exceptions.RequestException as e:
+                log.error(f"[Mouser] Request error: {str(e)}")
+            except Exception as e:
+                log.error(f"[Mouser] Error getting batch details: {str(e)}")
+
+        return results
 
     def validate_credentials(self) -> bool:
         """
@@ -266,6 +338,7 @@ class MouserSupplier(SupplierInterface):
 
             return SupplierPartInfo(
                 supplier=SupplierType.MOUSER,
+                source_provider="mouser",
                 supplier_part_number=mouser_pn,
                 manufacturer=manufacturer,
                 manufacturer_part_number=mfr_pn,
