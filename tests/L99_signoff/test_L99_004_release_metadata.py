@@ -20,9 +20,10 @@ def test_package_identity_uses_public_distribution_and_scm_import() -> None:
     pyproject = load_pyproject()
 
     assert pyproject["project"]["name"] == "supply-chain-monkey"
-    assert pyproject["tool"]["hatch"]["build"]["targets"]["wheel"]["packages"] == [
-        "src/py/scm"
-    ]
+    targets = pyproject["tool"]["hatch"]["build"]["targets"]
+    assert targets["wheel"]["packages"] == ["src/py/scm"]
+    assert targets["wheel"]["core-metadata-version"] == "2.4"
+    assert targets["sdist"]["core-metadata-version"] == "2.4"
 
 
 def test_version_is_date_based_and_matches_import_version() -> None:
