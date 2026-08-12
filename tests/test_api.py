@@ -4,13 +4,16 @@ Uses FastAPI's TestClient — no live server or network calls needed.
 Provider calls are mocked to isolate the HTTP/auth/envelope logic.
 """
 
+import json
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from fastapi.testclient import TestClient
 
 from scm.server.main import app
-from scm.server.providers.base import SupplierPartInfo
+from scm.server.providers.base import SupplierPartInfo, SupplierProviderError
+from scm.server.routers.stream import _search_provider_sync
 from scm.models import SupplierCapabilities, SupplierType
 
 
@@ -36,6 +39,42 @@ class TestHealth:
         r = client.get("/v1/health")
         assert r.status_code == 200
         assert r.json() == {"status": "ok"}
+
+    def test_status_page_renders_structured_provider_diagnostics(self, client):
+        response = client.get("/v1/")
+
+        assert response.status_code == 200
+        assert "data.error_detail" in response.text
+        assert "upstream HTTP" in response.text
+        assert "request ID" in response.text
+        assert "retryable" in response.text
+
+
+class TestStreamDiagnostics:
+    @patch("scm.server.routers.stream.create_supplier")
+    def test_stream_preserves_provider_error_details(self, mock_create):
+        mock_supplier = MagicMock()
+        mock_supplier.search_by_mpn.side_effect = SupplierProviderError(
+            "DigiKey OAuth failed",
+            code="digikey_oauth_failed",
+            retryable=True,
+            upstream_status_code=503,
+            upstream_request_id="request-503",
+        )
+        mock_create.return_value = mock_supplier
+
+        payload = json.loads(
+            _search_provider_sync("digikey", "TPS543620RPYR", 10, False)
+        )
+
+        assert payload["status"] == "provider_error"
+        assert payload["error"] == "DigiKey OAuth failed"
+        assert payload["error_detail"] == {
+            "code": "digikey_oauth_failed",
+            "retryable": True,
+            "upstream_status_code": 503,
+            "upstream_request_id": "request-503",
+        }
 
 
 # ---------------------------------------------------------------------------

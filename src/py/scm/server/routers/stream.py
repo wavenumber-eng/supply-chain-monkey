@@ -13,10 +13,11 @@ from scm.models import (
     SUPPLIER_LOOKUP,
     SUPPLIERS,
     ServiceEnvelope,
+    ServiceErrorDetail,
 )
 from ..models import part_response_from_info
 from ..providers.base import create_supplier
-from .common import get_supplier_credentials
+from .common import error_detail_from_exception, get_supplier_credentials
 
 log = logging.getLogger(__name__)
 
@@ -49,6 +50,9 @@ def _search_provider_sync(
             supplier=supplier_type.value,
             parameter_field_name=field_name,
             error=f"Supplier not available: {exc}",
+            error_detail=error_detail_from_exception(
+                exc, default_code="provider_unavailable"
+            ),
         ).model_dump_json()
 
     t0 = time.monotonic()
@@ -62,6 +66,7 @@ def _search_provider_sync(
             parameter_field_name=field_name,
             provider_latency_ms=latency,
             error=str(exc),
+            error_detail=error_detail_from_exception(exc),
         ).model_dump_json()
 
     latency = int((time.monotonic() - t0) * 1000)
@@ -170,6 +175,10 @@ async def search_stream(
                         parameter_field_name=field_name,
                         provider_latency_ms=int(timeout * 1000),
                         error=f"Search timed out after {timeout}s",
+                        error_detail=ServiceErrorDetail(
+                            code="provider_timeout",
+                            retryable=True,
+                        ),
                     )
                     yield f"data: {timeout_envelope.model_dump_json()}\n\n"
                 except Exception as exc:
@@ -178,6 +187,11 @@ async def search_stream(
                         status="provider_error",
                         supplier=supplier_type.value if supplier_type else supplier_key,
                         error=str(exc),
+                        error_detail=error_detail_from_exception(
+                            exc,
+                            default_code="stream_failure",
+                            default_retryable=True,
+                        ),
                     )
                     yield f"data: {error_envelope.model_dump_json()}\n\n"
 

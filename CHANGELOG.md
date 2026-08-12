@@ -13,6 +13,8 @@
 
 - Add sanitized structured failure details to service envelopes while keeping
   the existing human-readable `error` field.
+- Display those provider diagnostics on the demo/status page, including the
+  error code, retryability, upstream HTTP status, and upstream request ID.
 
 ## [2026.6.5] - 2026-06-05
 
