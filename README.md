@@ -23,8 +23,8 @@ unified HTTP API that centralizes vendor credentials and provider routing.
 
 ## Status
 
-`2026.6.16` - SPN lookup API, supplier capability metadata, JLCPCB/LCSC search
-updates, and live supplier validation.
+`2026.8.12` - explicit provider failure diagnostics in the API and status page,
+including retryability and sanitized upstream context.
 
 The PyPI distribution is `supply-chain-monkey`. The Python import package is
 `scm`.
@@ -71,7 +71,7 @@ The root URL serves a status page with an interactive test panel.
 Install the consumer client from PyPI:
 
 ```bash
-python -m pip install "supply-chain-monkey[client]==2026.6.16"
+python -m pip install "supply-chain-monkey[client]==2026.8.12"
 ```
 
 ```python

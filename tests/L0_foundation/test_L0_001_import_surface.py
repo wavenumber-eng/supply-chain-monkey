@@ -15,7 +15,7 @@ from scm.client import SCMClient
 
 
 def test_version():
-    assert __version__ == "2026.6.16"
+    assert __version__ == "2026.8.12"
 
 
 def test_supplier_enum():
