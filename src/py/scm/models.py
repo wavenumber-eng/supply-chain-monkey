@@ -65,9 +65,7 @@ class RateLimitSnapshot(BaseModel):
     reset_seconds: int | None = None
     reset_time: str | None = None
     retry_after_seconds: int | None = None
-    observed_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    observed_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 class SupplierCapabilities(BaseModel):
@@ -105,6 +103,15 @@ class SpnBatchItem(BaseModel):
     error: str | None = None
 
 
+class ServiceErrorDetail(BaseModel):
+    """Sanitized, machine-readable context for a service failure."""
+
+    code: str
+    retryable: bool = False
+    upstream_status_code: int | None = None
+    upstream_request_id: str | None = None
+
+
 class ServiceEnvelope(BaseModel):
     """Standard response wrapper for all API endpoints."""
 
@@ -114,9 +121,8 @@ class ServiceEnvelope(BaseModel):
     provider_latency_ms: int = 0
     provider_capabilities: SupplierCapabilities | None = None
     rate_limit: RateLimitSnapshot | None = None
-    service_timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    service_timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     cached: bool = False
     data: Any = None
     error: str | None = None
+    error_detail: ServiceErrorDetail | None = None

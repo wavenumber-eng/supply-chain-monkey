@@ -714,6 +714,13 @@ HTTP 401 Unauthorized.
 - `cached`: Whether response came from cache (always `false` in v1)
 - `data`: Part data (object for detail, list for search)
 - `error`: Error message when status is not `"ok"`, null otherwise
+- `error_detail`: Optional sanitized diagnostic containing `code`, `retryable`,
+  `upstream_status_code`, and `upstream_request_id`
+
+Provider authentication, transport, rate-limit, and response-processing
+failures MUST return `"provider_error"`; they MUST NOT be represented as
+`"not_found"`. Diagnostics MUST NOT expose credentials or unrestricted
+upstream response bodies.
 
 **Rationale**: Clients need timing, status, and cache info for operational decisions.
 
@@ -721,6 +728,7 @@ HTTP 401 Unauthorized.
 - [ ] All endpoints return envelope format
 - [ ] `provider_latency_ms` accurately measures upstream call time
 - [ ] `status` correctly reflects provider outcome
+- [ ] Provider failures include safe machine-readable diagnostics when available
 
 ---
 

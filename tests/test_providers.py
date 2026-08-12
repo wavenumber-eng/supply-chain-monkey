@@ -2,6 +2,9 @@
 
 from typing import Any, cast
 
+import pytest
+import requests
+
 from scm.server.providers.base import (
     SupplierInterface,
     SupplierPartInfo,
@@ -9,7 +12,8 @@ from scm.server.providers.base import (
     rate_limit_snapshot_from_headers,
     resolve_stock,
 )
-from scm.server.providers.digikey import DigikeySupplier
+from scm.server.providers import digikey as digikey_module
+from scm.server.providers.digikey import DigikeyProviderError, DigikeySupplier
 from scm.server.providers.jlc import JLCPCBSupplier
 from scm.server.providers.jlc_openapi import JLCOpenAPIClient
 from scm.models import SupplierType
@@ -106,6 +110,7 @@ class TestPartResponseConversion:
 
     def test_none_datasheet_url_converts(self):
         from scm.server.models import part_response_from_info
+
         part = SupplierPartInfo(
             supplier=SupplierType.DIGIKEY,
             supplier_part_number="256-W25Q16RVSSJQTR-ND",
@@ -121,6 +126,7 @@ class TestPartResponseConversion:
 
     def test_all_none_strings_convert(self):
         from scm.server.models import part_response_from_info
+
         part = SupplierPartInfo(
             supplier=SupplierType.DIGIKEY,
             supplier_part_number="TEST-ND",
@@ -182,14 +188,16 @@ class TestSupplierBatchDefaults:
 
 class TestRateLimitHeaders:
     def test_digikey_rate_limit_headers_parse(self):
-        snapshot = rate_limit_snapshot_from_headers({
-            "X-RateLimit-Limit": "1000",
-            "X-RateLimit-Remaining": "742",
-            "X-BurstLimit-Limit": "120",
-            "X-BurstLimit-Remaining": "119",
-            "X-BurstLimit-Reset": "60",
-            "Retry-After": "5",
-        })
+        snapshot = rate_limit_snapshot_from_headers(
+            {
+                "X-RateLimit-Limit": "1000",
+                "X-RateLimit-Remaining": "742",
+                "X-BurstLimit-Limit": "120",
+                "X-BurstLimit-Remaining": "119",
+                "X-BurstLimit-Reset": "60",
+                "Retry-After": "5",
+            }
+        )
 
         assert snapshot is not None
         assert snapshot.request_limit == 1000
@@ -201,6 +209,46 @@ class TestRateLimitHeaders:
 
     def test_unrelated_headers_return_none(self):
         assert rate_limit_snapshot_from_headers({"Content-Type": "application/json"}) is None
+
+
+class TestDigikeyFailures:
+    def test_oauth_failure_preserves_sanitized_diagnostics(self, monkeypatch):
+        response = requests.Response()
+        response.status_code = 500
+        response._content = b'{"ErrorMessage":"Internal server error","RequestId":"request-123"}'
+
+        monkeypatch.setattr(
+            digikey_module.requests,
+            "post",
+            lambda *args, **kwargs: response,
+        )
+        supplier = DigikeySupplier(client_id="client", client_secret="secret")
+
+        with pytest.raises(DigikeyProviderError) as error:
+            supplier._get_access_token()
+
+        assert error.value.code == "digikey_oauth_failed"
+        assert error.value.retryable is True
+        assert error.value.upstream_status_code == 500
+        assert error.value.upstream_request_id == "request-123"
+        assert "Internal server error" in str(error.value)
+        assert "secret" not in str(error.value)
+
+    def test_search_does_not_convert_provider_failure_to_empty_result(self):
+        supplier = DigikeySupplier(client_id="client", client_secret="secret")
+
+        def fail_request(*args, **kwargs):
+            raise DigikeyProviderError(
+                "DigiKey OAuth token request failed with HTTP 500",
+                code="digikey_oauth_failed",
+                retryable=True,
+                upstream_status_code=500,
+            )
+
+        supplier._make_request = fail_request
+
+        with pytest.raises(DigikeyProviderError, match="OAuth token request failed"):
+            supplier.search_by_mpn("TPS543620RPYR")
 
 
 class TestJLCOpenAPIParsing:
@@ -235,28 +283,28 @@ class TestJLCPublicSearchParsing:
         ) -> _JsonResponse:
             assert url == jlc_module.JLC_PUBLIC_SEARCH_URL
             assert json["keyword"] == "TPS543620RPYR"
-            return _JsonResponse({
-                "code": 200,
-                "data": {
-                    "componentPageInfo": {
-                        "list": [
-                            {
-                                "componentCode": "C2870085",
-                                "componentBrandEn": "Texas Instruments",
-                                "componentModelEn": "TPS543620RPYR",
-                                "componentName": "TI TPS543620RPYR",
-                                "describe": "Buck Switching Regulator",
-                                "stockCount": 654,
-                                "dataManualOfficialLink": "https://example.test/datasheet.pdf",
-                                "urlSuffix": "TexasInstruments-TPS543620RPYR/C2870085",
-                                "componentPrices": [
-                                    {"startNumber": 1, "productPrice": 3.1027}
-                                ],
-                            }
-                        ]
-                    }
-                },
-            })
+            return _JsonResponse(
+                {
+                    "code": 200,
+                    "data": {
+                        "componentPageInfo": {
+                            "list": [
+                                {
+                                    "componentCode": "C2870085",
+                                    "componentBrandEn": "Texas Instruments",
+                                    "componentModelEn": "TPS543620RPYR",
+                                    "componentName": "TI TPS543620RPYR",
+                                    "describe": "Buck Switching Regulator",
+                                    "stockCount": 654,
+                                    "dataManualOfficialLink": "https://example.test/datasheet.pdf",
+                                    "urlSuffix": "TexasInstruments-TPS543620RPYR/C2870085",
+                                    "componentPrices": [{"startNumber": 1, "productPrice": 3.1027}],
+                                }
+                            ]
+                        }
+                    },
+                }
+            )
 
         monkeypatch.setattr(jlc_module.requests, "post", fake_post)
 
@@ -281,10 +329,12 @@ class TestJLCPublicSearchParsing:
             headers: dict[str, str],
             timeout: int,
         ) -> _JsonResponse:
-            return _JsonResponse({
-                "code": 200,
-                "data": {"componentPageInfo": {"total": 0, "list": []}},
-            })
+            return _JsonResponse(
+                {
+                    "code": 200,
+                    "data": {"componentPageInfo": {"total": 0, "list": []}},
+                }
+            )
 
         def fail_scraper(*args, **kwargs):
             raise AssertionError("scraper fallback should not run after a valid empty response")
@@ -308,29 +358,29 @@ class TestLCSCSearchParsing:
         ) -> _JsonResponse:
             assert url.endswith("/ftps/wm/search/v3/global")
             assert json["keyword"] == "TPS543620RPYR"
-            return _JsonResponse({
-                "code": 200,
-                "result": {
-                    "productSearchResultVO": None,
-                    "exactMatchResult": [
-                        {
-                            "productCode": "C2870085",
-                            "productModel": "TPS543620RPYR",
-                            "brandNameEn": "TI",
-                            "productIntroEn": "Buck Switching Regulator",
-                            "stockNumber": 654,
-                            "productCycle": "normal",
-                            "encapStandard": "VQFN-14-HR(2.5x3)",
-                            "productArrange": "Tape & Reel (TR)",
-                            "pdfUrl": "https://example.test/datasheet.pdf",
-                            "url": "https://www.lcsc.com/product-detail/C2870085.html",
-                            "productPriceList": [
-                                {"ladder": 1, "usdPrice": 3.115}
-                            ],
-                        }
-                    ],
-                },
-            })
+            return _JsonResponse(
+                {
+                    "code": 200,
+                    "result": {
+                        "productSearchResultVO": None,
+                        "exactMatchResult": [
+                            {
+                                "productCode": "C2870085",
+                                "productModel": "TPS543620RPYR",
+                                "brandNameEn": "TI",
+                                "productIntroEn": "Buck Switching Regulator",
+                                "stockNumber": 654,
+                                "productCycle": "normal",
+                                "encapStandard": "VQFN-14-HR(2.5x3)",
+                                "productArrange": "Tape & Reel (TR)",
+                                "pdfUrl": "https://example.test/datasheet.pdf",
+                                "url": "https://www.lcsc.com/product-detail/C2870085.html",
+                                "productPriceList": [{"ladder": 1, "usdPrice": 3.115}],
+                            }
+                        ],
+                    },
+                }
+            )
 
         monkeypatch.setattr(lcsc_api.requests, "post", fake_post)
 
@@ -383,9 +433,7 @@ class TestDigikeyParsing:
         client = JLCOpenAPIClient(app_id="a", access_key="b", secret_key="c")
 
         def fake_post(path: str, payload: dict[str, Any]) -> dict[str, Any]:
-            return {
-                "data": [{"componentCode": "C1", "componentModel": "TEST1"}]
-            }
+            return {"data": [{"componentCode": "C1", "componentModel": "TEST1"}]}
 
         cast(Any, client)._post = fake_post
 
