@@ -251,6 +251,29 @@
         .provider-status.error { color: var(--red); }
         .provider-status.not-found { color: var(--amber-dim); }
 
+        .provider-error-panel {
+            padding: 8px 10px;
+            border: 1px solid var(--red);
+            color: var(--red);
+            font-size: 12px;
+        }
+
+        .provider-error-message {
+            margin-bottom: 6px;
+        }
+
+        .provider-error-details {
+            color: var(--text-dim);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 16px;
+        }
+
+        .provider-error-details strong {
+            color: var(--amber-dim);
+            font-weight: normal;
+        }
+
         .part-link {
             color: var(--amber);
             text-decoration: none;
@@ -619,11 +642,48 @@
 
             } else if (data.status === 'provider_error') {
                 statusEl.className = 'provider-status error';
-                statusEl.textContent = `error | ${elapsed}ms`;
-                tableWrap.innerHTML = `<div style="padding: 4px 0; color: var(--red); font-size: 12px;">${data.error || 'unknown error'}</div>`;
+                statusEl.textContent = `error | ${data.provider_latency_ms || 0}ms server | ${elapsed}ms total`;
+                renderProviderErrorDetails(tableWrap, data);
                 section.dataset.stock = '-1';
                 sortSections();
             }
+        }
+
+        function renderProviderErrorDetails(container, data) {
+            container.innerHTML = '';
+
+            const panel = document.createElement('div');
+            panel.className = 'provider-error-panel';
+
+            const message = document.createElement('div');
+            message.className = 'provider-error-message';
+            message.textContent = data.error || 'unknown provider error';
+            panel.appendChild(message);
+
+            const diagnostic = data.error_detail || {};
+            const details = [
+                ['code', diagnostic.code],
+                ['upstream HTTP', diagnostic.upstream_status_code],
+                ['request ID', diagnostic.upstream_request_id],
+                ['retryable', diagnostic.retryable === true ? 'yes' : diagnostic.retryable === false ? 'no' : ''],
+                ['service time', data.service_timestamp],
+            ].filter(([, value]) => value !== undefined && value !== null && value !== '');
+
+            if (details.length > 0) {
+                const detailRow = document.createElement('div');
+                detailRow.className = 'provider-error-details';
+                details.forEach(([label, value]) => {
+                    const item = document.createElement('span');
+                    const key = document.createElement('strong');
+                    key.textContent = `${label}: `;
+                    item.appendChild(key);
+                    item.appendChild(document.createTextNode(String(value)));
+                    detailRow.appendChild(item);
+                });
+                panel.appendChild(detailRow);
+            }
+
+            container.appendChild(panel);
         }
 
         function sortSections() {
@@ -642,7 +702,10 @@
             const section = document.getElementById('section-' + provider);
             statusEl.className = 'provider-status error';
             statusEl.textContent = `fetch error | ${elapsed}ms`;
-            tableWrap.innerHTML = `<div style="padding: 4px 0; color: var(--red); font-size: 12px;">${message}</div>`;
+            renderProviderErrorDetails(tableWrap, {
+                error: message,
+                error_detail: { code: 'scm_fetch_failed', retryable: true },
+            });
             section.dataset.stock = '-1';
             sortSections();
         }

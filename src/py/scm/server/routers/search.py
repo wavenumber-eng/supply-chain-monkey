@@ -11,12 +11,11 @@ from scm.models import (
     PARAMETER_FIELD_NAMES,
     SUPPLIER_LOOKUP,
     ServiceEnvelope,
-    ServiceErrorDetail,
 )
 from ..auth import verify_token
 from ..models import part_response_from_info
 from ..providers.base import create_supplier
-from .common import get_supplier_credentials
+from .common import error_detail_from_exception, get_supplier_credentials
 
 log = logging.getLogger(__name__)
 
@@ -54,12 +53,7 @@ def _do_search(supplier_key: str, mpn: str, include_raw: bool, max_results: int)
             parameter_field_name=field_name,
             provider_latency_ms=latency,
             error=str(exc),
-            error_detail=ServiceErrorDetail(
-                code=str(getattr(exc, "code", "provider_failure")),
-                retryable=bool(getattr(exc, "retryable", False)),
-                upstream_status_code=getattr(exc, "upstream_status_code", None),
-                upstream_request_id=getattr(exc, "upstream_request_id", None),
-            ),
+            error_detail=error_detail_from_exception(exc),
         )
     latency = int((time.monotonic() - t0) * 1000)
 
