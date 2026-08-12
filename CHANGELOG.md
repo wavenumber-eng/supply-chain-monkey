@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Preserve DigiKey OAuth and Product API failures as `provider_error` instead
+  of reporting false `not_found` responses.
+
+### Added
+
+- Add sanitized structured failure details to service envelopes while keeping
+  the existing human-readable `error` field.
+
 ## [2026.6.5] - 2026-06-05
 
 ### Changed

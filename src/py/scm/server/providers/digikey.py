@@ -49,12 +49,53 @@ from scm.models import SupplierCapabilities
 from .base import (
     SupplierInterface,
     SupplierPartInfo,
+    SupplierProviderError,
     SupplierType,
     rate_limit_snapshot_from_headers,
     resolve_stock,
 )
 
 log = logging.getLogger(__name__)
+
+
+class DigikeyProviderError(SupplierProviderError):
+    """A sanitized DigiKey OAuth or Product API failure."""
+
+
+def _digikey_request_error(
+    operation: str,
+    code: str,
+    exc: requests.exceptions.RequestException,
+) -> DigikeyProviderError:
+    response = exc.response
+    status_code = response.status_code if response is not None else None
+    message = ""
+    request_id = ""
+    if response is not None:
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = {}
+        if isinstance(payload, dict):
+            message = str(
+                payload.get("ErrorMessage") or payload.get("error_description") or ""
+            ).strip()
+            request_id = str(payload.get("RequestId") or payload.get("request_id") or "").strip()
+
+    summary = f"DigiKey {operation} failed"
+    if status_code is not None:
+        summary += f" with HTTP {status_code}"
+    if message:
+        summary += f": {message}"
+    if request_id:
+        summary += f" (request ID {request_id})"
+    return DigikeyProviderError(
+        summary,
+        code=code,
+        retryable=status_code == 429 or bool(status_code and status_code >= 500),
+        upstream_status_code=status_code,
+        upstream_request_id=request_id or None,
+    )
 
 
 class DigikeySupplier(SupplierInterface):
@@ -106,8 +147,8 @@ class DigikeySupplier(SupplierInterface):
         super().__init__(**credentials)
 
         # Get credentials from params or environment
-        self.client_id = credentials.get('client_id') or os.getenv('DIGIKEY_CLIENT_ID')
-        self.client_secret = credentials.get('client_secret') or os.getenv('DIGIKEY_CLIENT_SECRET')
+        self.client_id = credentials.get("client_id") or os.getenv("DIGIKEY_CLIENT_ID")
+        self.client_secret = credentials.get("client_secret") or os.getenv("DIGIKEY_CLIENT_SECRET")
 
         if not self.client_id or not self.client_secret:
             raise ValueError(
@@ -116,9 +157,9 @@ class DigikeySupplier(SupplierInterface):
             )
 
         # Locale settings
-        self.locale_site = credentials.get('locale_site', self.DEFAULT_LOCALE_SITE)
-        self.locale_language = credentials.get('locale_language', self.DEFAULT_LOCALE_LANGUAGE)
-        self.locale_currency = credentials.get('locale_currency', self.DEFAULT_LOCALE_CURRENCY)
+        self.locale_site = credentials.get("locale_site", self.DEFAULT_LOCALE_SITE)
+        self.locale_language = credentials.get("locale_language", self.DEFAULT_LOCALE_LANGUAGE)
+        self.locale_currency = credentials.get("locale_currency", self.DEFAULT_LOCALE_CURRENCY)
 
         # Token management
         self._access_token = None
@@ -168,7 +209,7 @@ class DigikeySupplier(SupplierInterface):
             Valid access token
 
         Raises:
-            Exception if token request fails
+            DigikeyProviderError: If authentication fails or returns invalid data.
         """
         # Return cached token if still valid (with 60 second buffer)
         if self._access_token and time.time() < (self._token_expires_at - 60):
@@ -176,31 +217,40 @@ class DigikeySupplier(SupplierInterface):
 
         # Request new token
         data = {
-            'grant_type': 'client_credentials',
-            'client_id': self.client_id,
-            'client_secret': self.client_secret
+            "grant_type": "client_credentials",
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
         }
 
-        headers = {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
         try:
             response = requests.post(self.TOKEN_URL, data=data, headers=headers, timeout=10)
             response.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            raise _digikey_request_error(
+                "OAuth token request",
+                "digikey_oauth_failed",
+                exc,
+            ) from exc
 
+        try:
             token_data = response.json()
-            self._access_token = token_data['access_token']
-            expires_in = token_data.get('expires_in', 600)  # Default 10 minutes
-            self._token_expires_at = time.time() + expires_in
+            access_token = token_data["access_token"]
+            expires_in = token_data.get("expires_in", 600)  # Default 10 minutes
+        except (KeyError, TypeError, ValueError) as exc:
+            raise DigikeyProviderError(
+                "DigiKey OAuth token response was invalid",
+                code="digikey_oauth_invalid_response",
+            ) from exc
 
-            return self._access_token
+        self._access_token = access_token
+        self._token_expires_at = time.time() + expires_in
+        return self._access_token
 
-        except Exception as e:
-            raise Exception(f"Failed to get Digikey access token: {str(e)}")
-
-    def _make_request(self, url: str, method: str = "GET", json_data: dict | None = None,
-                      max_retries: int = 3) -> dict | None:
+    def _make_request(
+        self, url: str, method: str = "GET", json_data: dict | None = None, max_retries: int = 3
+    ) -> dict:
         """
         Make an authenticated API request with rate limiting and retry logic.
 
@@ -211,7 +261,10 @@ class DigikeySupplier(SupplierInterface):
             max_retries: Maximum number of retries for rate limits
 
         Returns:
-            Response JSON data or None on failure
+            Response JSON data.
+
+        Raises:
+            DigikeyProviderError: If OAuth or the Product API request fails.
         """
         # Rate limiting - enforce minimum interval between requests
         elapsed = time.time() - self._last_request_time
@@ -223,12 +276,12 @@ class DigikeySupplier(SupplierInterface):
 
         # Build headers
         headers = {
-            'Authorization': f'Bearer {access_token}',
-            'X-DIGIKEY-Client-Id': self.client_id,
-            'Content-Type': 'application/json',
-            'X-DIGIKEY-Locale-Site': self.locale_site,
-            'X-DIGIKEY-Locale-Language': self.locale_language,
-            'X-DIGIKEY-Locale-Currency': self.locale_currency
+            "Authorization": f"Bearer {access_token}",
+            "X-DIGIKEY-Client-Id": self.client_id,
+            "Content-Type": "application/json",
+            "X-DIGIKEY-Locale-Site": self.locale_site,
+            "X-DIGIKEY-Locale-Language": self.locale_language,
+            "X-DIGIKEY-Locale-Currency": self.locale_currency,
         }
 
         # Retry loop with exponential backoff
@@ -249,28 +302,52 @@ class DigikeySupplier(SupplierInterface):
                 # Handle rate limiting (429)
                 if response.status_code == 429:
                     # Check for Retry-After header
-                    retry_after = response.headers.get('Retry-After')
+                    retry_after = response.headers.get("Retry-After")
                     if retry_after:
                         wait_time = int(retry_after)
                     else:
                         wait_time = wait_time * 2  # Exponential backoff
 
-                    log.info(f"Digikey rate limit hit. Waiting {wait_time}s before retry...")
-                    time.sleep(wait_time)
-                    continue
+                    if attempt < max_retries - 1:
+                        log.info(f"Digikey rate limit hit. Waiting {wait_time}s before retry...")
+                        time.sleep(wait_time)
+                        continue
+                    error = requests.HTTPError(
+                        f"429 Client Error for url: {url}", response=response
+                    )
+                    raise _digikey_request_error(
+                        "Product API request", "digikey_rate_limited", error
+                    )
 
                 # Raise for other error status codes
                 response.raise_for_status()
 
-                return response.json()
+                try:
+                    return response.json()
+                except ValueError as exc:
+                    raise DigikeyProviderError(
+                        "DigiKey Product API returned invalid JSON",
+                        code="digikey_api_invalid_response",
+                    ) from exc
+
+            except DigikeyProviderError:
+                raise
 
             except requests.exceptions.RequestException as e:
-                log.info(f"Digikey API request failed (attempt {attempt + 1}/{max_retries}): {str(e)}")
+                log.info(
+                    f"Digikey API request failed (attempt {attempt + 1}/{max_retries}): {str(e)}"
+                )
                 if attempt < max_retries - 1:
                     time.sleep(wait_time)
                     wait_time *= 2
+                    continue
+                raise _digikey_request_error("Product API request", "digikey_api_failed", e) from e
 
-        return None
+        raise DigikeyProviderError(
+            "DigiKey Product API request exhausted its retry budget",
+            code="digikey_api_failed",
+            retryable=True,
+        )
 
     def search_by_mpn(self, manufacturer_part_number: str, **kwargs) -> list[SupplierPartInfo]:
         """
@@ -284,20 +361,16 @@ class DigikeySupplier(SupplierInterface):
                 exact_only: bool = False (return only exact matches)
 
         Returns:
-            List of SupplierPartInfo objects (empty list on error)
+            List of SupplierPartInfo objects. A valid empty response returns an empty list.
         """
         try:
             # Extract options
-            limit = min(kwargs.get('limit', 50), 50)  # API max is 50
-            offset = kwargs.get('offset', 0)
-            exact_only = kwargs.get('exact_only', False)
+            limit = min(kwargs.get("limit", 50), 50)  # API max is 50
+            offset = kwargs.get("offset", 0)
+            exact_only = kwargs.get("exact_only", False)
 
             # Build request body
-            body = {
-                'Keywords': manufacturer_part_number,
-                'Limit': limit,
-                'Offset': offset
-            }
+            body = {"Keywords": manufacturer_part_number, "Limit": limit, "Offset": offset}
 
             # Make API request
             data = self._make_request(self.SEARCH_URL, method="POST", json_data=body)
@@ -309,31 +382,39 @@ class DigikeySupplier(SupplierInterface):
             results = []
 
             # Check exact matches first
-            exact_matches = data.get('ExactMatches', [])
+            exact_matches = data.get("ExactMatches", [])
             if exact_matches:
                 for product in exact_matches:
                     # Get all packaging variations for this product
-                    variant_infos = self._parse_product_variations(product, manufacturer_part_number)
+                    variant_infos = self._parse_product_variations(
+                        product, manufacturer_part_number
+                    )
                     results.extend(variant_infos)
 
             # Add regular matches if not exact_only
             if not exact_only:
-                products = data.get('Products', [])
+                products = data.get("Products", [])
                 for product in products:
                     # Skip if already in exact matches
-                    mpn = product.get('ManufacturerProductNumber', '')
+                    mpn = product.get("ManufacturerProductNumber", "")
                     if mpn and mpn in [r.manufacturer_part_number for r in results]:
                         continue
 
                     # Get all packaging variations for this product
-                    variant_infos = self._parse_product_variations(product, manufacturer_part_number)
+                    variant_infos = self._parse_product_variations(
+                        product, manufacturer_part_number
+                    )
                     results.extend(variant_infos)
 
             return results
 
-        except Exception as e:
-            log.info(f"Error searching Digikey for {manufacturer_part_number}: {str(e)}")
-            return []
+        except DigikeyProviderError:
+            raise
+        except Exception as exc:
+            raise DigikeyProviderError(
+                "DigiKey search response could not be processed",
+                code="digikey_search_invalid_response",
+            ) from exc
 
     def get_part_details(self, supplier_part_number: str, **kwargs) -> SupplierPartInfo | None:
         """
@@ -358,8 +439,8 @@ class DigikeySupplier(SupplierInterface):
                 return None
 
             # Parse product
-            expected_mpn = kwargs.get('expected_mpn', '')
-            product = data.get('Product') if isinstance(data, dict) else None
+            expected_mpn = kwargs.get("expected_mpn", "")
+            product = data.get("Product") if isinstance(data, dict) else None
             if not product:
                 product = data
 
@@ -368,11 +449,17 @@ class DigikeySupplier(SupplierInterface):
                 parsed.supplier_part_number = supplier_part_number
             return parsed
 
-        except Exception as e:
-            log.info(f"Error getting Digikey details for {supplier_part_number}: {str(e)}")
-            return None
+        except DigikeyProviderError:
+            raise
+        except Exception as exc:
+            raise DigikeyProviderError(
+                "DigiKey product detail response could not be processed",
+                code="digikey_detail_invalid_response",
+            ) from exc
 
-    def _parse_product_variations(self, product: dict, search_mpn: str = "") -> list[SupplierPartInfo]:
+    def _parse_product_variations(
+        self, product: dict, search_mpn: str = ""
+    ) -> list[SupplierPartInfo]:
         """
         Parse all packaging variations from a Digikey product.
 
@@ -386,15 +473,15 @@ class DigikeySupplier(SupplierInterface):
         variations_list = []
 
         # Check if ProductVariations exists
-        variations = product.get('ProductVariations', [])
+        variations = product.get("ProductVariations", [])
 
         if variations:
             # Multiple packaging options available - create one entry per variant
             for variation in variations:
                 # Create a copy of the product with this specific variation
                 product_copy = product.copy()
-                product_copy['DigiKeyProductNumber'] = variation.get('DigiKeyProductNumber', '')
-                product_copy['PackageType'] = variation.get('PackageType', {})
+                product_copy["DigiKeyProductNumber"] = variation.get("DigiKeyProductNumber", "")
+                product_copy["PackageType"] = variation.get("PackageType", {})
 
                 # Parse this variation
                 part_info = self._parse_product(product_copy, search_mpn)
@@ -421,76 +508,78 @@ class DigikeySupplier(SupplierInterface):
         """
         try:
             # Extract manufacturer info
-            manufacturer_obj = product.get('Manufacturer', {})
-            manufacturer = manufacturer_obj.get('Name', '') if isinstance(manufacturer_obj, dict) else ''
+            manufacturer_obj = product.get("Manufacturer", {})
+            manufacturer = (
+                manufacturer_obj.get("Name", "") if isinstance(manufacturer_obj, dict) else ""
+            )
 
             # Extract MPN
-            mpn = product.get('ManufacturerProductNumber', search_mpn)
+            mpn = product.get("ManufacturerProductNumber", search_mpn)
 
             # Extract Digikey part number
             # In search results, it's in ProductVariations[0].DigiKeyProductNumber
             # In product details, it might be at top level
             digikey_pn = (
-                product.get('DigiKeyProductNumber') or
-                product.get('DigiKeyPartNumber') or
-                product.get('ProductNumber') or
-                ""
+                product.get("DigiKeyProductNumber")
+                or product.get("DigiKeyPartNumber")
+                or product.get("ProductNumber")
+                or ""
             )
 
-            variations = product.get('ProductVariations', [])
+            variations = product.get("ProductVariations", [])
             selected_variation = variations[0] if variations else None
 
             # If not found at top level, check ProductVariations
             if not digikey_pn and selected_variation:
-                digikey_pn = selected_variation.get('DigiKeyProductNumber', '')
+                digikey_pn = selected_variation.get("DigiKeyProductNumber", "")
 
             # Extract description
-            description_obj = product.get('Description', {})
+            description_obj = product.get("Description", {})
             if isinstance(description_obj, dict):
-                description = description_obj.get('ProductDescription', '')
+                description = description_obj.get("ProductDescription", "")
             else:
-                description = str(description_obj) if description_obj else ''
+                description = str(description_obj) if description_obj else ""
 
             # Extract URLs
-            product_url = product.get('ProductUrl', '')
-            datasheet_url = product.get('DatasheetUrl', '')
+            product_url = product.get("ProductUrl", "")
+            datasheet_url = product.get("DatasheetUrl", "")
 
             # Extract lifecycle status
             lifecycle = ""
-            if product.get('Discontinued'):
+            if product.get("Discontinued"):
                 lifecycle = "Discontinued"
-            elif product.get('EndOfLife'):
+            elif product.get("EndOfLife"):
                 lifecycle = "End of Life"
-            elif product.get('NormallyStocking'):
+            elif product.get("NormallyStocking"):
                 lifecycle = "Active"
             else:
-                product_status = product.get('ProductStatus', {})
+                product_status = product.get("ProductStatus", {})
                 if isinstance(product_status, dict):
-                    lifecycle = product_status.get('Status', '')
+                    lifecycle = product_status.get("Status", "")
 
             # Extract stock with status
-            stock_qty, stock_status = resolve_stock(
-                product.get('QuantityAvailable'), lifecycle
-            )
+            stock_qty, stock_status = resolve_stock(product.get("QuantityAvailable"), lifecycle)
 
             # Extract pricing
             price_breaks = []
-            unit_price = product.get('UnitPrice')
+            unit_price = product.get("UnitPrice")
             if unit_price:
                 try:
-                    price_breaks.append({
-                        "qty": 1,
-                        "unit_price": float(unit_price),
-                        "currency": "USD",
-                    })
+                    price_breaks.append(
+                        {
+                            "qty": 1,
+                            "unit_price": float(unit_price),
+                            "currency": "USD",
+                        }
+                    )
                 except (TypeError, ValueError):
                     pass
 
             # Extract packaging type
-            package_type = product.get('PackageType', {})
+            package_type = product.get("PackageType", {})
             if not package_type and selected_variation:
-                package_type = selected_variation.get('PackageType', {})
-            packaging = package_type.get('Name', '') if isinstance(package_type, dict) else ''
+                package_type = selected_variation.get("PackageType", {})
+            packaging = package_type.get("Name", "") if isinstance(package_type, dict) else ""
 
             # Build SupplierPartInfo
             return SupplierPartInfo(
@@ -553,7 +642,7 @@ if __name__ == "__main__":
     # Test the Digikey supplier implementation
     log.info("=== Digikey Supplier Test ===\n")
 
-    if not os.getenv('DIGIKEY_CLIENT_ID'):
+    if not os.getenv("DIGIKEY_CLIENT_ID"):
         log.info("[ERROR] DIGIKEY_CLIENT_ID is not configured in the process environment.")
         exit(1)
 
@@ -588,4 +677,5 @@ if __name__ == "__main__":
     except Exception as e:
         log.info(f"[ERROR] Test failed: {str(e)}")
         import traceback
+
         traceback.print_exc()

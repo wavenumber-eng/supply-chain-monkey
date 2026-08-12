@@ -30,6 +30,7 @@ def _auth_header(token="test-token"):
 # Health
 # ---------------------------------------------------------------------------
 
+
 class TestHealth:
     def test_health_no_auth_required(self, client):
         r = client.get("/v1/health")
@@ -40,6 +41,7 @@ class TestHealth:
 # ---------------------------------------------------------------------------
 # Auth
 # ---------------------------------------------------------------------------
+
 
 class TestAuth:
     def test_missing_token_returns_422(self, client):
@@ -60,6 +62,7 @@ class TestAuth:
 # Provider status
 # ---------------------------------------------------------------------------
 
+
 class TestProviderStatus:
     def test_returns_all_providers(self, client):
         r = client.get("/v1/providers/status", headers=_auth_header())
@@ -75,6 +78,7 @@ class TestProviderStatus:
 # Search
 # ---------------------------------------------------------------------------
 
+
 def _mock_part(supplier=SupplierType.JLCPCB, pn="C12345", mpn="TEST123"):
     return SupplierPartInfo(
         supplier=supplier,
@@ -89,7 +93,9 @@ def _mock_part(supplier=SupplierType.JLCPCB, pn="C12345", mpn="TEST123"):
 
 class TestSearch:
     def test_unknown_supplier(self, client):
-        r = client.get("/v1/search", params={"supplier": "fake", "mpn": "X"}, headers=_auth_header())
+        r = client.get(
+            "/v1/search", params={"supplier": "fake", "mpn": "X"}, headers=_auth_header()
+        )
         assert r.status_code == 200
         body = r.json()
         assert body["status"] == "provider_error"
@@ -105,7 +111,9 @@ class TestSearch:
         mock_supplier.search_by_mpn.return_value = [_mock_part()]
         mock_create.return_value = mock_supplier
 
-        r = client.get("/v1/search", params={"supplier": "jlcpcb", "mpn": "TEST123"}, headers=_auth_header())
+        r = client.get(
+            "/v1/search", params={"supplier": "jlcpcb", "mpn": "TEST123"}, headers=_auth_header()
+        )
         body = r.json()
 
         assert body["status"] == "ok"
@@ -123,7 +131,9 @@ class TestSearch:
         mock_supplier.search_by_mpn.return_value = []
         mock_create.return_value = mock_supplier
 
-        r = client.get("/v1/search", params={"supplier": "jlcpcb", "mpn": "ZZZZ"}, headers=_auth_header())
+        r = client.get(
+            "/v1/search", params={"supplier": "jlcpcb", "mpn": "ZZZZ"}, headers=_auth_header()
+        )
         body = r.json()
 
         assert body["status"] == "not_found"
@@ -131,15 +141,31 @@ class TestSearch:
 
     @patch("scm.server.routers.search.create_supplier")
     def test_search_provider_error(self, mock_create, client):
+        from scm.server.providers.base import SupplierProviderError
+
         mock_supplier = MagicMock()
-        mock_supplier.search_by_mpn.side_effect = RuntimeError("connection timeout")
+        mock_supplier.search_by_mpn.side_effect = SupplierProviderError(
+            "upstream unavailable",
+            code="digikey_oauth_failed",
+            retryable=True,
+            upstream_status_code=500,
+            upstream_request_id="request-123",
+        )
         mock_create.return_value = mock_supplier
 
-        r = client.get("/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header())
+        r = client.get(
+            "/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header()
+        )
         body = r.json()
 
         assert body["status"] == "provider_error"
-        assert "connection timeout" in body["error"]
+        assert body["error"] == "upstream unavailable"
+        assert body["error_detail"] == {
+            "code": "digikey_oauth_failed",
+            "retryable": True,
+            "upstream_status_code": 500,
+            "upstream_request_id": "request-123",
+        }
 
     @patch("scm.server.routers.search.create_supplier")
     def test_search_part_shape(self, mock_create, client):
@@ -147,7 +173,9 @@ class TestSearch:
         mock_supplier.search_by_mpn.return_value = [_mock_part()]
         mock_create.return_value = mock_supplier
 
-        r = client.get("/v1/search", params={"supplier": "jlcpcb", "mpn": "TEST123"}, headers=_auth_header())
+        r = client.get(
+            "/v1/search", params={"supplier": "jlcpcb", "mpn": "TEST123"}, headers=_auth_header()
+        )
         part = r.json()["data"][0]
 
         assert part["supplier"] == "JLCPCB"
@@ -183,13 +211,16 @@ class TestSearch:
             mock_create.return_value = mock_supplier
 
             for name in ["JLCPCB", "jlcpcb", "Jlcpcb"]:
-                r = client.get("/v1/search", params={"supplier": name, "mpn": "X"}, headers=_auth_header())
+                r = client.get(
+                    "/v1/search", params={"supplier": name, "mpn": "X"}, headers=_auth_header()
+                )
                 assert r.json()["status"] == "ok", f"Failed for supplier name: {name}"
 
 
 # ---------------------------------------------------------------------------
 # None field handling (regression: Digikey returns None for datasheet_url)
 # ---------------------------------------------------------------------------
+
 
 class TestNoneFields:
     """Regression tests for providers returning None in string fields."""
@@ -203,7 +234,11 @@ class TestNoneFields:
         mock_supplier.search_by_mpn.return_value = [part]
         mock_create.return_value = mock_supplier
 
-        r = client.get("/v1/search", params={"supplier": "digikey", "mpn": "W25Q16RVSS"}, headers=_auth_header())
+        r = client.get(
+            "/v1/search",
+            params={"supplier": "digikey", "mpn": "W25Q16RVSS"},
+            headers=_auth_header(),
+        )
         assert r.status_code == 200
         body = r.json()
         assert body["status"] == "ok"
@@ -217,7 +252,9 @@ class TestNoneFields:
         mock_supplier.search_by_mpn.return_value = [part]
         mock_create.return_value = mock_supplier
 
-        r = client.get("/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header())
+        r = client.get(
+            "/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header()
+        )
         assert r.status_code == 200
         assert r.json()["data"][0]["product_url"] == ""
 
@@ -229,7 +266,9 @@ class TestNoneFields:
         mock_supplier.search_by_mpn.return_value = [part]
         mock_create.return_value = mock_supplier
 
-        r = client.get("/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header())
+        r = client.get(
+            "/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header()
+        )
         assert r.status_code == 200
         assert r.json()["data"][0]["description"] == ""
 
@@ -241,7 +280,9 @@ class TestNoneFields:
         mock_supplier.search_by_mpn.return_value = [part]
         mock_create.return_value = mock_supplier
 
-        r = client.get("/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header())
+        r = client.get(
+            "/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header()
+        )
         assert r.status_code == 200
         assert r.json()["data"][0]["manufacturer"] == ""
 
@@ -253,7 +294,9 @@ class TestNoneFields:
         mock_supplier.search_by_mpn.return_value = [part]
         mock_create.return_value = mock_supplier
 
-        r = client.get("/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header())
+        r = client.get(
+            "/v1/search", params={"supplier": "jlcpcb", "mpn": "X"}, headers=_auth_header()
+        )
         assert r.status_code == 200
         assert r.json()["data"][0]["lifecycle_status"] == ""
 
@@ -276,7 +319,9 @@ class TestNoneFields:
         mock_supplier.search_by_mpn.return_value = [part]
         mock_create.return_value = mock_supplier
 
-        r = client.get("/v1/search", params={"supplier": "digikey", "mpn": "X"}, headers=_auth_header())
+        r = client.get(
+            "/v1/search", params={"supplier": "digikey", "mpn": "X"}, headers=_auth_header()
+        )
         assert r.status_code == 200
         body = r.json()
         assert body["status"] == "ok"
@@ -293,6 +338,7 @@ class TestNoneFields:
 # Detail
 # ---------------------------------------------------------------------------
 
+
 class TestDetail:
     @patch("scm.server.routers.detail.create_supplier")
     def test_detail_returns_envelope(self, mock_create, client):
@@ -300,7 +346,9 @@ class TestDetail:
         mock_supplier.get_part_details.return_value = _mock_part()
         mock_create.return_value = mock_supplier
 
-        r = client.get("/v1/detail", params={"supplier": "jlcpcb", "part": "C12345"}, headers=_auth_header())
+        r = client.get(
+            "/v1/detail", params={"supplier": "jlcpcb", "part": "C12345"}, headers=_auth_header()
+        )
         body = r.json()
 
         assert body["status"] == "ok"
@@ -314,14 +362,18 @@ class TestDetail:
         mock_supplier.get_part_details.return_value = None
         mock_create.return_value = mock_supplier
 
-        r = client.get("/v1/detail", params={"supplier": "jlcpcb", "part": "C99999999"}, headers=_auth_header())
+        r = client.get(
+            "/v1/detail", params={"supplier": "jlcpcb", "part": "C99999999"}, headers=_auth_header()
+        )
         body = r.json()
 
         assert body["status"] == "not_found"
         assert body["data"] is None
 
     def test_detail_unknown_supplier(self, client):
-        r = client.get("/v1/detail", params={"supplier": "nope", "part": "X"}, headers=_auth_header())
+        r = client.get(
+            "/v1/detail", params={"supplier": "nope", "part": "X"}, headers=_auth_header()
+        )
         assert r.json()["status"] == "provider_error"
 
     def test_detail_missing_params(self, client):
@@ -333,6 +385,7 @@ class TestDetail:
 # SPN
 # ---------------------------------------------------------------------------
 
+
 class TestSpn:
     @patch("scm.server.routers.spn.create_supplier")
     def test_spn_returns_envelope(self, mock_create, client):
@@ -342,7 +395,9 @@ class TestSpn:
         mock_supplier.get_part_details.return_value = _mock_part()
         mock_create.return_value = mock_supplier
 
-        r = client.get("/v1/spn", params={"supplier": "jlcpcb", "spn": "C12345"}, headers=_auth_header())
+        r = client.get(
+            "/v1/spn", params={"supplier": "jlcpcb", "spn": "C12345"}, headers=_auth_header()
+        )
         body = r.json()
 
         assert body["status"] == "ok"

@@ -41,6 +41,25 @@ from scm.models import RateLimitSnapshot, SupplierCapabilities, SupplierType
 log = logging.getLogger(__name__)
 
 
+class SupplierProviderError(RuntimeError):
+    """Provider failure that should not be reported as a catalogue miss."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str = "provider_failure",
+        retryable: bool = False,
+        upstream_status_code: int | None = None,
+        upstream_request_id: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.code = code
+        self.retryable = retryable
+        self.upstream_status_code = upstream_status_code
+        self.upstream_request_id = upstream_request_id
+
+
 @dataclass
 class SupplierPartInfo:
     """
@@ -109,25 +128,27 @@ class SupplierPartInfo:
             Dictionary representation of part info
         """
         return {
-            'supplier': self.supplier.value,
-            'source_provider': self.source_provider,
-            'supplier_part_number': self.supplier_part_number,
-            'manufacturer': self.manufacturer,
-            'manufacturer_part_number': self.manufacturer_part_number,
-            'description': self.description,
-            'datasheet_url': self.datasheet_url,
-            'product_url': self.product_url,
-            'stock_quantity': self.stock_quantity,
-            'stock_status': self.stock_status,
-            'price_breaks': self.price_breaks,
-            'lifecycle_status': self.lifecycle_status,
-            'extra_data': self.extra_data
+            "supplier": self.supplier.value,
+            "source_provider": self.source_provider,
+            "supplier_part_number": self.supplier_part_number,
+            "manufacturer": self.manufacturer,
+            "manufacturer_part_number": self.manufacturer_part_number,
+            "description": self.description,
+            "datasheet_url": self.datasheet_url,
+            "product_url": self.product_url,
+            "stock_quantity": self.stock_quantity,
+            "stock_status": self.stock_status,
+            "price_breaks": self.price_breaks,
+            "lifecycle_status": self.lifecycle_status,
+            "extra_data": self.extra_data,
         }
 
     def __repr__(self) -> str:
         """String representation for debugging."""
-        return (f"SupplierPartInfo({self.supplier.value}: {self.supplier_part_number}, "
-                f"MPN={self.manufacturer_part_number}, stock={self.stock_quantity})")
+        return (
+            f"SupplierPartInfo({self.supplier.value}: {self.supplier_part_number}, "
+            f"MPN={self.manufacturer_part_number}, stock={self.stock_quantity})"
+        )
 
 
 class SupplierInterface(ABC):
@@ -492,18 +513,22 @@ def create_supplier(supplier_type: SupplierType, **credentials) -> SupplierInter
     """
     if supplier_type == SupplierType.JLCPCB:
         from .jlc import JLCPCBSupplier
+
         return JLCPCBSupplier(**credentials)
 
     elif supplier_type == SupplierType.LCSC:
         from .lcsc import LCSCSupplier
+
         return LCSCSupplier(**credentials)
 
     elif supplier_type == SupplierType.DIGIKEY:
         from .digikey import DigikeySupplier
+
         return DigikeySupplier(**credentials)
 
     elif supplier_type == SupplierType.MOUSER:
         from .mouser import MouserSupplier
+
         return MouserSupplier(**credentials)
 
     else:
