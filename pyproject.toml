@@ -50,6 +50,10 @@ sources = ["src/py"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/py/scm"]
+core-metadata-version = "2.4"
+
+[tool.hatch.build.targets.sdist]
+core-metadata-version = "2.4"
 
 [tool.uv]
 # Copy instead of hardlink: venv may live on a different volume than the uv

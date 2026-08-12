@@ -6,6 +6,8 @@
 
 - Preserve DigiKey OAuth and Product API failures as `provider_error` instead
   of reporting false `not_found` responses.
+- Keep wheel and source distributions on Core Metadata 2.4 until the release
+  upload toolchain accepts Core Metadata 2.5.
 
 ### Added
 
