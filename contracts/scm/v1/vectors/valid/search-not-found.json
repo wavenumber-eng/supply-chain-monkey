@@ -1,0 +1,13 @@
+{
+  "status": "not_found",
+  "supplier": "Mouser",
+  "parameter_field_name": "Mouser Part #",
+  "provider_latency_ms": 11,
+  "provider_capabilities": null,
+  "rate_limit": null,
+  "service_timestamp": "2026-08-31T12:34:56+00:00",
+  "cached": false,
+  "data": null,
+  "error": null,
+  "error_detail": null
+}

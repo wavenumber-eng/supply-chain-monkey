@@ -1,0 +1,980 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:supply-chain-monkey:projection:python-models:v1",
+  "$comment": "Generation projection only. Runtime validation uses unmodified root schemas.",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/DetailEnvelope"
+    },
+    {
+      "$ref": "#/$defs/HealthResponse"
+    },
+    {
+      "$ref": "#/$defs/ProviderStatusResponse"
+    },
+    {
+      "$ref": "#/$defs/SearchEnvelope"
+    },
+    {
+      "$ref": "#/$defs/SpnBatchEnvelope"
+    },
+    {
+      "$ref": "#/$defs/SpnBatchRequest"
+    },
+    {
+      "$ref": "#/$defs/SpnEnvelope"
+    },
+    {
+      "$ref": "#/$defs/StreamDoneEvent"
+    },
+    {
+      "$ref": "#/$defs/StreamSearchEvent"
+    }
+  ],
+  "$defs": {
+    "BadRequestResponse": {
+      "title": "BadRequestResponse",
+      "type": "object",
+      "properties": {
+        "status_code": {
+          "type": "number",
+          "const": 400
+        },
+        "body": {
+          "$ref": "#/$defs/HttpErrorDetail"
+        }
+      },
+      "required": [
+        "status_code",
+        "body"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "BatchItemStatus": {
+      "title": "BatchItemStatus",
+      "type": "string",
+      "enum": [
+        "ok",
+        "not_found",
+        "provider_error"
+      ]
+    },
+    "DetailEnvelope": {
+      "title": "DetailEnvelope",
+      "type": "object",
+      "properties": {
+        "data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Part"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "data"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/EnvelopeMetadata"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "EnvelopeMetadata": {
+      "title": "EnvelopeMetadata",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/EnvelopeStatus"
+        },
+        "supplier": {
+          "type": "string"
+        },
+        "parameter_field_name": {
+          "type": "string"
+        },
+        "provider_latency_ms": {
+          "$ref": "#/$defs/JsonInteger"
+        },
+        "provider_capabilities": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SupplierCapabilities"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rate_limit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RateLimitSnapshot"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "service_timestamp": {
+          "$ref": "#/$defs/Rfc3339Timestamp"
+        },
+        "cached": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error_detail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ServiceErrorDetail"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "supplier",
+        "parameter_field_name",
+        "provider_latency_ms",
+        "provider_capabilities",
+        "rate_limit",
+        "service_timestamp",
+        "cached",
+        "error",
+        "error_detail"
+      ]
+    },
+    "EnvelopeStatus": {
+      "title": "EnvelopeStatus",
+      "type": "string",
+      "enum": [
+        "ok",
+        "partial",
+        "not_found",
+        "provider_error"
+      ]
+    },
+    "EventStreamResponse": {
+      "title": "EventStreamResponse",
+      "type": "object",
+      "properties": {
+        "status_code": {
+          "type": "number",
+          "const": 200
+        },
+        "content_type": {
+          "type": "string",
+          "const": "text/event-stream"
+        },
+        "cache_control": {
+          "type": "string",
+          "const": "no-cache"
+        },
+        "accelerator_buffering": {
+          "type": "string",
+          "const": "no"
+        },
+        "body": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status_code",
+        "content_type",
+        "cache_control",
+        "accelerator_buffering",
+        "body"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "HealthResponse": {
+      "title": "HealthResponse",
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "const": "ok"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "HttpErrorDetail": {
+      "title": "HttpErrorDetail",
+      "type": "object",
+      "properties": {
+        "detail": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "detail"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "JsonInteger": {
+      "title": "JsonInteger",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
+      "description": "I-JSON interoperable integer range used by SCM JSON payloads."
+    },
+    "JsonValue": {
+      "title": "JsonValue",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          }
+        },
+        {
+          "$ref": "#/$defs/RecordJsonValue"
+        }
+      ],
+      "description": "JSON-compatible scalar, array, or object value."
+    },
+    "Part": {
+      "title": "Part",
+      "type": "object",
+      "properties": {
+        "supplier": {
+          "type": "string"
+        },
+        "source_provider": {
+          "type": "string"
+        },
+        "supplier_part_number": {
+          "type": "string"
+        },
+        "manufacturer": {
+          "type": "string"
+        },
+        "manufacturer_part_number": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "datasheet_url": {
+          "type": "string"
+        },
+        "product_url": {
+          "type": "string"
+        },
+        "stock_quantity": {
+          "$ref": "#/$defs/JsonInteger"
+        },
+        "stock_status": {
+          "type": "string"
+        },
+        "price_breaks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PriceBreak"
+          }
+        },
+        "lifecycle_status": {
+          "type": "string"
+        },
+        "packaging": {
+          "type": "string"
+        },
+        "extra_data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProviderRawData"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "supplier",
+        "source_provider",
+        "supplier_part_number",
+        "manufacturer",
+        "manufacturer_part_number",
+        "description",
+        "datasheet_url",
+        "product_url",
+        "stock_quantity",
+        "stock_status",
+        "price_breaks",
+        "lifecycle_status",
+        "packaging",
+        "extra_data"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PriceBreak": {
+      "title": "PriceBreak",
+      "type": "object",
+      "properties": {
+        "qty": {
+          "$ref": "#/$defs/JsonInteger"
+        },
+        "unit_price": {
+          "type": "number"
+        },
+        "currency": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "qty",
+        "unit_price",
+        "currency"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ProviderRawData": {
+      "title": "ProviderRawData",
+      "type": "object",
+      "properties": {},
+      "description": "The one reviewed provider-owned flexible JSON object.",
+      "x-wn-flexible-reason": "Raw provider data is returned only when include_raw is explicitly requested.",
+      "x-wn-flexible": true,
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      }
+    },
+    "ProviderStatusEntry": {
+      "title": "ProviderStatusEntry",
+      "type": "object",
+      "properties": {
+        "configured": {
+          "type": "boolean"
+        },
+        "backend": {
+          "type": "string"
+        },
+        "capabilities": {
+          "$ref": "#/$defs/SupplierCapabilities"
+        }
+      },
+      "required": [
+        "configured",
+        "capabilities"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ProviderStatusResponse": {
+      "title": "ProviderStatusResponse",
+      "type": "object",
+      "properties": {
+        "providers": {
+          "$ref": "#/$defs/RecordProviderStatusEntry"
+        }
+      },
+      "required": [
+        "providers"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RateLimitSnapshot": {
+      "title": "RateLimitSnapshot",
+      "type": "object",
+      "properties": {
+        "request_limit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonInteger"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requests_remaining": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonInteger"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "burst_limit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonInteger"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "burst_remaining": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonInteger"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reset_seconds": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonInteger"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reset_time": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retry_after_seconds": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonInteger"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observed_at": {
+          "$ref": "#/$defs/Rfc3339Timestamp"
+        }
+      },
+      "required": [
+        "request_limit",
+        "requests_remaining",
+        "burst_limit",
+        "burst_remaining",
+        "reset_seconds",
+        "reset_time",
+        "retry_after_seconds",
+        "observed_at"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordJsonValue": {
+      "title": "RecordJsonValue",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      }
+    },
+    "RecordProviderStatusEntry": {
+      "title": "RecordProviderStatusEntry",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": {
+        "$ref": "#/$defs/ProviderStatusEntry"
+      }
+    },
+    "Rfc3339Timestamp": {
+      "title": "Rfc3339Timestamp",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$",
+      "description": "RFC 3339 timestamp retained as the deployed Python string representation."
+    },
+    "SearchEnvelope": {
+      "title": "SearchEnvelope",
+      "type": "object",
+      "properties": {
+        "data": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Part"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "data"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/EnvelopeMetadata"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ServerConfigurationErrorResponse": {
+      "title": "ServerConfigurationErrorResponse",
+      "type": "object",
+      "properties": {
+        "status_code": {
+          "type": "number",
+          "const": 500
+        },
+        "body": {
+          "$ref": "#/$defs/HttpErrorDetail"
+        }
+      },
+      "required": [
+        "status_code",
+        "body"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ServiceErrorDetail": {
+      "title": "ServiceErrorDetail",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "upstream_status_code": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "upstream_request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "retryable",
+        "upstream_status_code",
+        "upstream_request_id"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SpnBatchEnvelope": {
+      "title": "SpnBatchEnvelope",
+      "type": "object",
+      "properties": {
+        "data": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SpnBatchItem"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "data"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/EnvelopeMetadata"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SpnBatchItem": {
+      "title": "SpnBatchItem",
+      "type": "object",
+      "properties": {
+        "spn": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/BatchItemStatus"
+        },
+        "part": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Part"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "spn",
+        "status",
+        "part",
+        "error"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SpnBatchRequest": {
+      "title": "SpnBatchRequest",
+      "type": "object",
+      "properties": {
+        "supplier": {
+          "type": "string"
+        },
+        "spns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "maxItems": 1000
+        },
+        "include_raw": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "supplier",
+        "spns"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SpnEnvelope": {
+      "title": "SpnEnvelope",
+      "type": "object",
+      "properties": {
+        "data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Part"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "data"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/EnvelopeMetadata"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "StreamDoneEvent": {
+      "title": "StreamDoneEvent",
+      "type": "object",
+      "properties": {
+        "done": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "required": [
+        "done"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "StreamMpn": {
+      "title": "StreamMpn",
+      "type": "string",
+      "minLength": 3,
+      "description": "Stream MPN after the deployed handler's trim normalization.",
+      "x-scm-normalization": "trim before minimum-length validation"
+    },
+    "StreamSearchEvent": {
+      "title": "StreamSearchEvent",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SearchEnvelope"
+        },
+        {
+          "$ref": "#/$defs/StreamDoneEvent"
+        }
+      ]
+    },
+    "Supplier": {
+      "title": "Supplier",
+      "type": "string",
+      "enum": [
+        "JLCPCB",
+        "LCSC",
+        "Digikey",
+        "Mouser"
+      ]
+    },
+    "SupplierCapabilities": {
+      "title": "SupplierCapabilities",
+      "type": "object",
+      "properties": {
+        "supplier": {
+          "type": "string"
+        },
+        "provider_kind": {
+          "type": "string"
+        },
+        "supports_mpn_search": {
+          "type": "boolean"
+        },
+        "supports_keyword_search": {
+          "type": "boolean"
+        },
+        "supports_spn_lookup": {
+          "type": "boolean"
+        },
+        "supports_native_spn_batch": {
+          "type": "boolean"
+        },
+        "max_spn_batch_size": {
+          "$ref": "#/$defs/JsonInteger"
+        },
+        "min_request_interval_seconds": {
+          "type": "number"
+        },
+        "rate_limit_per_minute": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonInteger"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rate_limit_per_day": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonInteger"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "usage_unit": {
+          "type": "string"
+        },
+        "supports_quota_headers": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "supplier",
+        "provider_kind",
+        "supports_mpn_search",
+        "supports_keyword_search",
+        "supports_spn_lookup",
+        "supports_native_spn_batch",
+        "max_spn_batch_size",
+        "min_request_interval_seconds",
+        "rate_limit_per_minute",
+        "rate_limit_per_day",
+        "usage_unit",
+        "supports_quota_headers",
+        "notes"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "UnauthorizedResponse": {
+      "title": "UnauthorizedResponse",
+      "type": "object",
+      "properties": {
+        "status_code": {
+          "type": "number",
+          "const": 401
+        },
+        "body": {
+          "$ref": "#/$defs/HttpErrorDetail"
+        }
+      },
+      "required": [
+        "status_code",
+        "body"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ValidationErrorDetail": {
+      "title": "ValidationErrorDetail",
+      "type": "object",
+      "properties": {
+        "detail": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ValidationErrorItem"
+          }
+        }
+      },
+      "required": [
+        "detail"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ValidationErrorItem": {
+      "title": "ValidationErrorItem",
+      "type": "object",
+      "properties": {
+        "loc": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/JsonInteger"
+              }
+            ]
+          }
+        },
+        "msg": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "input": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "ctx": {
+          "$ref": "#/$defs/RecordJsonValue"
+        }
+      },
+      "required": [
+        "loc",
+        "msg",
+        "type"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ValidationErrorResponse": {
+      "title": "ValidationErrorResponse",
+      "type": "object",
+      "properties": {
+        "status_code": {
+          "type": "number",
+          "const": 422
+        },
+        "body": {
+          "$ref": "#/$defs/ValidationErrorDetail"
+        }
+      },
+      "required": [
+        "status_code",
+        "body"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "EnvelopeStatus.json",
+    "type": "string",
+    "enum": [
+        "ok",
+        "partial",
+        "not_found",
+        "provider_error"
+    ]
+}

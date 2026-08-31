@@ -1,26 +1,30 @@
 import { createHash } from "node:crypto";
-import { readdir, readFile } from "node:fs/promises";
-import { dirname, relative, resolve } from "node:path";
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { dirname, join, relative, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const GENERATED_ROOT = resolve(REPO_ROOT, "contracts/scm/v1/generated");
-const before = await snapshot(GENERATED_ROOT);
-runNode(resolve(REPO_ROOT, "node_modules/@typespec/compiler/cmd/tsp.js"), [
-  "compile",
-  "src/tsp/scm/v1/main.tsp",
-  "--config",
-  "tspconfig.scm.yaml",
-]);
-runNode(resolve(REPO_ROOT, "scripts/build-contract-catalog.mjs"));
-
-const after = await snapshot(GENERATED_ROOT);
-if (JSON.stringify(before) !== JSON.stringify(after)) {
-  console.error("Generated SCM contracts were stale; regenerated output differs.");
-  process.exit(1);
+const temporaryRoot = await mkdtemp(join(tmpdir(), "scm-contract-check-"));
+const temporaryGenerated = resolve(temporaryRoot, "generated");
+try {
+  runNode(resolve(REPO_ROOT, "scripts/generate-contracts.mjs"), [
+    "--output-root",
+    temporaryGenerated,
+  ]);
+  const current = await snapshot(GENERATED_ROOT);
+  const generated = await snapshot(temporaryGenerated);
+  if (JSON.stringify(current) !== JSON.stringify(generated)) {
+    console.error("Generated SCM contracts are stale, missing, or contain unexpected files.");
+    process.exitCode = 1;
+  } else {
+    console.log("Generated SCM contracts are current.");
+  }
+} finally {
+  await rm(temporaryRoot, { recursive: true, force: true });
 }
-console.log("Generated SCM contracts are current.");
 
 function runNode(script, args = []) {
   const command = spawnSync(process.execPath, [script, ...args], {

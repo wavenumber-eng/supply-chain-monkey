@@ -1,0 +1,43 @@
+{
+  "type": "wn.contract_roots",
+  "version": "a0",
+  "namespace": "Wavenumber.SupplyChainMonkey.V1",
+  "roots": [
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.DetailEnvelope",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.detail-envelope"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.HealthResponse",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.health-response"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.ProviderStatusResponse",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.provider-status-response"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.SearchEnvelope",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.search-envelope"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.SpnBatchEnvelope",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.spn-batch-envelope"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.SpnBatchRequest",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.spn-batch-request"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.SpnEnvelope",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.spn-envelope"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.StreamDoneEvent",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.stream-done-event"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.StreamSearchEvent",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.stream-search-event"
+    }
+  ]
+}

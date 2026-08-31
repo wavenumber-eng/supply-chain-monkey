@@ -225,8 +225,7 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "format": "int64",
+              "$ref": "#/components/schemas/JsonInteger",
               "default": 10
             },
             "explode": false
@@ -290,7 +289,7 @@
             "in": "query",
             "required": true,
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/StreamMpn"
             },
             "explode": false
           },
@@ -299,8 +298,7 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "format": "int64",
+              "$ref": "#/components/schemas/JsonInteger",
               "default": 10
             },
             "explode": false
@@ -341,18 +339,27 @@
           "200": {
             "description": "The request has succeeded.",
             "headers": {
-              "content_type": {
+              "Cache-Control": {
                 "required": true,
                 "schema": {
                   "type": "string",
                   "enum": [
-                    "text/event-stream"
+                    "no-cache"
+                  ]
+                }
+              },
+              "X-Accel-Buffering": {
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no"
                   ]
                 }
               }
             },
             "content": {
-              "text/plain": {
+              "text/event-stream": {
                 "schema": {
                   "type": "string"
                 }
@@ -384,6 +391,10 @@
           {
             "ApiKeyAuth": []
           }
+        ],
+        "deprecated": true,
+        "x-scm-event-roots": [
+          "StreamSearchEvent"
         ]
       }
     },
@@ -594,8 +605,7 @@
             "type": "string"
           },
           "provider_latency_ms": {
-            "type": "integer",
-            "format": "int64"
+            "$ref": "#/components/schemas/JsonInteger"
           },
           "provider_capabilities": {
             "anyOf": [
@@ -618,7 +628,7 @@
             ]
           },
           "service_timestamp": {
-            "type": "string"
+            "$ref": "#/components/schemas/Rfc3339Timestamp"
           },
           "cached": {
             "type": "boolean"
@@ -684,6 +694,13 @@
         "unevaluatedProperties": {
           "not": {}
         }
+      },
+      "JsonInteger": {
+        "type": "integer",
+        "format": "int64",
+        "minimum": -9007199254740991,
+        "maximum": 9007199254740991,
+        "description": "I-JSON interoperable integer range used by SCM JSON payloads."
       },
       "JsonValue": {
         "anyOf": [
@@ -758,8 +775,7 @@
             "type": "string"
           },
           "stock_quantity": {
-            "type": "integer",
-            "format": "int64"
+            "$ref": "#/components/schemas/JsonInteger"
           },
           "stock_status": {
             "type": "string"
@@ -800,8 +816,7 @@
         ],
         "properties": {
           "qty": {
-            "type": "integer",
-            "format": "int64"
+            "$ref": "#/components/schemas/JsonInteger"
           },
           "unit_price": {
             "type": "number",
@@ -876,8 +891,7 @@
           "request_limit": {
             "anyOf": [
               {
-                "type": "integer",
-                "format": "int64"
+                "$ref": "#/components/schemas/JsonInteger"
               },
               {
                 "type": "null"
@@ -887,8 +901,7 @@
           "requests_remaining": {
             "anyOf": [
               {
-                "type": "integer",
-                "format": "int64"
+                "$ref": "#/components/schemas/JsonInteger"
               },
               {
                 "type": "null"
@@ -898,8 +911,7 @@
           "burst_limit": {
             "anyOf": [
               {
-                "type": "integer",
-                "format": "int64"
+                "$ref": "#/components/schemas/JsonInteger"
               },
               {
                 "type": "null"
@@ -909,8 +921,7 @@
           "burst_remaining": {
             "anyOf": [
               {
-                "type": "integer",
-                "format": "int64"
+                "$ref": "#/components/schemas/JsonInteger"
               },
               {
                 "type": "null"
@@ -920,8 +931,7 @@
           "reset_seconds": {
             "anyOf": [
               {
-                "type": "integer",
-                "format": "int64"
+                "$ref": "#/components/schemas/JsonInteger"
               },
               {
                 "type": "null"
@@ -941,8 +951,7 @@
           "retry_after_seconds": {
             "anyOf": [
               {
-                "type": "integer",
-                "format": "int64"
+                "$ref": "#/components/schemas/JsonInteger"
               },
               {
                 "type": "null"
@@ -950,12 +959,17 @@
             ]
           },
           "observed_at": {
-            "type": "string"
+            "$ref": "#/components/schemas/Rfc3339Timestamp"
           }
         },
         "unevaluatedProperties": {
           "not": {}
         }
+      },
+      "Rfc3339Timestamp": {
+        "type": "string",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$",
+        "description": "RFC 3339 timestamp retained as the deployed Python string representation."
       },
       "SearchEnvelope": {
         "type": "object",
@@ -1166,6 +1180,11 @@
           "not": {}
         }
       },
+      "StreamMpn": {
+        "type": "string",
+        "minLength": 3,
+        "description": "Stream MPN after the deployed handler's trim normalization."
+      },
       "StreamSearchEvent": {
         "anyOf": [
           {
@@ -1222,8 +1241,7 @@
             "type": "boolean"
           },
           "max_spn_batch_size": {
-            "type": "integer",
-            "format": "int64"
+            "$ref": "#/components/schemas/JsonInteger"
           },
           "min_request_interval_seconds": {
             "type": "number",
@@ -1232,8 +1250,7 @@
           "rate_limit_per_minute": {
             "anyOf": [
               {
-                "type": "integer",
-                "format": "int64"
+                "$ref": "#/components/schemas/JsonInteger"
               },
               {
                 "type": "null"
@@ -1243,8 +1260,7 @@
           "rate_limit_per_day": {
             "anyOf": [
               {
-                "type": "integer",
-                "format": "int64"
+                "$ref": "#/components/schemas/JsonInteger"
               },
               {
                 "type": "null"
@@ -1301,8 +1317,7 @@
                   "type": "string"
                 },
                 {
-                  "type": "integer",
-                  "format": "int64"
+                  "$ref": "#/components/schemas/JsonInteger"
                 }
               ]
             }

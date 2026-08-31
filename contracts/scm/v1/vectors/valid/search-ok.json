@@ -1,0 +1,28 @@
+{
+  "status": "ok",
+  "supplier": "Digikey",
+  "parameter_field_name": "Digikey Part #",
+  "provider_latency_ms": 42,
+  "provider_capabilities": null,
+  "rate_limit": null,
+  "service_timestamp": "2026-08-31T12:34:56Z",
+  "cached": false,
+  "data": [{
+    "supplier": "Digikey",
+    "source_provider": "api",
+    "supplier_part_number": "296-6501-1-ND",
+    "manufacturer": "Texas Instruments",
+    "manufacturer_part_number": "NE555P",
+    "description": "Timer",
+    "datasheet_url": "https://example.invalid/ne555.pdf",
+    "product_url": "https://example.invalid/ne555",
+    "stock_quantity": 1250,
+    "stock_status": "in_stock",
+    "price_breaks": [{"qty": 1, "unit_price": 0.42, "currency": "USD"}],
+    "lifecycle_status": "active",
+    "packaging": "Tube",
+    "extra_data": {"lead_free": true, "warehouse_bins": ["A1", 2]}
+  }],
+  "error": null,
+  "error_detail": null
+}

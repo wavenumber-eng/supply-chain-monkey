@@ -50,7 +50,7 @@ The owned locations and identities are:
 
 - TypeSpec namespace: `Wavenumber.SupplyChainMonkey.V1`;
 - authored TypeSpec: `src/tsp/scm/v1/` with `main.tsp` as its entry point;
-- normalized catalog: `contracts/scm/v1/generated/wn_contract_catalog.a0.json`;
+- normalized catalog: `contracts/scm/v1/generated/contract_catalog.a0.json`;
 - JSON Schemas: `contracts/scm/v1/generated/schema/`;
 - OpenAPI 3.1: `contracts/scm/v1/generated/openapi.json`;
 - generated Python internals: `src/py/scm/generated/v1/`, re-exported only
@@ -86,9 +86,10 @@ paths as compatibility shims.
 
 The catalog roots are `HealthResponse`, `ProviderStatusResponse`,
 `SearchEnvelope`, `DetailEnvelope`, `SpnEnvelope`, `SpnBatchRequest`,
-`SpnBatchEnvelope`, `StreamSearchEvent`, `StreamDoneEvent`, and the explicit
-FastAPI-compatible authentication and validation error responses. Shared
-declarations include `Supplier`, `EnvelopeStatus`, `Part`, `PriceBreak`,
+`SpnBatchEnvelope`, `StreamSearchEvent`, and `StreamDoneEvent`.
+FastAPI-compatible authentication and validation schemas are operation response
+declarations rather than native-model generation roots. Shared declarations
+include `Supplier`, `EnvelopeStatus`, `Part`, `PriceBreak`,
 `SupplierCapabilities`, `RateLimitSnapshot`, `SpnBatchItem`, and
 `ServiceErrorDetail`. The catalog, rather than this prose list, becomes root
 discovery authority after generation.
@@ -152,17 +153,20 @@ compiler/emitters 1.14.0, a private `package.json`, and `package-lock.json`.
 Generation and freshness commands are committed and deterministic.
 
 The checked package scripts are `generate:contracts`, `check:typespec`,
-`check:contracts`, `generate:python`, and `check:python-generation`; a clean
-checkout begins with `npm ci`. JSON Schema and OpenAPI emission use
+`check:contracts`, `generate:vectors`, `check:vectors`, `generate:python`, and
+`check:python-generation`; a clean checkout begins with `npm ci`. JSON Schema and OpenAPI emission use
 `@typespec/json-schema` and `@typespec/openapi3`. SCM owns a small catalog
 emitter derived from the reviewed Wavenumber pattern in this repository rather
 than importing Alexandria by local path.
 
-Python model projection uses `datamodel-code-generator==0.76.0` with the
-immutable `practical-py313-20260826` preset, Pydantic v2 output, schema-accurate
-nullability, and forbidden extra fields. A catalog-driven wrapper creates the
-complete schema input and runs the generator in write or `--check` mode. The official
-preview TypeSpec Python client emitter is not used because the supported
+Python model projection uses `datamodel-code-generator==0.76.0` with an
+explicit Python 3.13/Pydantic v2 option set, schema-accurate nullability, and
+forbidden extra fields. The projection adds definition titles to preserve
+distinct catalog identities for structurally identical models and rewrites
+references into one local `$defs` bundle; these changes never reach runtime
+validation. A catalog-driven wrapper creates the complete schema input and
+runs the generator in write or `--check` mode. The official preview TypeSpec
+Python client emitter is not used because the supported
 handwritten `SCMClient` remains the transport boundary. Runtime validation uses
 the Draft 2020-12 validator from `jsonschema` before Pydantic decode; generated
 Pydantic validation is an additional native-type gate, not a replacement for

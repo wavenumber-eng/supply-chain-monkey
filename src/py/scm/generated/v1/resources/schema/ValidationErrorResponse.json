@@ -1,0 +1,21 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "ValidationErrorResponse.json",
+    "type": "object",
+    "properties": {
+        "status_code": {
+            "type": "number",
+            "const": 422
+        },
+        "body": {
+            "$ref": "ValidationErrorDetail.json"
+        }
+    },
+    "required": [
+        "status_code",
+        "body"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

@@ -1,0 +1,23 @@
+{
+  "providers": {
+    "digikey": {
+      "configured": true,
+      "backend": "api",
+      "capabilities": {
+        "supplier": "Digikey",
+        "provider_kind": "direct_supplier",
+        "supports_mpn_search": true,
+        "supports_keyword_search": false,
+        "supports_spn_lookup": true,
+        "supports_native_spn_batch": false,
+        "max_spn_batch_size": 1,
+        "min_request_interval_seconds": 0.25,
+        "rate_limit_per_minute": null,
+        "rate_limit_per_day": null,
+        "usage_unit": "requests",
+        "supports_quota_headers": false,
+        "notes": []
+      }
+    }
+  }
+}

@@ -101,7 +101,7 @@ The TypeSpec entry point is `src/tsp/scm/v1/main.tsp` in namespace
 
 ```text
 contracts/scm/v1/generated/
-  wn_contract_catalog.a0.json
+  contract_catalog.a0.json
   openapi.json
   schema/
 ```

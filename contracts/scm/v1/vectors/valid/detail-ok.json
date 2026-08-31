@@ -1,0 +1,13 @@
+{
+  "status": "ok",
+  "supplier": "LCSC",
+  "parameter_field_name": "LCSC Part #",
+  "provider_latency_ms": 5,
+  "provider_capabilities": null,
+  "rate_limit": null,
+  "service_timestamp": "2026-08-31T12:34:56Z",
+  "cached": true,
+  "data": null,
+  "error": null,
+  "error_detail": null
+}
