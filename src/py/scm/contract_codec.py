@@ -210,7 +210,7 @@ def encode(
         instance = value if isinstance(value, model) else model.model_validate(value)
     except PydanticValidationError as error:
         raise ContractModelError("generated model validation failed") from error
-    document = instance.model_dump(mode="json", by_alias=True)
+    document = instance.model_dump(mode="json", by_alias=True, exclude_unset=True)
     _check_ijson(document)
     _validate(schema, registry, document)
     try:

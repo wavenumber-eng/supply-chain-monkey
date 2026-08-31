@@ -3,7 +3,13 @@
   "supplier": "LCSC",
   "parameter_field_name": "LCSC Part #",
   "provider_latency_ms": 5,
-  "provider_capabilities": null,
+  "provider_capabilities": {
+    "supplier":"LCSC","provider_kind":"direct_supplier","supports_mpn_search":true,
+    "supports_keyword_search":false,"supports_spn_lookup":true,"supports_native_spn_batch":false,
+    "max_spn_batch_size":1,"min_request_interval_seconds":0.0,"rate_limit_per_minute":null,
+    "rate_limit_per_day":null,"usage_unit":"requests","supports_quota_headers":false,
+    "notes":["Current adapter uses LCSC JSON endpoints."]
+  },
   "rate_limit": null,
   "service_timestamp": "2026-08-31T12:34:56Z",
   "cached": false,

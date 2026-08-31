@@ -6,7 +6,7 @@
   "provider_capabilities": null,
   "rate_limit": null,
   "service_timestamp": "2026-08-31T12:34:56Z",
-  "cached": true,
+  "cached": false,
   "data": {
     "supplier": "LCSC",
     "source_provider": "api",
