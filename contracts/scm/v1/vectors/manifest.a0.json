@@ -14,7 +14,7 @@
       "path": "valid/provider-status.json",
       "schema": "ProviderStatusResponse",
       "valid": true,
-      "sha256": "64aa6626ce711129950891dc2c0d9b1bc21b4d5118d727986e3ba7aefb1c8a10"
+      "sha256": "05e5d44be26d6c7eb5dc7e08923289f182e01333efe5dca239315befd417de21"
     },
     {
       "id": "search-ok",
@@ -42,7 +42,7 @@
       "path": "valid/detail-ok.json",
       "schema": "DetailEnvelope",
       "valid": true,
-      "sha256": "67020664c707e9d2c2028f4c366a649b459d8f7fc0983c29823982ea934d95e4"
+      "sha256": "4bf856c148d654eaa5b778e6944552786f14bf692d9884e69198d1a43cd2f7f5"
     },
     {
       "id": "spn-batch-partial",
@@ -56,7 +56,7 @@
       "path": "valid/spn-ok.json",
       "schema": "SpnEnvelope",
       "valid": true,
-      "sha256": "8156d27c0365a9f576050e52873648d54918002182ef13b27ae5949dea3a735f"
+      "sha256": "acaa6e204392199f8541e2a769c23554716b7af8b899c1278e0ad05140fcd329"
     },
     {
       "id": "spn-batch-request",

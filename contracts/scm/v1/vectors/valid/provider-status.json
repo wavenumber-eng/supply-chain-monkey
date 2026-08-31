@@ -1,22 +1,44 @@
 {
   "providers": {
-    "Digikey": {
+    "JLCPCB": {
+      "configured": true,
+      "backend": "scraper",
+      "capabilities": {
+        "supplier":"JLCPCB","provider_kind":"direct_supplier","supports_mpn_search":true,
+        "supports_keyword_search":false,"supports_spn_lookup":true,"supports_native_spn_batch":false,
+        "max_spn_batch_size":1,"min_request_interval_seconds":0.0,"rate_limit_per_minute":null,
+        "rate_limit_per_day":null,"usage_unit":"requests","supports_quota_headers":false,
+        "notes":["MPN search uses the public JLCPCB component-search endpoint with scraper fallback.","Native SPN batch uses JLC OpenAPI getComponentDetailByCode."]
+      }
+    },
+    "LCSC": {
       "configured": true,
       "backend": "api",
       "capabilities": {
-        "supplier": "Digikey",
-        "provider_kind": "direct_supplier",
-        "supports_mpn_search": true,
-        "supports_keyword_search": false,
-        "supports_spn_lookup": true,
-        "supports_native_spn_batch": false,
-        "max_spn_batch_size": 1,
-        "min_request_interval_seconds": 0.25,
-        "rate_limit_per_minute": null,
-        "rate_limit_per_day": null,
-        "usage_unit": "requests",
-        "supports_quota_headers": false,
-        "notes": []
+        "supplier":"LCSC","provider_kind":"direct_supplier","supports_mpn_search":true,
+        "supports_keyword_search":false,"supports_spn_lookup":true,"supports_native_spn_batch":false,
+        "max_spn_batch_size":1,"min_request_interval_seconds":0.0,"rate_limit_per_minute":null,
+        "rate_limit_per_day":null,"usage_unit":"requests","supports_quota_headers":false,
+        "notes":["Current adapter uses LCSC JSON endpoints."]
+      }
+    },
+    "Digikey": {
+      "configured": false,
+      "capabilities": {
+        "supplier":"Digikey","provider_kind":"direct_supplier","supports_mpn_search":true,
+        "supports_keyword_search":false,"supports_spn_lookup":true,"supports_native_spn_batch":false,
+        "max_spn_batch_size":1,"min_request_interval_seconds":0.2,"rate_limit_per_minute":120,
+        "rate_limit_per_day":1000,"usage_unit":"requests","supports_quota_headers":true,"notes":[]
+      }
+    },
+    "Mouser": {
+      "configured": false,
+      "capabilities": {
+        "supplier":"Mouser","provider_kind":"direct_supplier","supports_mpn_search":true,
+        "supports_keyword_search":false,"supports_spn_lookup":true,"supports_native_spn_batch":true,
+        "max_spn_batch_size":10,"min_request_interval_seconds":0.0,"rate_limit_per_minute":null,
+        "rate_limit_per_day":null,"usage_unit":"requests","supports_quota_headers":false,
+        "notes":["Native exact SPN batch uses pipe-separated part numbers."]
       }
     }
   }
