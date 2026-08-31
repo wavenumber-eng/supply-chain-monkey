@@ -1,0 +1,23 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.ProviderStatusEntry",
+    "type": "object",
+    "properties": {
+        "configured": {
+            "type": "boolean"
+        },
+        "backend": {
+            "type": "string"
+        },
+        "capabilities": {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.SupplierCapabilities"
+        }
+    },
+    "required": [
+        "configured",
+        "capabilities"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

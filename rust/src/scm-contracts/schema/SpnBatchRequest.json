@@ -1,0 +1,29 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.spn-batch-request",
+    "type": "object",
+    "properties": {
+        "supplier": {
+            "type": "string"
+        },
+        "spns": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 1000
+        },
+        "include_raw": {
+            "type": "boolean",
+            "default": false
+        }
+    },
+    "required": [
+        "supplier",
+        "spns"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

@@ -185,7 +185,11 @@ and fractional flexible-JSON variants, and adds `serde(deny_unknown_fields)` to
 generated named structs. Generated source is inventory-checked in `--check`
 mode. The Rust codec validates against the separately embedded, unmodified
 normalized schemas before Serde decode; the bundled typify input is never used
-for runtime validation.
+for runtime validation. Code generation copies those authoritative schemas
+byte-for-byte into an exact, freshness-checked `scm-contracts` package resource
+inventory so published crates have no repository-relative runtime paths. The
+codec parses that inventory and compiles each immutable root validator once
+per process.
 
 The repository root retains its `python-package` profile under
 `wn-dev-std 2026.8.12`. The Rust workspace receives a standalone

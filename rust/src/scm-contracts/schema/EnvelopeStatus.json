@@ -1,0 +1,11 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeStatus",
+    "type": "string",
+    "enum": [
+        "ok",
+        "partial",
+        "not_found",
+        "provider_error"
+    ]
+}

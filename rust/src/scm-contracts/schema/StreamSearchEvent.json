@@ -1,0 +1,12 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.stream-search-event",
+    "anyOf": [
+        {
+            "$ref": "urn:supply-chain-monkey:schema:v1.search-envelope"
+        },
+        {
+            "$ref": "urn:supply-chain-monkey:schema:v1.stream-done-event"
+        }
+    ]
+}

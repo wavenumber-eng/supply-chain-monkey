@@ -21,6 +21,7 @@ fn main() -> Result<()> {
         .to_path_buf();
     let contract_root = repository.join("contracts/scm/v1/generated");
     let output_root = repository.join("rust/src/scm-contracts/src/generated");
+    let resource_root = repository.join("rust/src/scm-contracts/schema");
     let schemas = load_schemas(&contract_root.join("schema"))?;
     let roots = load_roots(&contract_root.join("contract_catalog.a0.json"))?;
     let mut outputs = BTreeMap::new();
@@ -41,7 +42,14 @@ fn main() -> Result<()> {
         output_root.join("mod.rs"),
         generate_registry(&bindings, &schemas)?,
     );
+    for schema in schemas.values() {
+        let title = schema["title"].as_str().context("schema title")?;
+        let source =
+            fs::read_to_string(contract_root.join("schema").join(format!("{title}.json")))?;
+        outputs.insert(resource_root.join(format!("{title}.json")), source);
+    }
     enforce_inventory(&output_root, &outputs, check)?;
+    enforce_inventory(&resource_root, &outputs, check)?;
     write_or_check(outputs, check)?;
     println!(
         "{} Rust SCM bindings: {} catalog roots",
@@ -185,7 +193,7 @@ fn generate_registry(
     source.push_str("        }\n    }\n\n    pub const fn schema(self) -> &'static str {\n        match self {\n");
     for (_, _, title) in bindings {
         source.push_str(&format!(
-            "            Self::{title} => include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/../../../contracts/scm/v1/generated/schema/{title}.json\")),\n"
+            "            Self::{title} => include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/schema/{title}.json\")),\n"
         ));
     }
     source.push_str("        }\n    }\n}\n\n");
@@ -193,7 +201,7 @@ fn generate_registry(
     for (schema_id, schema) in schemas {
         let title = schema["title"].as_str().context("schema title")?;
         source.push_str(&format!(
-            "    ({schema_id:?}, include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/../../../contracts/scm/v1/generated/schema/{title}.json\"))),\n"
+            "    ({schema_id:?}, include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/schema/{title}.json\"))),\n"
         ));
     }
     source.push_str("];\n");

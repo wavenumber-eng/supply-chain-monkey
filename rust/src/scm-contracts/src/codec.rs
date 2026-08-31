@@ -2,8 +2,9 @@
 
 use std::collections::{HashMap, HashSet};
 use std::fmt;
+use std::sync::OnceLock;
 
-use jsonschema::{Retrieve, Uri};
+use jsonschema::{Retrieve, Uri, Validator};
 use serde::Serialize;
 use serde::de::{DeserializeOwned, Deserializer, MapAccess, SeqAccess, Visitor};
 use serde_json::{Map, Value};
@@ -84,7 +85,7 @@ fn check_ijson(value: &Value, path: &str) -> Result<(), CodecError> {
     match value {
         Value::Number(number) => {
             let valid = if let Some(value) = number.as_i64() {
-                value >= MIN_IJSON_INTEGER
+                (MIN_IJSON_INTEGER..=MAX_IJSON_INTEGER as i64).contains(&value)
             } else if let Some(value) = number.as_u64() {
                 value <= MAX_IJSON_INTEGER
             } else {
@@ -110,19 +111,41 @@ fn check_ijson(value: &Value, path: &str) -> Result<(), CodecError> {
 }
 
 fn validate(root: ContractRoot, instance: &Value) -> Result<(), CodecError> {
-    let schema: Value = serde_json::from_str(root.schema())
-        .map_err(|error| CodecError::Schema(error.to_string()))?;
-    let retriever = SchemaRetriever::new()?;
-    let validator = jsonschema::options()
-        .with_retriever(retriever)
-        .build(&schema)
-        .map_err(|error| CodecError::Schema(error.to_string()))?;
+    let validator = validators()?
+        .get(root.schema_id())
+        .ok_or_else(|| CodecError::Schema(format!("missing root schema: {}", root.schema_id())))?;
     validator
         .validate(instance)
         .map_err(|error| CodecError::Schema(error.to_string()))
 }
 
-#[derive(Debug)]
+static VALIDATORS: OnceLock<Result<HashMap<&'static str, Validator>, String>> = OnceLock::new();
+
+fn validators() -> Result<&'static HashMap<&'static str, Validator>, CodecError> {
+    VALIDATORS
+        .get_or_init(build_validators)
+        .as_ref()
+        .map_err(|error| CodecError::Schema(error.clone()))
+}
+
+fn build_validators() -> Result<HashMap<&'static str, Validator>, String> {
+    let retriever = SchemaRetriever::new().map_err(|error| error.to_string())?;
+    let mut validators = HashMap::new();
+    for root in ContractRoot::ALL {
+        let schema = retriever
+            .schemas
+            .get(root.schema_id())
+            .ok_or_else(|| format!("missing root schema: {}", root.schema_id()))?;
+        let validator = jsonschema::options()
+            .with_retriever(retriever.clone())
+            .build(schema)
+            .map_err(|error| error.to_string())?;
+        validators.insert(root.schema_id(), validator);
+    }
+    Ok(validators)
+}
+
+#[derive(Clone, Debug)]
 struct SchemaRetriever {
     schemas: HashMap<String, Value>,
 }

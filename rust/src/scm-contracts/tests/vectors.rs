@@ -78,7 +78,18 @@ fn shared_vectors_match_digests_and_contract_outcomes() {
         if case["valid"].as_bool() == Some(true) {
             typed_roundtrip(contract_root, &payload);
         } else {
-            assert!(decode::<Value>(contract_root, &payload, DEFAULT_MAX_BYTES).is_err());
+            let error = decode::<Value>(contract_root, &payload, DEFAULT_MAX_BYTES)
+                .expect_err("invalid shared vector must fail");
+            let failure = case["failure"].as_str().expect("invalid failure class");
+            match failure {
+                "duplicate_member" | "nonfinite" | "unsafe_integer" => {
+                    assert!(matches!(error, CodecError::Json(_)), "{failure}: {error}");
+                }
+                "schema" => {
+                    assert!(matches!(error, CodecError::Schema(_)), "{failure}: {error}");
+                }
+                other => panic!("unknown shared-vector failure class: {other}"),
+            }
         }
     }
 }
@@ -106,6 +117,26 @@ fn codec_enforces_bounds_and_duplicate_preflight() {
     let duplicate = br#"{"status":"ok","status":"ok"}"#;
     assert!(matches!(
         decode::<HealthResponse>(ContractRoot::HealthResponse, duplicate, DEFAULT_MAX_BYTES),
+        Err(CodecError::Json(_))
+    ));
+
+    let malformed_utf8 = b"{\"status\":\"\xff\"}";
+    assert!(matches!(
+        decode::<HealthResponse>(
+            ContractRoot::HealthResponse,
+            malformed_utf8,
+            DEFAULT_MAX_BYTES
+        ),
+        Err(CodecError::Json(_))
+    ));
+
+    let unpaired_surrogate = br#"{"status":"\ud800"}"#;
+    assert!(matches!(
+        decode::<HealthResponse>(
+            ContractRoot::HealthResponse,
+            unpaired_surrogate,
+            DEFAULT_MAX_BYTES
+        ),
         Err(CodecError::Json(_))
     ));
 }
