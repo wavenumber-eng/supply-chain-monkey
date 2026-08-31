@@ -75,12 +75,13 @@ class SCMClient:
         content_length = headers.get("content-length") if headers else None
         if content_length is not None:
             try:
-                if int(content_length) > self.max_response_bytes:
-                    raise PayloadTooLargeError(
-                        f"response exceeds the {self.max_response_bytes}-byte limit"
-                    )
+                declared_length = int(content_length)
             except ValueError:
-                pass
+                declared_length = None
+            if declared_length is not None and declared_length > self.max_response_bytes:
+                raise PayloadTooLargeError(
+                    f"response exceeds the {self.max_response_bytes}-byte limit"
+                )
 
         chunks: list[bytes] = []
         size = 0

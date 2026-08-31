@@ -168,6 +168,30 @@ def test_python_client_strictly_rejects_duplicate_and_oversized_responses(
         client.health()
 
 
+def test_python_client_rejects_declared_oversize_before_streaming(monkeypatch):
+    class Response:
+        headers = {"content-length": "1025"}
+
+        def raise_for_status(self):
+            return None
+
+        def iter_content(self, chunk_size):
+            raise AssertionError("oversized declared body must not be streamed")
+
+        def close(self):
+            return None
+
+    monkeypatch.setattr("scm.client.requests.get", lambda *_args, **_kwargs: Response())
+    client = SCMClient(
+        "https://scm.example.invalid",
+        "test-token",
+        max_response_bytes=1024,
+    )
+
+    with pytest.raises(PayloadTooLargeError):
+        client.health()
+
+
 def test_provider_raw_json_preserves_integer_and_fractional_number_kinds():
     payload = (VECTOR_ROOT / _case("detail-ok")["path"]).read_bytes()
     model = decode("DetailEnvelope", payload)
