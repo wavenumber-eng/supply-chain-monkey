@@ -104,13 +104,13 @@ depends_on = ["rust-client-library"]
 [[steps]]
 id = "cross-language-conformance"
 title = "Prove Python and Rust conformance against shared vectors"
-status = "active"
+status = "done"
 depends_on = ["python-contract-cutover", "rust-client-library"]
 
 [[steps]]
 id = "artifact-candidate-proof"
 title = "Prove packaged Python and Rust release candidates in isolation"
-status = "pending"
+status = "active"
 depends_on = ["python-contract-cutover", "rust-client-library"]
 
 [[steps]]
