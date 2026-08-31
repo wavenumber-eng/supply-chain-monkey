@@ -1,5 +1,8 @@
 """Executable proof that served routes use the generated TypeSpec boundary."""
 
+import json
+from pathlib import Path
+
 from unittest.mock import patch
 
 import pytest
@@ -27,6 +30,14 @@ ROUTE_MODELS = {
     ("GET", "/v1/spn"): SpnEnvelope,
     ("POST", "/v1/spn/batch"): SpnBatchEnvelope,
 }
+CATALOG_PATH = (
+    Path(__file__).parents[2]
+    / "contracts"
+    / "scm"
+    / "v1"
+    / "generated"
+    / "contract_catalog.a0.json"
+)
 
 
 def test_fastapi_routes_and_openapi_declare_generated_roots():
@@ -43,6 +54,32 @@ def test_fastapi_routes_and_openapi_declare_generated_roots():
         "application/json"
     ]["schema"]
     assert request_schema["$ref"].endswith("/SpnBatchRequest")
+
+
+def test_served_auth_and_error_metadata_matches_typespec_catalog():
+    served_openapi = app.openapi()
+    catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
+    catalog_endpoints = {
+        (endpoint["method"], endpoint["path"]): endpoint for endpoint in catalog["endpoints"]
+    }
+    security_scheme = served_openapi["components"]["securitySchemes"]["BearerAuth"]
+    assert security_scheme["type"] == "http"
+    assert security_scheme["scheme"].lower() == "bearer"
+
+    for method, path in ROUTE_MODELS:
+        if path == "/v1/health":
+            continue
+        authority = catalog_endpoints[(method, path)]
+        operation = served_openapi["paths"][path][method.lower()]
+        assert operation["security"] == authority["security"] == [{"BearerAuth": []}]
+        assert set(operation["responses"]) == set(authority["responses"])
+        parameters = operation.get("parameters", [])
+        assert all(parameter["name"].lower() != "authorization" for parameter in parameters)
+        for status, roots in authority["responses"].items():
+            if not roots:
+                continue
+            schema = operation["responses"][status]["content"]["application/json"]["schema"]
+            assert schema["$ref"].endswith(f"/{roots[0]}")
 
 
 def test_spn_batch_optional_boolean_is_non_nullable():

@@ -5,6 +5,7 @@ from scm.models import (
     SUPPLIER_LOOKUP,
     DetailEnvelope,
     HealthResponse,
+    HttpErrorDetail,
     PartResponse,
     ProviderStatusResponse,
     RateLimitSnapshot,
@@ -17,6 +18,7 @@ from scm.models import (
     StreamDoneEvent,
     SupplierCapabilities,
     SupplierType,
+    ValidationErrorDetail,
 )
 from scm.client import SCMClient
 
@@ -55,6 +57,7 @@ def test_parameter_field_names():
 def test_contract_models_importable():
     assert DetailEnvelope is not None
     assert HealthResponse is not None
+    assert HttpErrorDetail is not None
     assert PartResponse is not None
     assert ProviderStatusResponse is not None
     assert RateLimitSnapshot is not None
@@ -65,6 +68,7 @@ def test_contract_models_importable():
     assert SpnBatchRequest is not None
     assert SpnEnvelope is not None
     assert StreamDoneEvent is not None
+    assert ValidationErrorDetail is not None
     assert SupplierCapabilities is not None
 
 

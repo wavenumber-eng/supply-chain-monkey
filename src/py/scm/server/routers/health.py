@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 
 from scm import __version__
 from scm.models import HealthResponse, ProviderStatusResponse, SupplierType
-from ..auth import verify_token
+from ..auth import CONTRACT_ERROR_RESPONSES, verify_token
 from ..contract_response import contract_response
 from ..providers.base import (
     IMPLEMENTED_SUPPLIERS,
@@ -114,6 +114,7 @@ async def status_page():
     dependencies=[Depends(verify_token)],
     response_model=ProviderStatusResponse,
     response_model_exclude_unset=True,
+    responses=CONTRACT_ERROR_RESPONSES,
 )
 async def providers_status():
     """Report which providers are configured (have credentials)."""
