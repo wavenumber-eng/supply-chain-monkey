@@ -37,3 +37,11 @@ name = "Compatibility Pruning"
 description = "Prevent retired package aliases and provider env loaders from returning"
 concerns = ["release", "signoff"]
 test_case_type = "audit_meta"
+
+[[subtests]]
+id = "L99_004"
+file = "test_L99_004_release_metadata.py"
+name = "Release Metadata"
+description = "Validate package identity, date versioning, release notes, and trusted publishing"
+concerns = ["release", "signoff"]
+test_case_type = "audit_meta"

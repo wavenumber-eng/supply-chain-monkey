@@ -1,0 +1,77 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "EnvelopeMetadata.json",
+    "type": "object",
+    "properties": {
+        "status": {
+            "$ref": "EnvelopeStatus.json"
+        },
+        "supplier": {
+            "type": "string"
+        },
+        "parameter_field_name": {
+            "type": "string"
+        },
+        "provider_latency_ms": {
+            "type": "string"
+        },
+        "provider_capabilities": {
+            "anyOf": [
+                {
+                    "$ref": "SupplierCapabilities.json"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "rate_limit": {
+            "anyOf": [
+                {
+                    "$ref": "RateLimitSnapshot.json"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "service_timestamp": {
+            "type": "string"
+        },
+        "cached": {
+            "type": "boolean"
+        },
+        "error": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "error_detail": {
+            "anyOf": [
+                {
+                    "$ref": "ServiceErrorDetail.json"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        }
+    },
+    "required": [
+        "status",
+        "supplier",
+        "parameter_field_name",
+        "provider_latency_ms",
+        "provider_capabilities",
+        "rate_limit",
+        "service_timestamp",
+        "cached",
+        "error",
+        "error_detail"
+    ]
+}

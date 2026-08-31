@@ -1,0 +1,28 @@
+{
+  "name": "@wavenumber/supply-chain-monkey-contract-toolchain",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "packageManager": "npm@11.16.0",
+  "engines": {
+    "node": "24.12.0",
+    "npm": "11.16.0"
+  },
+  "scripts": {
+    "check:typespec": "tsp compile src/tsp/scm/v1/main.tsp --config tspconfig.scm.yaml --no-emit",
+    "generate:contracts": "tsp compile src/tsp/scm/v1/main.tsp --config tspconfig.scm.yaml && node scripts/build-contract-catalog.mjs",
+    "check:contracts": "node scripts/check-contract-generation.mjs"
+  },
+  "devDependencies": {
+    "@typespec/compiler": "1.14.0",
+    "@typespec/events": "0.84.0",
+    "@typespec/http": "1.14.0",
+    "@typespec/json-schema": "1.14.0",
+    "@typespec/openapi": "1.14.0",
+    "@typespec/openapi3": "1.14.0",
+    "@typespec/sse": "0.84.0",
+    "@typespec/streams": "0.84.0",
+    "@typespec/versioning": "0.84.0",
+    "@wavenumber/wn-contract-catalog-emitter": "file:src/ts/wn-contract-catalog-emitter"
+  }
+}

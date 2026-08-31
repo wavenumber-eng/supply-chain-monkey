@@ -66,10 +66,22 @@ default-groups = []
 
 [tool.wn_dev_std]
 profile = "python-package"
+standard_version = "2026.8.12"
 distribution = "appliku-service"
 languages = ["python"]
 strict = false
 artifact_policy = "transient-dist"
+
+[tool.wn_dev_std.documentation.plans]
+roots = ["docs/plans/active"]
+ignore = [
+    "docs/plans/LIB_CRUNCHER_INTEGRATION_PLAN.md",
+    "docs/plans/SUPPLY_CHAIN_MONKEY_SERVICE_TRANSITION_PLAN.md",
+]
+
+[tool.wn_dev_std.tests]
+roots = ["tests"]
+signoff_strata = ["L99_signoff"]
 
 [tool.wn_dev_std.compatibility_pruning]
 root = "."

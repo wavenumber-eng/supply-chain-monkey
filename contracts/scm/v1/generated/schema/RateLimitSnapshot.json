@@ -1,0 +1,93 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "RateLimitSnapshot.json",
+    "type": "object",
+    "properties": {
+        "request_limit": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "requests_remaining": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "burst_limit": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "burst_remaining": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "reset_seconds": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "reset_time": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "retry_after_seconds": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "observed_at": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "request_limit",
+        "requests_remaining",
+        "burst_limit",
+        "burst_remaining",
+        "reset_seconds",
+        "reset_time",
+        "retry_after_seconds",
+        "observed_at"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

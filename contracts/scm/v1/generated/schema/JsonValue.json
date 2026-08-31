@@ -1,0 +1,28 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "JsonValue.json",
+    "anyOf": [
+        {
+            "type": "string"
+        },
+        {
+            "type": "number"
+        },
+        {
+            "type": "boolean"
+        },
+        {
+            "type": "null"
+        },
+        {
+            "type": "array",
+            "items": {
+                "$ref": "JsonValue.json"
+            }
+        },
+        {
+            "$ref": "RecordJsonValue.json"
+        }
+    ],
+    "description": "JSON-compatible scalar, array, or object value."
+}

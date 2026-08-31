@@ -1,0 +1,81 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "SupplierCapabilities.json",
+    "type": "object",
+    "properties": {
+        "supplier": {
+            "type": "string"
+        },
+        "provider_kind": {
+            "type": "string"
+        },
+        "supports_mpn_search": {
+            "type": "boolean"
+        },
+        "supports_keyword_search": {
+            "type": "boolean"
+        },
+        "supports_spn_lookup": {
+            "type": "boolean"
+        },
+        "supports_native_spn_batch": {
+            "type": "boolean"
+        },
+        "max_spn_batch_size": {
+            "type": "string"
+        },
+        "min_request_interval_seconds": {
+            "type": "number"
+        },
+        "rate_limit_per_minute": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "rate_limit_per_day": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "usage_unit": {
+            "type": "string"
+        },
+        "supports_quota_headers": {
+            "type": "boolean"
+        },
+        "notes": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    },
+    "required": [
+        "supplier",
+        "provider_kind",
+        "supports_mpn_search",
+        "supports_keyword_search",
+        "supports_spn_lookup",
+        "supports_native_spn_batch",
+        "max_spn_batch_size",
+        "min_request_interval_seconds",
+        "rate_limit_per_minute",
+        "rate_limit_per_day",
+        "usage_unit",
+        "supports_quota_headers",
+        "notes"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

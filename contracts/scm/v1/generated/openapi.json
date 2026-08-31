@@ -1,0 +1,1343 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "supply-chain-monkey",
+    "version": "0.0.0"
+  },
+  "tags": [],
+  "paths": {
+    "/v1/": {
+      "get": {
+        "operationId": "PublicOperations_statusPage",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "headers": {
+              "content_type": {
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "text/html"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/detail": {
+      "get": {
+        "operationId": "AuthenticatedOperations_detail",
+        "parameters": [
+          {
+            "name": "supplier",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "part",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "include_raw",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Access is unauthorized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "operationId": "PublicOperations_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/providers/status": {
+      "get": {
+        "operationId": "AuthenticatedOperations_providersStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Access is unauthorized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/search": {
+      "get": {
+        "operationId": "AuthenticatedOperations_search",
+        "parameters": [
+          {
+            "name": "supplier",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "mpn",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "include_raw",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "explode": false
+          },
+          {
+            "name": "max_results",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "default": 10
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Access is unauthorized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/search/stream": {
+      "get": {
+        "operationId": "LegacyStreamingOperations_searchStream",
+        "parameters": [
+          {
+            "name": "mpn",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "max_results",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "default": 10
+            },
+            "explode": false
+          },
+          {
+            "name": "timeout",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "default": 15
+            },
+            "explode": false
+          },
+          {
+            "name": "include_raw",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "explode": false
+          },
+          {
+            "name": "suppliers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": ""
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "headers": {
+              "content_type": {
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "text/event-stream"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The server could not understand the request due to invalid syntax.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Access is unauthorized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/spn": {
+      "get": {
+        "operationId": "AuthenticatedOperations_spn",
+        "parameters": [
+          {
+            "name": "supplier",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "spn",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "include_raw",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpnEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Access is unauthorized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/spn/batch": {
+      "post": {
+        "operationId": "AuthenticatedOperations_spnBatch",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpnBatchEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Access is unauthorized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpnBatchRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BatchItemStatus": {
+        "type": "string",
+        "enum": [
+          "ok",
+          "not_found",
+          "provider_error"
+        ]
+      },
+      "DetailEnvelope": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Part"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EnvelopeMetadata"
+          }
+        ]
+      },
+      "EnvelopeMetadata": {
+        "type": "object",
+        "required": [
+          "status",
+          "supplier",
+          "parameter_field_name",
+          "provider_latency_ms",
+          "provider_capabilities",
+          "rate_limit",
+          "service_timestamp",
+          "cached",
+          "error",
+          "error_detail"
+        ],
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/EnvelopeStatus"
+          },
+          "supplier": {
+            "type": "string"
+          },
+          "parameter_field_name": {
+            "type": "string"
+          },
+          "provider_latency_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "provider_capabilities": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SupplierCapabilities"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rate_limit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RateLimitSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "service_timestamp": {
+            "type": "string"
+          },
+          "cached": {
+            "type": "boolean"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error_detail": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ServiceErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "EnvelopeStatus": {
+        "type": "string",
+        "enum": [
+          "ok",
+          "partial",
+          "not_found",
+          "provider_error"
+        ]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      },
+      "HttpErrorDetail": {
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "properties": {
+          "detail": {
+            "type": "string"
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      },
+      "JsonValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JsonValue"
+            }
+          },
+          {
+            "type": "object",
+            "unevaluatedProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            }
+          }
+        ],
+        "description": "JSON-compatible scalar, array, or object value."
+      },
+      "Part": {
+        "type": "object",
+        "required": [
+          "supplier",
+          "source_provider",
+          "supplier_part_number",
+          "manufacturer",
+          "manufacturer_part_number",
+          "description",
+          "datasheet_url",
+          "product_url",
+          "stock_quantity",
+          "stock_status",
+          "price_breaks",
+          "lifecycle_status",
+          "packaging",
+          "extra_data"
+        ],
+        "properties": {
+          "supplier": {
+            "type": "string"
+          },
+          "source_provider": {
+            "type": "string"
+          },
+          "supplier_part_number": {
+            "type": "string"
+          },
+          "manufacturer": {
+            "type": "string"
+          },
+          "manufacturer_part_number": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "datasheet_url": {
+            "type": "string"
+          },
+          "product_url": {
+            "type": "string"
+          },
+          "stock_quantity": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "stock_status": {
+            "type": "string"
+          },
+          "price_breaks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceBreak"
+            }
+          },
+          "lifecycle_status": {
+            "type": "string"
+          },
+          "packaging": {
+            "type": "string"
+          },
+          "extra_data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProviderRawData"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      },
+      "PriceBreak": {
+        "type": "object",
+        "required": [
+          "qty",
+          "unit_price",
+          "currency"
+        ],
+        "properties": {
+          "qty": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unit_price": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      },
+      "ProviderRawData": {
+        "type": "object",
+        "unevaluatedProperties": {
+          "$ref": "#/components/schemas/JsonValue"
+        },
+        "description": "The one reviewed provider-owned flexible JSON object."
+      },
+      "ProviderStatusEntry": {
+        "type": "object",
+        "required": [
+          "configured",
+          "capabilities"
+        ],
+        "properties": {
+          "configured": {
+            "type": "boolean"
+          },
+          "backend": {
+            "type": "string"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/SupplierCapabilities"
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      },
+      "ProviderStatusResponse": {
+        "type": "object",
+        "required": [
+          "providers"
+        ],
+        "properties": {
+          "providers": {
+            "type": "object",
+            "unevaluatedProperties": {
+              "$ref": "#/components/schemas/ProviderStatusEntry"
+            }
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      },
+      "RateLimitSnapshot": {
+        "type": "object",
+        "required": [
+          "request_limit",
+          "requests_remaining",
+          "burst_limit",
+          "burst_remaining",
+          "reset_seconds",
+          "reset_time",
+          "retry_after_seconds",
+          "observed_at"
+        ],
+        "properties": {
+          "request_limit": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requests_remaining": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "burst_limit": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "burst_remaining": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reset_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reset_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "retry_after_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "observed_at": {
+            "type": "string"
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      },
+      "SearchEnvelope": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Part"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EnvelopeMetadata"
+          }
+        ]
+      },
+      "ServiceErrorDetail": {
+        "type": "object",
+        "required": [
+          "code",
+          "retryable",
+          "upstream_status_code",
+          "upstream_request_id"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "retryable": {
+            "type": "boolean"
+          },
+          "upstream_status_code": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int32"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "upstream_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      },
+      "SpnBatchEnvelope": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SpnBatchItem"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EnvelopeMetadata"
+          }
+        ]
+      },
+      "SpnBatchItem": {
+        "type": "object",
+        "required": [
+          "spn",
+          "status",
+          "part",
+          "error"
+        ],
+        "properties": {
+          "spn": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BatchItemStatus"
+          },
+          "part": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Part"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      },
+      "SpnBatchRequest": {
+        "type": "object",
+        "required": [
+          "supplier",
+          "spns"
+        ],
+        "properties": {
+          "supplier": {
+            "type": "string"
+          },
+          "spns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 1000
+          },
+          "include_raw": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      },
+      "SpnEnvelope": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Part"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EnvelopeMetadata"
+          }
+        ]
+      },
+      "StreamDoneEvent": {
+        "type": "object",
+        "required": [
+          "done"
+        ],
+        "properties": {
+          "done": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      },
+      "StreamSearchEvent": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/SearchEnvelope"
+          },
+          {
+            "$ref": "#/components/schemas/StreamDoneEvent"
+          }
+        ]
+      },
+      "Supplier": {
+        "type": "string",
+        "enum": [
+          "JLCPCB",
+          "LCSC",
+          "Digikey",
+          "Mouser"
+        ]
+      },
+      "SupplierCapabilities": {
+        "type": "object",
+        "required": [
+          "supplier",
+          "provider_kind",
+          "supports_mpn_search",
+          "supports_keyword_search",
+          "supports_spn_lookup",
+          "supports_native_spn_batch",
+          "max_spn_batch_size",
+          "min_request_interval_seconds",
+          "rate_limit_per_minute",
+          "rate_limit_per_day",
+          "usage_unit",
+          "supports_quota_headers",
+          "notes"
+        ],
+        "properties": {
+          "supplier": {
+            "type": "string"
+          },
+          "provider_kind": {
+            "type": "string"
+          },
+          "supports_mpn_search": {
+            "type": "boolean"
+          },
+          "supports_keyword_search": {
+            "type": "boolean"
+          },
+          "supports_spn_lookup": {
+            "type": "boolean"
+          },
+          "supports_native_spn_batch": {
+            "type": "boolean"
+          },
+          "max_spn_batch_size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "min_request_interval_seconds": {
+            "type": "number",
+            "format": "double"
+          },
+          "rate_limit_per_minute": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rate_limit_per_day": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "usage_unit": {
+            "type": "string"
+          },
+          "supports_quota_headers": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      },
+      "ValidationErrorDetail": {
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "properties": {
+          "detail": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorItem"
+            }
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      },
+      "ValidationErrorItem": {
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "properties": {
+          "loc": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              ]
+            }
+          },
+          "msg": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/components/schemas/JsonValue"
+          },
+          "ctx": {
+            "type": "object",
+            "unevaluatedProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            }
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "Bearer"
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "token"
+      }
+    }
+  }
+}

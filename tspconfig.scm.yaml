@@ -1,0 +1,24 @@
+emit:
+  - "@typespec/json-schema"
+  - "@typespec/openapi3"
+  - "@wavenumber/wn-contract-catalog-emitter"
+
+options:
+  "@typespec/json-schema":
+    emitter-output-dir: "{project-root}/contracts/scm/v1/generated/schema"
+    file-type: json
+    emitAllModels: true
+    emitAllRefs: true
+    seal-object-schemas: true
+  "@typespec/openapi3":
+    emitter-output-dir: "{project-root}/contracts/scm/v1/generated"
+    output-file: openapi.json
+    file-type: json
+    openapi-versions:
+      - "3.1.0"
+    omit-unreachable-types: false
+    seal-object-schemas: true
+  "@wavenumber/wn-contract-catalog-emitter":
+    emitter-output-dir: "{project-root}/contracts/scm/v1/generated"
+
+warn-as-error: true

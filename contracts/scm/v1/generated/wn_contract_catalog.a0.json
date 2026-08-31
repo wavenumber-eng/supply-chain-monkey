@@ -1,0 +1,433 @@
+{
+  "type": "wn.contract_catalog",
+  "version": "a0",
+  "contract": "scm.v1",
+  "namespace": "Wavenumber.SupplyChainMonkey.V1",
+  "roots": [
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.DetailEnvelope",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.detail-envelope",
+      "artifact": "contracts/scm/v1/generated/schema/DetailEnvelope.json",
+      "sha256": "5cd8a46e6c210283167bcf85b7ed6e200814d0b925b88a01daa37a9e3931357f"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.HealthResponse",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.health-response",
+      "artifact": "contracts/scm/v1/generated/schema/HealthResponse.json",
+      "sha256": "f970a95481ee632b56fecd3056a53448ff15b20df343ebe2b274e8c73a43577b"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.ProviderStatusResponse",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.provider-status-response",
+      "artifact": "contracts/scm/v1/generated/schema/ProviderStatusResponse.json",
+      "sha256": "d188f30ca887e42ada8a4608c3e5b14e2ddca5ddda695516052cc47db5dc8090"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.SearchEnvelope",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.search-envelope",
+      "artifact": "contracts/scm/v1/generated/schema/SearchEnvelope.json",
+      "sha256": "b51ab38d3552a668556e44b52c7f22057f26e20046f9658df1819b3edf4e424e"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.SpnBatchEnvelope",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.spn-batch-envelope",
+      "artifact": "contracts/scm/v1/generated/schema/SpnBatchEnvelope.json",
+      "sha256": "5e51239e3f81da9f9ad0cb1310d2afcd163f32684587de30c583bfd1b9e318ad"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.SpnBatchRequest",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.spn-batch-request",
+      "artifact": "contracts/scm/v1/generated/schema/SpnBatchRequest.json",
+      "sha256": "4c07c2689f4d7541318318465d72786306e0d4e74f16272366bdb86a0fd9ada8"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.SpnEnvelope",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.spn-envelope",
+      "artifact": "contracts/scm/v1/generated/schema/SpnEnvelope.json",
+      "sha256": "a6e8ff902378fe82ae42356a181f12ace953d2121654c666b07cb620e23fc10c"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.StreamDoneEvent",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.stream-done-event",
+      "artifact": "contracts/scm/v1/generated/schema/StreamDoneEvent.json",
+      "sha256": "55fe7f4d0bffb20aa387dda7e190ceef998f8197e96fd047b5e175f262d4ebab"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.StreamSearchEvent",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.stream-search-event",
+      "artifact": "contracts/scm/v1/generated/schema/StreamSearchEvent.json",
+      "sha256": "51ba18a0f89e610251a8b76262a6321b9f1a4b56450e4e568676454685ab030b"
+    }
+  ],
+  "endpoints": [
+    {
+      "operation_id": "PublicOperations_statusPage",
+      "method": "GET",
+      "path": "/v1/",
+      "security": [],
+      "request_roots": [],
+      "responses": {
+        "200": []
+      }
+    },
+    {
+      "operation_id": "AuthenticatedOperations_detail",
+      "method": "GET",
+      "path": "/v1/detail",
+      "security": [
+        {
+          "BearerAuth": []
+        }
+      ],
+      "request_roots": [],
+      "responses": {
+        "200": [
+          "DetailEnvelope"
+        ],
+        "401": [
+          "HttpErrorDetail"
+        ],
+        "422": [
+          "ValidationErrorDetail"
+        ],
+        "500": [
+          "HttpErrorDetail"
+        ]
+      }
+    },
+    {
+      "operation_id": "PublicOperations_health",
+      "method": "GET",
+      "path": "/v1/health",
+      "security": [],
+      "request_roots": [],
+      "responses": {
+        "200": [
+          "HealthResponse"
+        ]
+      }
+    },
+    {
+      "operation_id": "AuthenticatedOperations_providersStatus",
+      "method": "GET",
+      "path": "/v1/providers/status",
+      "security": [
+        {
+          "BearerAuth": []
+        }
+      ],
+      "request_roots": [],
+      "responses": {
+        "200": [
+          "ProviderStatusResponse"
+        ],
+        "401": [
+          "HttpErrorDetail"
+        ],
+        "422": [
+          "ValidationErrorDetail"
+        ],
+        "500": [
+          "HttpErrorDetail"
+        ]
+      }
+    },
+    {
+      "operation_id": "AuthenticatedOperations_search",
+      "method": "GET",
+      "path": "/v1/search",
+      "security": [
+        {
+          "BearerAuth": []
+        }
+      ],
+      "request_roots": [],
+      "responses": {
+        "200": [
+          "SearchEnvelope"
+        ],
+        "401": [
+          "HttpErrorDetail"
+        ],
+        "422": [
+          "ValidationErrorDetail"
+        ],
+        "500": [
+          "HttpErrorDetail"
+        ]
+      }
+    },
+    {
+      "operation_id": "LegacyStreamingOperations_searchStream",
+      "method": "GET",
+      "path": "/v1/search/stream",
+      "security": [
+        {
+          "ApiKeyAuth": []
+        }
+      ],
+      "request_roots": [],
+      "responses": {
+        "200": [],
+        "400": [
+          "HttpErrorDetail"
+        ],
+        "401": [
+          "HttpErrorDetail"
+        ]
+      }
+    },
+    {
+      "operation_id": "AuthenticatedOperations_spn",
+      "method": "GET",
+      "path": "/v1/spn",
+      "security": [
+        {
+          "BearerAuth": []
+        }
+      ],
+      "request_roots": [],
+      "responses": {
+        "200": [
+          "SpnEnvelope"
+        ],
+        "401": [
+          "HttpErrorDetail"
+        ],
+        "422": [
+          "ValidationErrorDetail"
+        ],
+        "500": [
+          "HttpErrorDetail"
+        ]
+      }
+    },
+    {
+      "operation_id": "AuthenticatedOperations_spnBatch",
+      "method": "POST",
+      "path": "/v1/spn/batch",
+      "security": [
+        {
+          "BearerAuth": []
+        }
+      ],
+      "request_roots": [
+        "SpnBatchRequest"
+      ],
+      "responses": {
+        "200": [
+          "SpnBatchEnvelope"
+        ],
+        "401": [
+          "HttpErrorDetail"
+        ],
+        "422": [
+          "ValidationErrorDetail"
+        ],
+        "500": [
+          "HttpErrorDetail"
+        ]
+      }
+    }
+  ],
+  "artifacts": {
+    "openapi": {
+      "path": "contracts/scm/v1/generated/openapi.json",
+      "sha256": "bb730d072803a064543287d7d6714785f6599e27f3fbb58ad04869b369d0db23"
+    },
+    "schemas": [
+      {
+        "name": "BadRequestResponse",
+        "schema_id": "BadRequestResponse.json",
+        "path": "contracts/scm/v1/generated/schema/BadRequestResponse.json",
+        "sha256": "fec6f0ff2858ffad49fb7f17263b724957378bc322bea42b3350ac2702d6a24d"
+      },
+      {
+        "name": "BatchItemStatus",
+        "schema_id": "BatchItemStatus.json",
+        "path": "contracts/scm/v1/generated/schema/BatchItemStatus.json",
+        "sha256": "44534fc405e0340fdb26b36f5a9031ec376dbc3ff52499c9e1a8d22fa1d8de05"
+      },
+      {
+        "name": "DetailEnvelope",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.detail-envelope",
+        "path": "contracts/scm/v1/generated/schema/DetailEnvelope.json",
+        "sha256": "5cd8a46e6c210283167bcf85b7ed6e200814d0b925b88a01daa37a9e3931357f"
+      },
+      {
+        "name": "EnvelopeMetadata",
+        "schema_id": "EnvelopeMetadata.json",
+        "path": "contracts/scm/v1/generated/schema/EnvelopeMetadata.json",
+        "sha256": "935b50604d25012547110dcf07e4074cf0ef8097e1bc095cc71e68465de4b052"
+      },
+      {
+        "name": "EnvelopeStatus",
+        "schema_id": "EnvelopeStatus.json",
+        "path": "contracts/scm/v1/generated/schema/EnvelopeStatus.json",
+        "sha256": "fd66dd1a631d286cea51e4767fc2d1eb754b59ec69e23d98414befaea0cb5727"
+      },
+      {
+        "name": "EventStreamResponse",
+        "schema_id": "EventStreamResponse.json",
+        "path": "contracts/scm/v1/generated/schema/EventStreamResponse.json",
+        "sha256": "c5db1adb7adc8ceb62a50c50421637427c4e34f4de4feedc780f137272215563"
+      },
+      {
+        "name": "HealthResponse",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.health-response",
+        "path": "contracts/scm/v1/generated/schema/HealthResponse.json",
+        "sha256": "f970a95481ee632b56fecd3056a53448ff15b20df343ebe2b274e8c73a43577b"
+      },
+      {
+        "name": "HttpErrorDetail",
+        "schema_id": "HttpErrorDetail.json",
+        "path": "contracts/scm/v1/generated/schema/HttpErrorDetail.json",
+        "sha256": "d73c6f870e7c5eb91aeef6914be50eb0ed581dcc0c712aec758f37a38d5ab62a"
+      },
+      {
+        "name": "JsonValue",
+        "schema_id": "JsonValue.json",
+        "path": "contracts/scm/v1/generated/schema/JsonValue.json",
+        "sha256": "3cec0666c93bea5043cd1e70e527ae57a467a9c3437f75d209ff36daddadf79e"
+      },
+      {
+        "name": "Part",
+        "schema_id": "Part.json",
+        "path": "contracts/scm/v1/generated/schema/Part.json",
+        "sha256": "8b9849d1de68b48e73afd28e50e2ad9a0973e7e7fdb4d4efe5d09bd95d501649"
+      },
+      {
+        "name": "PriceBreak",
+        "schema_id": "PriceBreak.json",
+        "path": "contracts/scm/v1/generated/schema/PriceBreak.json",
+        "sha256": "1071e6c64f661f1a9e6bc5b21517eac4a1dd3063ffca06def3da35492e2be1f6"
+      },
+      {
+        "name": "ProviderRawData",
+        "schema_id": "ProviderRawData.json",
+        "path": "contracts/scm/v1/generated/schema/ProviderRawData.json",
+        "sha256": "87dc93c87045ab193790240885ec8f25f3028ae3c615551df378a1390e39b32d"
+      },
+      {
+        "name": "ProviderStatusEntry",
+        "schema_id": "ProviderStatusEntry.json",
+        "path": "contracts/scm/v1/generated/schema/ProviderStatusEntry.json",
+        "sha256": "716fe63d4b05724de5f56f2642f3eb00fee62aa9a7609ab5bba5145cd9b891af"
+      },
+      {
+        "name": "ProviderStatusResponse",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.provider-status-response",
+        "path": "contracts/scm/v1/generated/schema/ProviderStatusResponse.json",
+        "sha256": "d188f30ca887e42ada8a4608c3e5b14e2ddca5ddda695516052cc47db5dc8090"
+      },
+      {
+        "name": "RateLimitSnapshot",
+        "schema_id": "RateLimitSnapshot.json",
+        "path": "contracts/scm/v1/generated/schema/RateLimitSnapshot.json",
+        "sha256": "a4d5516f141622970dace99979cb16cc70406a241cfb4a7eb69daddc3a7cb24d"
+      },
+      {
+        "name": "RecordJsonValue",
+        "schema_id": "RecordJsonValue.json",
+        "path": "contracts/scm/v1/generated/schema/RecordJsonValue.json",
+        "sha256": "874c4879b94c066f6ea3ab49e734d808573fb583f69ea0d9c8e3175d1e2ac356"
+      },
+      {
+        "name": "RecordProviderStatusEntry",
+        "schema_id": "RecordProviderStatusEntry.json",
+        "path": "contracts/scm/v1/generated/schema/RecordProviderStatusEntry.json",
+        "sha256": "9e555c45f1aea69db9e835f3e94c55b7e0d15b3bb883e6a46bedfb552177c40b"
+      },
+      {
+        "name": "SearchEnvelope",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.search-envelope",
+        "path": "contracts/scm/v1/generated/schema/SearchEnvelope.json",
+        "sha256": "b51ab38d3552a668556e44b52c7f22057f26e20046f9658df1819b3edf4e424e"
+      },
+      {
+        "name": "ServerConfigurationErrorResponse",
+        "schema_id": "ServerConfigurationErrorResponse.json",
+        "path": "contracts/scm/v1/generated/schema/ServerConfigurationErrorResponse.json",
+        "sha256": "da6632eaebc7978402998e3498e53df3f07e833312f2b7947acd4830d898e24d"
+      },
+      {
+        "name": "ServiceErrorDetail",
+        "schema_id": "ServiceErrorDetail.json",
+        "path": "contracts/scm/v1/generated/schema/ServiceErrorDetail.json",
+        "sha256": "339a059a2573711f95220979d4b0301a5c2f1d5216111084988e60766d2c59b7"
+      },
+      {
+        "name": "SpnBatchEnvelope",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.spn-batch-envelope",
+        "path": "contracts/scm/v1/generated/schema/SpnBatchEnvelope.json",
+        "sha256": "5e51239e3f81da9f9ad0cb1310d2afcd163f32684587de30c583bfd1b9e318ad"
+      },
+      {
+        "name": "SpnBatchItem",
+        "schema_id": "SpnBatchItem.json",
+        "path": "contracts/scm/v1/generated/schema/SpnBatchItem.json",
+        "sha256": "3857851b3592b500e450b87857aeea5da22ee93d609f754101d43dd099590ffd"
+      },
+      {
+        "name": "SpnBatchRequest",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.spn-batch-request",
+        "path": "contracts/scm/v1/generated/schema/SpnBatchRequest.json",
+        "sha256": "4c07c2689f4d7541318318465d72786306e0d4e74f16272366bdb86a0fd9ada8"
+      },
+      {
+        "name": "SpnEnvelope",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.spn-envelope",
+        "path": "contracts/scm/v1/generated/schema/SpnEnvelope.json",
+        "sha256": "a6e8ff902378fe82ae42356a181f12ace953d2121654c666b07cb620e23fc10c"
+      },
+      {
+        "name": "StreamDoneEvent",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.stream-done-event",
+        "path": "contracts/scm/v1/generated/schema/StreamDoneEvent.json",
+        "sha256": "55fe7f4d0bffb20aa387dda7e190ceef998f8197e96fd047b5e175f262d4ebab"
+      },
+      {
+        "name": "StreamSearchEvent",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.stream-search-event",
+        "path": "contracts/scm/v1/generated/schema/StreamSearchEvent.json",
+        "sha256": "51ba18a0f89e610251a8b76262a6321b9f1a4b56450e4e568676454685ab030b"
+      },
+      {
+        "name": "Supplier",
+        "schema_id": "Supplier.json",
+        "path": "contracts/scm/v1/generated/schema/Supplier.json",
+        "sha256": "12b732f4f20e19fd1e0b82318fc5cd14012eaac85035d5dd1fd8b64cf17bf79f"
+      },
+      {
+        "name": "SupplierCapabilities",
+        "schema_id": "SupplierCapabilities.json",
+        "path": "contracts/scm/v1/generated/schema/SupplierCapabilities.json",
+        "sha256": "b9c40b7a39c9eb89c733007e8d4bac36a9492955cfda3a29ef7667fdaf9f3305"
+      },
+      {
+        "name": "UnauthorizedResponse",
+        "schema_id": "UnauthorizedResponse.json",
+        "path": "contracts/scm/v1/generated/schema/UnauthorizedResponse.json",
+        "sha256": "949220c4451ba2c013474f3a9fcd389678615216fb60170ae2cf54829934c8e9"
+      },
+      {
+        "name": "ValidationErrorDetail",
+        "schema_id": "ValidationErrorDetail.json",
+        "path": "contracts/scm/v1/generated/schema/ValidationErrorDetail.json",
+        "sha256": "ee7ef9c5d076c28b3bd378ad6522ace7e82eb0405cec2b2c5da66171a118ff6e"
+      },
+      {
+        "name": "ValidationErrorItem",
+        "schema_id": "ValidationErrorItem.json",
+        "path": "contracts/scm/v1/generated/schema/ValidationErrorItem.json",
+        "sha256": "d92137482ef8273c04b64bac446d5db304788bd55deb838643edbecb52d8b3c6"
+      },
+      {
+        "name": "ValidationErrorResponse",
+        "schema_id": "ValidationErrorResponse.json",
+        "path": "contracts/scm/v1/generated/schema/ValidationErrorResponse.json",
+        "sha256": "7f78e6017707a157591ce34e4382290de054e3ebb9a43a661e7242f77d3cbb5e"
+      }
+    ]
+  }
+}

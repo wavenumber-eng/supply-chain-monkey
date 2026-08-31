@@ -8,6 +8,7 @@ __pycache__/
 .ruff_cache/
 .pyright/
 .mypy_cache/
+node_modules/
 rack_results/
 tests/rack_results/
 build/

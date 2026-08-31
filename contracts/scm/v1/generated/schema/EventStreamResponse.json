@@ -1,0 +1,26 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "EventStreamResponse.json",
+    "type": "object",
+    "properties": {
+        "status_code": {
+            "type": "number",
+            "const": 200
+        },
+        "content_type": {
+            "type": "string",
+            "const": "text/event-stream"
+        },
+        "body": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "status_code",
+        "content_type",
+        "body"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "ServerConfigurationErrorResponse.json",
+    "type": "object",
+    "properties": {
+        "status_code": {
+            "type": "number",
+            "const": 500
+        },
+        "body": {
+            "$ref": "HttpErrorDetail.json"
+        }
+    },
+    "required": [
+        "status_code",
+        "body"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

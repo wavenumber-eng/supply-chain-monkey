@@ -1,0 +1,31 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.spn-batch-envelope",
+    "type": "object",
+    "properties": {
+        "data": {
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "SpnBatchItem.json"
+                    }
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        }
+    },
+    "required": [
+        "data"
+    ],
+    "allOf": [
+        {
+            "$ref": "EnvelopeMetadata.json"
+        }
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

@@ -1,0 +1,78 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "Part.json",
+    "type": "object",
+    "properties": {
+        "supplier": {
+            "type": "string"
+        },
+        "source_provider": {
+            "type": "string"
+        },
+        "supplier_part_number": {
+            "type": "string"
+        },
+        "manufacturer": {
+            "type": "string"
+        },
+        "manufacturer_part_number": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "datasheet_url": {
+            "type": "string"
+        },
+        "product_url": {
+            "type": "string"
+        },
+        "stock_quantity": {
+            "type": "string"
+        },
+        "stock_status": {
+            "type": "string"
+        },
+        "price_breaks": {
+            "type": "array",
+            "items": {
+                "$ref": "PriceBreak.json"
+            }
+        },
+        "lifecycle_status": {
+            "type": "string"
+        },
+        "packaging": {
+            "type": "string"
+        },
+        "extra_data": {
+            "anyOf": [
+                {
+                    "$ref": "ProviderRawData.json"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        }
+    },
+    "required": [
+        "supplier",
+        "source_provider",
+        "supplier_part_number",
+        "manufacturer",
+        "manufacturer_part_number",
+        "description",
+        "datasheet_url",
+        "product_url",
+        "stock_quantity",
+        "stock_status",
+        "price_breaks",
+        "lifecycle_status",
+        "packaging",
+        "extra_data"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

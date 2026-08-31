@@ -1,0 +1,40 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "ValidationErrorItem.json",
+    "type": "object",
+    "properties": {
+        "loc": {
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {
+                        "type": "string"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "msg": {
+            "type": "string"
+        },
+        "type": {
+            "type": "string"
+        },
+        "input": {
+            "$ref": "JsonValue.json"
+        },
+        "ctx": {
+            "$ref": "RecordJsonValue.json"
+        }
+    },
+    "required": [
+        "loc",
+        "msg",
+        "type"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}
