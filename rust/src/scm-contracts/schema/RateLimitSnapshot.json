@@ -1,0 +1,93 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.RateLimitSnapshot",
+    "type": "object",
+    "properties": {
+        "request_limit": {
+            "anyOf": [
+                {
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "requests_remaining": {
+            "anyOf": [
+                {
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "burst_limit": {
+            "anyOf": [
+                {
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "burst_remaining": {
+            "anyOf": [
+                {
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "reset_seconds": {
+            "anyOf": [
+                {
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "reset_time": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "retry_after_seconds": {
+            "anyOf": [
+                {
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "observed_at": {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp"
+        }
+    },
+    "required": [
+        "request_limit",
+        "requests_remaining",
+        "burst_limit",
+        "burst_remaining",
+        "reset_seconds",
+        "reset_time",
+        "retry_after_seconds",
+        "observed_at"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

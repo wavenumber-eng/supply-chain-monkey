@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.stream-done-event",
+    "type": "object",
+    "properties": {
+        "done": {
+            "type": "boolean",
+            "const": true
+        }
+    },
+    "required": [
+        "done"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

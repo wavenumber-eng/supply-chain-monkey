@@ -85,56 +85,48 @@ impl ContractRoot {
         match self {
             Self::DetailEnvelope => {
                 include_str!(
-                    concat!(env!("CARGO_MANIFEST_DIR"),
-                    "/../../../contracts/scm/v1/generated/schema/DetailEnvelope.json")
+                    concat!(env!("CARGO_MANIFEST_DIR"), "/schema/DetailEnvelope.json")
                 )
             }
             Self::HealthResponse => {
                 include_str!(
-                    concat!(env!("CARGO_MANIFEST_DIR"),
-                    "/../../../contracts/scm/v1/generated/schema/HealthResponse.json")
+                    concat!(env!("CARGO_MANIFEST_DIR"), "/schema/HealthResponse.json")
                 )
             }
             Self::ProviderStatusResponse => {
                 include_str!(
                     concat!(env!("CARGO_MANIFEST_DIR"),
-                    "/../../../contracts/scm/v1/generated/schema/ProviderStatusResponse.json")
+                    "/schema/ProviderStatusResponse.json")
                 )
             }
             Self::SearchEnvelope => {
                 include_str!(
-                    concat!(env!("CARGO_MANIFEST_DIR"),
-                    "/../../../contracts/scm/v1/generated/schema/SearchEnvelope.json")
+                    concat!(env!("CARGO_MANIFEST_DIR"), "/schema/SearchEnvelope.json")
                 )
             }
             Self::SpnBatchEnvelope => {
                 include_str!(
-                    concat!(env!("CARGO_MANIFEST_DIR"),
-                    "/../../../contracts/scm/v1/generated/schema/SpnBatchEnvelope.json")
+                    concat!(env!("CARGO_MANIFEST_DIR"), "/schema/SpnBatchEnvelope.json")
                 )
             }
             Self::SpnBatchRequest => {
                 include_str!(
-                    concat!(env!("CARGO_MANIFEST_DIR"),
-                    "/../../../contracts/scm/v1/generated/schema/SpnBatchRequest.json")
+                    concat!(env!("CARGO_MANIFEST_DIR"), "/schema/SpnBatchRequest.json")
                 )
             }
             Self::SpnEnvelope => {
                 include_str!(
-                    concat!(env!("CARGO_MANIFEST_DIR"),
-                    "/../../../contracts/scm/v1/generated/schema/SpnEnvelope.json")
+                    concat!(env!("CARGO_MANIFEST_DIR"), "/schema/SpnEnvelope.json")
                 )
             }
             Self::StreamDoneEvent => {
                 include_str!(
-                    concat!(env!("CARGO_MANIFEST_DIR"),
-                    "/../../../contracts/scm/v1/generated/schema/StreamDoneEvent.json")
+                    concat!(env!("CARGO_MANIFEST_DIR"), "/schema/StreamDoneEvent.json")
                 )
             }
             Self::StreamSearchEvent => {
                 include_str!(
-                    concat!(env!("CARGO_MANIFEST_DIR"),
-                    "/../../../contracts/scm/v1/generated/schema/StreamSearchEvent.json")
+                    concat!(env!("CARGO_MANIFEST_DIR"), "/schema/StreamSearchEvent.json")
                 )
             }
         }
@@ -144,246 +136,176 @@ pub(crate) const GENERATED_SCHEMAS: &[(&str, &str)] = &[
     (
         "urn:supply-chain-monkey:schema:v1.declaration.BadRequestResponse",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/BadRequestResponse.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/BadRequestResponse.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.BatchItemStatus",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/BatchItemStatus.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/BatchItemStatus.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeMetadata",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/EnvelopeMetadata.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/EnvelopeMetadata.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeStatus",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/EnvelopeStatus.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/EnvelopeStatus.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.EventStreamResponse",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/EventStreamResponse.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/EventStreamResponse.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.HttpErrorDetail",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/HttpErrorDetail.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/HttpErrorDetail.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/JsonInteger.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/JsonInteger.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.JsonValue",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/JsonValue.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/JsonValue.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.Part",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/Part.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/Part.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.PriceBreak",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/PriceBreak.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/PriceBreak.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.ProviderRawData",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/ProviderRawData.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/ProviderRawData.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.ProviderStatusEntry",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/ProviderStatusEntry.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/ProviderStatusEntry.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.RateLimitSnapshot",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/RateLimitSnapshot.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/RateLimitSnapshot.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.RecordJsonValue",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/RecordJsonValue.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/RecordJsonValue.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.RecordProviderStatusEntry",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/RecordProviderStatusEntry.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/RecordProviderStatusEntry.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/Rfc3339Timestamp.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/Rfc3339Timestamp.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.ServerConfigurationErrorResponse",
         include_str!(
             concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/ServerConfigurationErrorResponse.json")
+            "/schema/ServerConfigurationErrorResponse.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.ServiceErrorDetail",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/ServiceErrorDetail.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/ServiceErrorDetail.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.SpnBatchItem",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/SpnBatchItem.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/SpnBatchItem.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.StreamMpn",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/StreamMpn.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/StreamMpn.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.Supplier",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/Supplier.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/Supplier.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.SupplierCapabilities",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/SupplierCapabilities.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/SupplierCapabilities.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.UnauthorizedResponse",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/UnauthorizedResponse.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/UnauthorizedResponse.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.ValidationErrorDetail",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/ValidationErrorDetail.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/ValidationErrorDetail.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.ValidationErrorItem",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/ValidationErrorItem.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/ValidationErrorItem.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.ValidationErrorResponse",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/ValidationErrorResponse.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/ValidationErrorResponse.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.detail-envelope",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/DetailEnvelope.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/DetailEnvelope.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.health-response",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/HealthResponse.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/HealthResponse.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.provider-status-response",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/ProviderStatusResponse.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/ProviderStatusResponse.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.search-envelope",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/SearchEnvelope.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/SearchEnvelope.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.spn-batch-envelope",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/SpnBatchEnvelope.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/SpnBatchEnvelope.json")
         ),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.spn-batch-request",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/SpnBatchRequest.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/SpnBatchRequest.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.spn-envelope",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/SpnEnvelope.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/SpnEnvelope.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.stream-done-event",
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/StreamDoneEvent.json")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/StreamDoneEvent.json")),
     ),
     (
         "urn:supply-chain-monkey:schema:v1.stream-search-event",
         include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../../contracts/scm/v1/generated/schema/StreamSearchEvent.json")
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/StreamSearchEvent.json")
         ),
     ),
 ];

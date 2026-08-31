@@ -1,0 +1,21 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.ServerConfigurationErrorResponse",
+    "type": "object",
+    "properties": {
+        "status_code": {
+            "type": "number",
+            "const": 500
+        },
+        "body": {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.HttpErrorDetail"
+        }
+    },
+    "required": [
+        "status_code",
+        "body"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

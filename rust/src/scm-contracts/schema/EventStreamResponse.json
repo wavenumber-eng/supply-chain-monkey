@@ -1,0 +1,36 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.EventStreamResponse",
+    "type": "object",
+    "properties": {
+        "status_code": {
+            "type": "number",
+            "const": 200
+        },
+        "content_type": {
+            "type": "string",
+            "const": "text/event-stream"
+        },
+        "cache_control": {
+            "type": "string",
+            "const": "no-cache"
+        },
+        "accelerator_buffering": {
+            "type": "string",
+            "const": "no"
+        },
+        "body": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "status_code",
+        "content_type",
+        "cache_control",
+        "accelerator_buffering",
+        "body"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

@@ -1,0 +1,77 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeMetadata",
+    "type": "object",
+    "properties": {
+        "status": {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeStatus"
+        },
+        "supplier": {
+            "type": "string"
+        },
+        "parameter_field_name": {
+            "type": "string"
+        },
+        "provider_latency_ms": {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+        },
+        "provider_capabilities": {
+            "anyOf": [
+                {
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.SupplierCapabilities"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "rate_limit": {
+            "anyOf": [
+                {
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.RateLimitSnapshot"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "service_timestamp": {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp"
+        },
+        "cached": {
+            "type": "boolean"
+        },
+        "error": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "error_detail": {
+            "anyOf": [
+                {
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.ServiceErrorDetail"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        }
+    },
+    "required": [
+        "status",
+        "supplier",
+        "parameter_field_name",
+        "provider_latency_ms",
+        "provider_capabilities",
+        "rate_limit",
+        "service_timestamp",
+        "cached",
+        "error",
+        "error_detail"
+    ]
+}

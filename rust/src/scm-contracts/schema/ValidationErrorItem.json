@@ -1,0 +1,40 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.ValidationErrorItem",
+    "type": "object",
+    "properties": {
+        "loc": {
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {
+                        "type": "string"
+                    },
+                    {
+                        "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+                    }
+                ]
+            }
+        },
+        "msg": {
+            "type": "string"
+        },
+        "type": {
+            "type": "string"
+        },
+        "input": {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonValue"
+        },
+        "ctx": {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.RecordJsonValue"
+        }
+    },
+    "required": [
+        "loc",
+        "msg",
+        "type"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

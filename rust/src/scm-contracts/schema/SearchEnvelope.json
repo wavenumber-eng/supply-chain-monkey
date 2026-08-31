@@ -1,0 +1,31 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.search-envelope",
+    "type": "object",
+    "properties": {
+        "data": {
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Part"
+                    }
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        }
+    },
+    "required": [
+        "data"
+    ],
+    "allOf": [
+        {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeMetadata"
+        }
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

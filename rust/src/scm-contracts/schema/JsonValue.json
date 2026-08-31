@@ -1,0 +1,28 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.JsonValue",
+    "anyOf": [
+        {
+            "type": "string"
+        },
+        {
+            "type": "number"
+        },
+        {
+            "type": "boolean"
+        },
+        {
+            "type": "null"
+        },
+        {
+            "type": "array",
+            "items": {
+                "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonValue"
+            }
+        },
+        {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.RecordJsonValue"
+        }
+    ],
+    "description": "JSON-compatible scalar, array, or object value."
+}

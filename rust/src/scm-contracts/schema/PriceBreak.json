@@ -1,0 +1,24 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.PriceBreak",
+    "type": "object",
+    "properties": {
+        "qty": {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+        },
+        "unit_price": {
+            "type": "number"
+        },
+        "currency": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "qty",
+        "unit_price",
+        "currency"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}
