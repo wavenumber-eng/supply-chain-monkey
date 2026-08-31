@@ -80,13 +80,13 @@ depends_on = ["python-runtime-viability"]
 [[steps]]
 id = "rust-standard-adoption"
 title = "Adopt the wn-dev-std 2026.8.12 Rust application guidance"
-status = "active"
+status = "done"
 depends_on = ["contract-authority-design"]
 
 [[steps]]
 id = "rust-contract-generation"
 title = "Generate strict Rust contract types from TypeSpec schemas"
-status = "pending"
+status = "active"
 depends_on = ["typespec-v1-contract", "rust-standard-adoption"]
 
 [[steps]]
