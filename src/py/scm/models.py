@@ -14,12 +14,14 @@ from pydantic import BaseModel, Field
 from .generated.v1.models import (
     DetailEnvelope as DetailEnvelope,
     HealthResponse as HealthResponse,
+    HttpErrorDetail as HttpErrorDetail,
     ProviderStatusResponse as ProviderStatusResponse,
     SearchEnvelope as SearchEnvelope,
     SpnBatchEnvelope as SpnBatchEnvelope,
     SpnBatchRequest as SpnBatchRequest,
     SpnEnvelope as SpnEnvelope,
     StreamDoneEvent as StreamDoneEvent,
+    ValidationErrorDetail as ValidationErrorDetail,
 )
 
 

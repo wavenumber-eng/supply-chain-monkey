@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from fastapi import APIRouter, Depends, Query
 
 from scm.models import DetailEnvelope, PARAMETER_FIELD_NAMES, SUPPLIER_LOOKUP, ServiceEnvelope
-from ..auth import verify_token
+from ..auth import CONTRACT_ERROR_RESPONSES, verify_token
 from ..contract_response import contract_response
 from ..models import part_response_from_info
 from ..providers.base import create_supplier
@@ -16,7 +16,11 @@ from .common import get_supplier_credentials
 
 log = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/v1", dependencies=[Depends(verify_token)])
+router = APIRouter(
+    prefix="/v1",
+    dependencies=[Depends(verify_token)],
+    responses=CONTRACT_ERROR_RESPONSES,
+)
 
 _executor = ThreadPoolExecutor(max_workers=4)
 
