@@ -118,6 +118,17 @@ fn configuration_enforces_url_token_and_debug_policy() {
         ScmClient::new("http://example.test", "SENSITIVE_MARKER_DO_NOT_LOG"),
         Err(ConfigError::AuthenticatedRemoteHttp)
     ));
+    let proxied_loopback = ScmClient::builder("http://127.0.0.1:12345")
+        .expect("builder")
+        .bearer_token("SENSITIVE_MARKER_DO_NOT_LOG")
+        .expect("token")
+        .proxy("http://127.0.0.1:23456")
+        .expect("proxy")
+        .build();
+    assert!(matches!(
+        proxied_loopback,
+        Err(ConfigError::AuthenticatedLoopbackProxy)
+    ));
     let client = ScmClient::new("http://127.0.0.1:12345", "SENSITIVE_MARKER_DO_NOT_LOG")
         .expect("loopback HTTP client");
     let diagnostic = format!("{client:?}");
