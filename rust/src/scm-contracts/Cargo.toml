@@ -1,0 +1,11 @@
+[package]
+name = "scm-contracts"
+description = "Generated Supply Chain Monkey v1 wire contracts and strict codec"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true

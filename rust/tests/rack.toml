@@ -1,0 +1,46 @@
+[rack]
+name = "Supply Chain Monkey Rust Tests"
+version = "1.0"
+description = "Rust contracts, client, and CLI signoff"
+default_lane = "signoff"
+
+[strata]
+order = []
+default_enabled = []
+
+[concerns.signoff]
+description = "Rust development-standard and locked Cargo signoff"
+
+[concerns.language_policy]
+description = "Runs dev-std audit . --scope language --format text as a failing lane"
+
+[lanes.signoff]
+description = "Complete Rust workspace signoff"
+
+[[signoff_commands]]
+id = "language-policy"
+command = "dev-std audit . --scope language --format text"
+
+[[signoff_commands]]
+id = "rust-format"
+command = "cargo fmt --all -- --check"
+
+[[signoff_commands]]
+id = "rust-check"
+command = "cargo check --workspace --all-targets --all-features --locked"
+
+[[signoff_commands]]
+id = "rust-clippy"
+command = "cargo clippy --workspace --all-targets --all-features --locked -- -D warnings"
+
+[[signoff_commands]]
+id = "rust-test"
+command = "cargo test --workspace --all-features --locked"
+
+[[signoff_commands]]
+id = "rust-doctest"
+command = "cargo test --workspace --doc --locked"
+
+[[signoff_commands]]
+id = "rust-doc"
+command = "RUSTDOCFLAGS=\"-D warnings\" cargo doc --workspace --no-deps --locked"

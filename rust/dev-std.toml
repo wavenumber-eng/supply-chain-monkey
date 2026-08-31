@@ -1,0 +1,18 @@
+profile = "rust-app"
+standard_version = "2026.8.12"
+distribution = "crate"
+languages = ["rust"]
+strict = true
+artifact_policy = "transient-dist"
+
+[rust]
+source_root = "src"
+
+[compatibility_pruning]
+root = "."
+forbidden_patterns = [
+  "\\btoken=.*https?://",
+  "danger_accept_invalid_certs",
+  "danger_accept_invalid_hostnames",
+]
+excluded_parts = ["docs", "generated"]

@@ -1,0 +1,4 @@
+<h1>Rust standard boundary</h1>
+<p>This subroot applies wn-dev-std 2026.8.12 rust-app policy without replacing the repository Python-package boundary.</p>
+<p>Generated files are checked in and excluded from structural source limits, but remain subject to compile, test, schema-conformance, and freshness gates. No vendored or unsafe project code is currently allowed.</p>
+<pre>uvx --from wn-dev-std==2026.8.12 dev-std audit rust --scope repo --scope language</pre>

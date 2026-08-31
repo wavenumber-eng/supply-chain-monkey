@@ -1,0 +1,15 @@
+[package]
+name = "scm-cli"
+description = "Command-line client for Supply Chain Monkey"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "scm"
+path = "src/main.rs"
+
+[lints]
+workspace = true
