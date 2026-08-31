@@ -141,10 +141,23 @@ disabled unless a same-origin, no-downgrade policy is proven. Authorization is
 never forwarded cross-origin or included in URLs, errors, `Debug` output,
 fixtures, CLI arguments, or logs.
 
-The TLS backend decision is made through cross-platform tests. `rustls` is the
-preferred candidate because it avoids an OpenSSL runtime dependency, but it is
-accepted only after native/private CA roots and required proxy behavior pass on
-Windows, macOS, and Linux. Certificate validation is never disabled.
+The release candidate selects reqwest's `rustls` feature with the platform
+certificate verifier and system-proxy support, avoiding an OpenSSL runtime
+dependency while retaining native roots. The client can merge explicitly
+configured private PEM roots, never disables certificate or hostname
+validation, and disables redirects. In-process tests prove default rejection
+of an untrusted certificate, explicit private-root acceptance, and proxy
+routing. Those same tests must pass in the Windows, macOS, and Linux CI matrix
+before the candidate is accepted for release.
+
+The public crates are released contracts-first. Until the exact
+`scm-contracts` version is available in the selected registry, Cargo can build
+and test `scm-client` through its reviewed workspace path. Packaging the client
+alone cannot resolve that not-yet-published sibling, but a single multi-package
+`cargo package -p scm-contracts -p scm-client` invocation stages the exact
+contracts candidate in Cargo's temporary registry and verifies both normalized
+packages in dependency order. Artifact-candidate proof uses that path and binds
+both archive hashes; actual publication retains the same contracts-first order.
 
 ## Toolchain and audit boundaries
 
