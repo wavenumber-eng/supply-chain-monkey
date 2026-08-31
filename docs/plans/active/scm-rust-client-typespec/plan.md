@@ -86,13 +86,13 @@ depends_on = ["contract-authority-design"]
 [[steps]]
 id = "rust-contract-generation"
 title = "Generate strict Rust contract types from TypeSpec schemas"
-status = "active"
+status = "done"
 depends_on = ["typespec-v1-contract", "rust-standard-adoption"]
 
 [[steps]]
 id = "rust-client-library"
 title = "Implement the async Rust SCM client library"
-status = "pending"
+status = "active"
 depends_on = ["rust-contract-generation"]
 
 [[steps]]
