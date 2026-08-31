@@ -21,6 +21,24 @@ const schemaFiles = (await readdir(SCHEMA_ROOT))
   .filter((name) => name.endsWith(".json"))
   .sort();
 
+const schemaIdentities = new Map();
+for (const name of schemaFiles) {
+  const document = await readJson(resolve(SCHEMA_ROOT, name));
+  const emittedId = typeof document.$id === "string" ? document.$id : name;
+  const canonicalId = emittedId.includes(":")
+    ? emittedId
+    : `urn:supply-chain-monkey:schema:v1.declaration.${name.slice(0, -5)}`;
+  schemaIdentities.set(name, canonicalId);
+  schemaIdentities.set(emittedId, canonicalId);
+}
+for (const name of schemaFiles) {
+  const path = resolve(SCHEMA_ROOT, name);
+  const document = await readJson(path);
+  document.$id = schemaIdentities.get(name);
+  rewriteExternalSchemaRefs(document, schemaIdentities);
+  await writeFile(path, `${JSON.stringify(document, null, 4)}\n`, "utf8");
+}
+
 const schemas = [];
 const schemasById = new Map();
 const schemasByName = new Map();
@@ -122,6 +140,21 @@ function rewriteRefs(value, idToName) {
     delete rewritten.unevaluatedProperties;
   }
   return rewritten;
+}
+
+function rewriteExternalSchemaRefs(value, identities) {
+  if (Array.isArray(value)) {
+    value.forEach((item) => rewriteExternalSchemaRefs(item, identities));
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  if (typeof value.$ref === "string" && !value.$ref.startsWith("#")) {
+    const [target, fragment = ""] = value.$ref.split("#", 2);
+    const identity = identities.get(target);
+    if (!identity) throw new Error(`Unresolved generated schema reference ${value.$ref}.`);
+    value.$ref = fragment ? `${identity}#${fragment}` : identity;
+  }
+  Object.values(value).forEach((item) => rewriteExternalSchemaRefs(item, identities));
 }
 
 function endpointRecords(document) {

@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "ValidationErrorResponse.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.ValidationErrorResponse",
     "type": "object",
     "properties": {
         "status_code": {
@@ -8,7 +8,7 @@
             "const": 422
         },
         "body": {
-            "$ref": "ValidationErrorDetail.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.ValidationErrorDetail"
         }
     },
     "required": [

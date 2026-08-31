@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "ValidationErrorItem.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.ValidationErrorItem",
     "type": "object",
     "properties": {
         "loc": {
@@ -11,7 +11,7 @@
                         "type": "string"
                     },
                     {
-                        "$ref": "JsonInteger.json"
+                        "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
                     }
                 ]
             }
@@ -23,10 +23,10 @@
             "type": "string"
         },
         "input": {
-            "$ref": "JsonValue.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonValue"
         },
         "ctx": {
-            "$ref": "RecordJsonValue.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.RecordJsonValue"
         }
     },
     "required": [

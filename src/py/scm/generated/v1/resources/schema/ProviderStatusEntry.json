@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "ProviderStatusEntry.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.ProviderStatusEntry",
     "type": "object",
     "properties": {
         "configured": {
@@ -10,7 +10,7 @@
             "type": "string"
         },
         "capabilities": {
-            "$ref": "SupplierCapabilities.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.SupplierCapabilities"
         }
     },
     "required": [

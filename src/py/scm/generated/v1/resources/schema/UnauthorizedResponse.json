@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "UnauthorizedResponse.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.UnauthorizedResponse",
     "type": "object",
     "properties": {
         "status_code": {
@@ -8,7 +8,7 @@
             "const": 401
         },
         "body": {
-            "$ref": "HttpErrorDetail.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.HttpErrorDetail"
         }
     },
     "required": [

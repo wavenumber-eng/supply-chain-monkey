@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "SupplierCapabilities.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.SupplierCapabilities",
     "type": "object",
     "properties": {
         "supplier": {
@@ -22,7 +22,7 @@
             "type": "boolean"
         },
         "max_spn_batch_size": {
-            "$ref": "JsonInteger.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
         },
         "min_request_interval_seconds": {
             "type": "number"
@@ -30,7 +30,7 @@
         "rate_limit_per_minute": {
             "anyOf": [
                 {
-                    "$ref": "JsonInteger.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
                 },
                 {
                     "type": "null"
@@ -40,7 +40,7 @@
         "rate_limit_per_day": {
             "anyOf": [
                 {
-                    "$ref": "JsonInteger.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
                 },
                 {
                     "type": "null"

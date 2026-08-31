@@ -1,18 +1,18 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "SpnBatchItem.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.SpnBatchItem",
     "type": "object",
     "properties": {
         "spn": {
             "type": "string"
         },
         "status": {
-            "$ref": "BatchItemStatus.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.BatchItemStatus"
         },
         "part": {
             "anyOf": [
                 {
-                    "$ref": "Part.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Part"
                 },
                 {
                     "type": "null"

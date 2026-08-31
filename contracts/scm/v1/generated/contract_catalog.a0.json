@@ -8,55 +8,55 @@
       "name": "Wavenumber.SupplyChainMonkey.V1.DetailEnvelope",
       "schema_id": "urn:supply-chain-monkey:schema:v1.detail-envelope",
       "artifact": "contracts/scm/v1/generated/schema/DetailEnvelope.json",
-      "sha256": "5cd8a46e6c210283167bcf85b7ed6e200814d0b925b88a01daa37a9e3931357f"
+      "sha256": "96adc53f7cedb973cf068b4aa2c53198596e6745101f0c95a60cdce8ba2ab4b6"
     },
     {
       "name": "Wavenumber.SupplyChainMonkey.V1.HealthResponse",
       "schema_id": "urn:supply-chain-monkey:schema:v1.health-response",
       "artifact": "contracts/scm/v1/generated/schema/HealthResponse.json",
-      "sha256": "f970a95481ee632b56fecd3056a53448ff15b20df343ebe2b274e8c73a43577b"
+      "sha256": "e59850bb930df929aeab93f6941be3a36aeee9fa512d31c33de337f51e40e1d2"
     },
     {
       "name": "Wavenumber.SupplyChainMonkey.V1.ProviderStatusResponse",
       "schema_id": "urn:supply-chain-monkey:schema:v1.provider-status-response",
       "artifact": "contracts/scm/v1/generated/schema/ProviderStatusResponse.json",
-      "sha256": "d188f30ca887e42ada8a4608c3e5b14e2ddca5ddda695516052cc47db5dc8090"
+      "sha256": "6613279068b35feef6992cd5f03afe22279bebe5a98644ab916b5eff54891df4"
     },
     {
       "name": "Wavenumber.SupplyChainMonkey.V1.SearchEnvelope",
       "schema_id": "urn:supply-chain-monkey:schema:v1.search-envelope",
       "artifact": "contracts/scm/v1/generated/schema/SearchEnvelope.json",
-      "sha256": "b51ab38d3552a668556e44b52c7f22057f26e20046f9658df1819b3edf4e424e"
+      "sha256": "bfbaea4fc89223ab998c25004d525a0e3552c8252d0497c28061c2f46218de81"
     },
     {
       "name": "Wavenumber.SupplyChainMonkey.V1.SpnBatchEnvelope",
       "schema_id": "urn:supply-chain-monkey:schema:v1.spn-batch-envelope",
       "artifact": "contracts/scm/v1/generated/schema/SpnBatchEnvelope.json",
-      "sha256": "5e51239e3f81da9f9ad0cb1310d2afcd163f32684587de30c583bfd1b9e318ad"
+      "sha256": "1b3b6fa27875e2349c44ab9d440eee4ed4d114f43ab72016ec9c87a869dce787"
     },
     {
       "name": "Wavenumber.SupplyChainMonkey.V1.SpnBatchRequest",
       "schema_id": "urn:supply-chain-monkey:schema:v1.spn-batch-request",
       "artifact": "contracts/scm/v1/generated/schema/SpnBatchRequest.json",
-      "sha256": "4c07c2689f4d7541318318465d72786306e0d4e74f16272366bdb86a0fd9ada8"
+      "sha256": "87a062398129786faa5ddffa3ee25606946175c788100606bf56130ca8ce6913"
     },
     {
       "name": "Wavenumber.SupplyChainMonkey.V1.SpnEnvelope",
       "schema_id": "urn:supply-chain-monkey:schema:v1.spn-envelope",
       "artifact": "contracts/scm/v1/generated/schema/SpnEnvelope.json",
-      "sha256": "a6e8ff902378fe82ae42356a181f12ace953d2121654c666b07cb620e23fc10c"
+      "sha256": "8990a6caa5aad143bcc046dd9f75dbeb6867b6a9de678dfeca1ddaf99e90c30f"
     },
     {
       "name": "Wavenumber.SupplyChainMonkey.V1.StreamDoneEvent",
       "schema_id": "urn:supply-chain-monkey:schema:v1.stream-done-event",
       "artifact": "contracts/scm/v1/generated/schema/StreamDoneEvent.json",
-      "sha256": "55fe7f4d0bffb20aa387dda7e190ceef998f8197e96fd047b5e175f262d4ebab"
+      "sha256": "c1d2ac619ddd62c577b49dbbcdd17d91831bf15afefbddfd5df1cbc7b443cb5a"
     },
     {
       "name": "Wavenumber.SupplyChainMonkey.V1.StreamSearchEvent",
       "schema_id": "urn:supply-chain-monkey:schema:v1.stream-search-event",
       "artifact": "contracts/scm/v1/generated/schema/StreamSearchEvent.json",
-      "sha256": "51ba18a0f89e610251a8b76262a6321b9f1a4b56450e4e568676454685ab030b"
+      "sha256": "d72994b620dd7d590dd3f17531ef8f6bcabc9e4ffdd657b49c5bbd596f44950b"
     }
   ],
   "endpoints": [
@@ -260,213 +260,213 @@
     "schemas": [
       {
         "name": "BadRequestResponse",
-        "schema_id": "BadRequestResponse.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.BadRequestResponse",
         "path": "contracts/scm/v1/generated/schema/BadRequestResponse.json",
-        "sha256": "fec6f0ff2858ffad49fb7f17263b724957378bc322bea42b3350ac2702d6a24d"
+        "sha256": "65c52cfa7808a9ba354574bcd7ef647ad1104ea5e590edd9beee3c9d11aebae5"
       },
       {
         "name": "BatchItemStatus",
-        "schema_id": "BatchItemStatus.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.BatchItemStatus",
         "path": "contracts/scm/v1/generated/schema/BatchItemStatus.json",
-        "sha256": "44534fc405e0340fdb26b36f5a9031ec376dbc3ff52499c9e1a8d22fa1d8de05"
+        "sha256": "4a9590883a9db8809893e52c3193dbc4f8d5cac3cfdb503ec6ed7946e3f18374"
       },
       {
         "name": "DetailEnvelope",
         "schema_id": "urn:supply-chain-monkey:schema:v1.detail-envelope",
         "path": "contracts/scm/v1/generated/schema/DetailEnvelope.json",
-        "sha256": "5cd8a46e6c210283167bcf85b7ed6e200814d0b925b88a01daa37a9e3931357f"
+        "sha256": "96adc53f7cedb973cf068b4aa2c53198596e6745101f0c95a60cdce8ba2ab4b6"
       },
       {
         "name": "EnvelopeMetadata",
-        "schema_id": "EnvelopeMetadata.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeMetadata",
         "path": "contracts/scm/v1/generated/schema/EnvelopeMetadata.json",
-        "sha256": "f33d570ea12c3bbfb8bd9ffbdd9e8f734527d83a85d15c326d5e193707b68e0f"
+        "sha256": "da8ae8a300c92318eeb711a96b192ffad1e988e5673a1d5cbd82f3262b186106"
       },
       {
         "name": "EnvelopeStatus",
-        "schema_id": "EnvelopeStatus.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeStatus",
         "path": "contracts/scm/v1/generated/schema/EnvelopeStatus.json",
-        "sha256": "fd66dd1a631d286cea51e4767fc2d1eb754b59ec69e23d98414befaea0cb5727"
+        "sha256": "39637d511276ba03dabafbf1504af6e0af5a4d0ce5dd6ad7237e73223902ed73"
       },
       {
         "name": "EventStreamResponse",
-        "schema_id": "EventStreamResponse.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.EventStreamResponse",
         "path": "contracts/scm/v1/generated/schema/EventStreamResponse.json",
-        "sha256": "b12d5507b9c1bb39c193920fe089299e46403d6d911ebe2a287a2b5433787ccd"
+        "sha256": "5a9f2a373d821b6a77b9b8d580e91a1273308fd6a62015717bce419b9dbddcd3"
       },
       {
         "name": "HealthResponse",
         "schema_id": "urn:supply-chain-monkey:schema:v1.health-response",
         "path": "contracts/scm/v1/generated/schema/HealthResponse.json",
-        "sha256": "f970a95481ee632b56fecd3056a53448ff15b20df343ebe2b274e8c73a43577b"
+        "sha256": "e59850bb930df929aeab93f6941be3a36aeee9fa512d31c33de337f51e40e1d2"
       },
       {
         "name": "HttpErrorDetail",
-        "schema_id": "HttpErrorDetail.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.HttpErrorDetail",
         "path": "contracts/scm/v1/generated/schema/HttpErrorDetail.json",
-        "sha256": "d73c6f870e7c5eb91aeef6914be50eb0ed581dcc0c712aec758f37a38d5ab62a"
+        "sha256": "f86c1272ab4f17d8b069edb8317fb951ef7ab4d22311b5a6a7808caeac995a17"
       },
       {
         "name": "JsonInteger",
-        "schema_id": "JsonInteger.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger",
         "path": "contracts/scm/v1/generated/schema/JsonInteger.json",
-        "sha256": "1015bfc4e6fa07e994fa48192247d66be5bd67fe193d60f85355c343d6b1e79b"
+        "sha256": "27810416eea984e987f666b157459b6233c0ed38fec2f9ac741c7d37f95bd518"
       },
       {
         "name": "JsonValue",
-        "schema_id": "JsonValue.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.JsonValue",
         "path": "contracts/scm/v1/generated/schema/JsonValue.json",
-        "sha256": "3cec0666c93bea5043cd1e70e527ae57a467a9c3437f75d209ff36daddadf79e"
+        "sha256": "b374f69150b49f734a32df410fac0f1cebeed1525cced7849cdda5d6b84faf8f"
       },
       {
         "name": "Part",
-        "schema_id": "Part.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.Part",
         "path": "contracts/scm/v1/generated/schema/Part.json",
-        "sha256": "9245b3a91ac49ef7f8f6e62e6c6802d97c1ef2259aef2357b6ec9b63c0b3b65d"
+        "sha256": "3f83d5394ccb123413f1ec0ac6b5e90d799ea418167a784653e3bedf9fa99fdb"
       },
       {
         "name": "PriceBreak",
-        "schema_id": "PriceBreak.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.PriceBreak",
         "path": "contracts/scm/v1/generated/schema/PriceBreak.json",
-        "sha256": "6b609394966167bb7b99fe4475f9c03d6704fc34c861bb940573613942d8ea90"
+        "sha256": "0874c4ae3587df7c2ca89ff64008c4e1943c527088737c428b0ee6b38e4f89f7"
       },
       {
         "name": "ProviderRawData",
-        "schema_id": "ProviderRawData.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.ProviderRawData",
         "path": "contracts/scm/v1/generated/schema/ProviderRawData.json",
-        "sha256": "87dc93c87045ab193790240885ec8f25f3028ae3c615551df378a1390e39b32d"
+        "sha256": "cf0d1e16a8344d8c836fe13afce2d595fa4732877f455a5fc880eb3c40b84964"
       },
       {
         "name": "ProviderStatusEntry",
-        "schema_id": "ProviderStatusEntry.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.ProviderStatusEntry",
         "path": "contracts/scm/v1/generated/schema/ProviderStatusEntry.json",
-        "sha256": "716fe63d4b05724de5f56f2642f3eb00fee62aa9a7609ab5bba5145cd9b891af"
+        "sha256": "93be240df414c78853c48d2a51e1bc6bd70134e440168bf8252e9297c00354c0"
       },
       {
         "name": "ProviderStatusResponse",
         "schema_id": "urn:supply-chain-monkey:schema:v1.provider-status-response",
         "path": "contracts/scm/v1/generated/schema/ProviderStatusResponse.json",
-        "sha256": "d188f30ca887e42ada8a4608c3e5b14e2ddca5ddda695516052cc47db5dc8090"
+        "sha256": "6613279068b35feef6992cd5f03afe22279bebe5a98644ab916b5eff54891df4"
       },
       {
         "name": "RateLimitSnapshot",
-        "schema_id": "RateLimitSnapshot.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.RateLimitSnapshot",
         "path": "contracts/scm/v1/generated/schema/RateLimitSnapshot.json",
-        "sha256": "cbd6bda3fe8f3fd12e6b5dd05b79efb9ed4b8a84767b893e1a9023ffb2f73921"
+        "sha256": "886d2afc54664ec9188f7b6baf9cd3d45fb91c8da739f5320063c423e1b3e528"
       },
       {
         "name": "RecordJsonValue",
-        "schema_id": "RecordJsonValue.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.RecordJsonValue",
         "path": "contracts/scm/v1/generated/schema/RecordJsonValue.json",
-        "sha256": "874c4879b94c066f6ea3ab49e734d808573fb583f69ea0d9c8e3175d1e2ac356"
+        "sha256": "b5048414f8c10764499fe8cef0de1b7712299a9e1fdb5ebb2a80fe77b66ca296"
       },
       {
         "name": "RecordProviderStatusEntry",
-        "schema_id": "RecordProviderStatusEntry.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.RecordProviderStatusEntry",
         "path": "contracts/scm/v1/generated/schema/RecordProviderStatusEntry.json",
-        "sha256": "9e555c45f1aea69db9e835f3e94c55b7e0d15b3bb883e6a46bedfb552177c40b"
+        "sha256": "ad60ff0d54d249c2262212a5f6223aa75417bf08bec9edc4b388651ac3ff4983"
       },
       {
         "name": "Rfc3339Timestamp",
-        "schema_id": "Rfc3339Timestamp.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp",
         "path": "contracts/scm/v1/generated/schema/Rfc3339Timestamp.json",
-        "sha256": "e9857310c894b0134b919cb89d446e2f1043bfdbf3dee510cd76b76ad670c902"
+        "sha256": "9599da71f9c9e4df6f22895f584efa5850c7cf2c39b37f70977c6402e75042fa"
       },
       {
         "name": "SearchEnvelope",
         "schema_id": "urn:supply-chain-monkey:schema:v1.search-envelope",
         "path": "contracts/scm/v1/generated/schema/SearchEnvelope.json",
-        "sha256": "b51ab38d3552a668556e44b52c7f22057f26e20046f9658df1819b3edf4e424e"
+        "sha256": "bfbaea4fc89223ab998c25004d525a0e3552c8252d0497c28061c2f46218de81"
       },
       {
         "name": "ServerConfigurationErrorResponse",
-        "schema_id": "ServerConfigurationErrorResponse.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.ServerConfigurationErrorResponse",
         "path": "contracts/scm/v1/generated/schema/ServerConfigurationErrorResponse.json",
-        "sha256": "da6632eaebc7978402998e3498e53df3f07e833312f2b7947acd4830d898e24d"
+        "sha256": "f52647e80e7dacb28e9965bfd4e8b399f216a9816a0c9ef43ad423ec156b19b2"
       },
       {
         "name": "ServiceErrorDetail",
-        "schema_id": "ServiceErrorDetail.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.ServiceErrorDetail",
         "path": "contracts/scm/v1/generated/schema/ServiceErrorDetail.json",
-        "sha256": "339a059a2573711f95220979d4b0301a5c2f1d5216111084988e60766d2c59b7"
+        "sha256": "c689e1eaf3b363f1ec1feb9059ed2d17740e93e1ac1407c553f3502f0ca0a953"
       },
       {
         "name": "SpnBatchEnvelope",
         "schema_id": "urn:supply-chain-monkey:schema:v1.spn-batch-envelope",
         "path": "contracts/scm/v1/generated/schema/SpnBatchEnvelope.json",
-        "sha256": "5e51239e3f81da9f9ad0cb1310d2afcd163f32684587de30c583bfd1b9e318ad"
+        "sha256": "1b3b6fa27875e2349c44ab9d440eee4ed4d114f43ab72016ec9c87a869dce787"
       },
       {
         "name": "SpnBatchItem",
-        "schema_id": "SpnBatchItem.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.SpnBatchItem",
         "path": "contracts/scm/v1/generated/schema/SpnBatchItem.json",
-        "sha256": "3857851b3592b500e450b87857aeea5da22ee93d609f754101d43dd099590ffd"
+        "sha256": "5843641d9af6b01c54a003ea3558fca153b850aa6e841f0ab893d873943c148b"
       },
       {
         "name": "SpnBatchRequest",
         "schema_id": "urn:supply-chain-monkey:schema:v1.spn-batch-request",
         "path": "contracts/scm/v1/generated/schema/SpnBatchRequest.json",
-        "sha256": "4c07c2689f4d7541318318465d72786306e0d4e74f16272366bdb86a0fd9ada8"
+        "sha256": "87a062398129786faa5ddffa3ee25606946175c788100606bf56130ca8ce6913"
       },
       {
         "name": "SpnEnvelope",
         "schema_id": "urn:supply-chain-monkey:schema:v1.spn-envelope",
         "path": "contracts/scm/v1/generated/schema/SpnEnvelope.json",
-        "sha256": "a6e8ff902378fe82ae42356a181f12ace953d2121654c666b07cb620e23fc10c"
+        "sha256": "8990a6caa5aad143bcc046dd9f75dbeb6867b6a9de678dfeca1ddaf99e90c30f"
       },
       {
         "name": "StreamDoneEvent",
         "schema_id": "urn:supply-chain-monkey:schema:v1.stream-done-event",
         "path": "contracts/scm/v1/generated/schema/StreamDoneEvent.json",
-        "sha256": "55fe7f4d0bffb20aa387dda7e190ceef998f8197e96fd047b5e175f262d4ebab"
+        "sha256": "c1d2ac619ddd62c577b49dbbcdd17d91831bf15afefbddfd5df1cbc7b443cb5a"
       },
       {
         "name": "StreamMpn",
-        "schema_id": "StreamMpn.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.StreamMpn",
         "path": "contracts/scm/v1/generated/schema/StreamMpn.json",
-        "sha256": "13adf768e395f7d2101f441d83d14e20da006be4bc40be59db4d2baa7fa999c8"
+        "sha256": "f09160f27042c0a877d6bb2bb8362a1daf22ea28d697015fca025b523809d916"
       },
       {
         "name": "StreamSearchEvent",
         "schema_id": "urn:supply-chain-monkey:schema:v1.stream-search-event",
         "path": "contracts/scm/v1/generated/schema/StreamSearchEvent.json",
-        "sha256": "51ba18a0f89e610251a8b76262a6321b9f1a4b56450e4e568676454685ab030b"
+        "sha256": "d72994b620dd7d590dd3f17531ef8f6bcabc9e4ffdd657b49c5bbd596f44950b"
       },
       {
         "name": "Supplier",
-        "schema_id": "Supplier.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.Supplier",
         "path": "contracts/scm/v1/generated/schema/Supplier.json",
-        "sha256": "12b732f4f20e19fd1e0b82318fc5cd14012eaac85035d5dd1fd8b64cf17bf79f"
+        "sha256": "6505ac189e670b62259ca8efc46199908869ad0d5030677b6e8c18e03fbef76d"
       },
       {
         "name": "SupplierCapabilities",
-        "schema_id": "SupplierCapabilities.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.SupplierCapabilities",
         "path": "contracts/scm/v1/generated/schema/SupplierCapabilities.json",
-        "sha256": "6969a0e730a6b17a17b0e9f52b82598327f1a2c70d0190fe80723fa717f16eaa"
+        "sha256": "233b6a64bdff1aef9f1d0d3e89e18a9302956b4f6a6bd1bd67eba1c378f484c1"
       },
       {
         "name": "UnauthorizedResponse",
-        "schema_id": "UnauthorizedResponse.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.UnauthorizedResponse",
         "path": "contracts/scm/v1/generated/schema/UnauthorizedResponse.json",
-        "sha256": "949220c4451ba2c013474f3a9fcd389678615216fb60170ae2cf54829934c8e9"
+        "sha256": "286d65f75e214bee6c04dabc368d120ac1c4ead220971f168d10bc6a1c23ef02"
       },
       {
         "name": "ValidationErrorDetail",
-        "schema_id": "ValidationErrorDetail.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.ValidationErrorDetail",
         "path": "contracts/scm/v1/generated/schema/ValidationErrorDetail.json",
-        "sha256": "ee7ef9c5d076c28b3bd378ad6522ace7e82eb0405cec2b2c5da66171a118ff6e"
+        "sha256": "d9373e354d3e8fb0dc1fc2f498f2d40b8c6271195a73dd40bb9811fe26667ba3"
       },
       {
         "name": "ValidationErrorItem",
-        "schema_id": "ValidationErrorItem.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.ValidationErrorItem",
         "path": "contracts/scm/v1/generated/schema/ValidationErrorItem.json",
-        "sha256": "87b711b56d7a288fb6e3bdcd7b6aaf65a09f932cd89632504d678503eceda02a"
+        "sha256": "8c47d5bda8c9167ae72de24358729bd726ad2ea2420f776cce5692ffc83befec"
       },
       {
         "name": "ValidationErrorResponse",
-        "schema_id": "ValidationErrorResponse.json",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.ValidationErrorResponse",
         "path": "contracts/scm/v1/generated/schema/ValidationErrorResponse.json",
-        "sha256": "7f78e6017707a157591ce34e4382290de054e3ebb9a43a661e7242f77d3cbb5e"
+        "sha256": "96172e3443a6fd58fbb8e323dcfd8226f05e4a0015d3729502118b7d0d9bda2b"
       }
     ]
   }

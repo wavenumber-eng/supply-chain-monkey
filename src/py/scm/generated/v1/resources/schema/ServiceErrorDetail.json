@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "ServiceErrorDetail.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.ServiceErrorDetail",
     "type": "object",
     "properties": {
         "code": {

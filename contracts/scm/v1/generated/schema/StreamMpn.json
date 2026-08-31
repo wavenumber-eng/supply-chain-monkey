@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "StreamMpn.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.StreamMpn",
     "type": "string",
     "minLength": 3,
     "description": "Stream MPN after the deployed handler's trim normalization.",

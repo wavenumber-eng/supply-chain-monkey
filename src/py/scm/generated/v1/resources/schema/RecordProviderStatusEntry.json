@@ -1,9 +1,9 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "RecordProviderStatusEntry.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.RecordProviderStatusEntry",
     "type": "object",
     "properties": {},
     "unevaluatedProperties": {
-        "$ref": "ProviderStatusEntry.json"
+        "$ref": "urn:supply-chain-monkey:schema:v1.declaration.ProviderStatusEntry"
     }
 }

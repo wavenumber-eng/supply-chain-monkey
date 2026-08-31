@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "BadRequestResponse.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.BadRequestResponse",
     "type": "object",
     "properties": {
         "status_code": {
@@ -8,7 +8,7 @@
             "const": 400
         },
         "body": {
-            "$ref": "HttpErrorDetail.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.HttpErrorDetail"
         }
     },
     "required": [

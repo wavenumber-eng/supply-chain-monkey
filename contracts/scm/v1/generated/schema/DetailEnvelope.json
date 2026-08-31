@@ -6,7 +6,7 @@
         "data": {
             "anyOf": [
                 {
-                    "$ref": "Part.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Part"
                 },
                 {
                     "type": "null"
@@ -19,7 +19,7 @@
     ],
     "allOf": [
         {
-            "$ref": "EnvelopeMetadata.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeMetadata"
         }
     ],
     "unevaluatedProperties": {

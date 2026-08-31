@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "Part.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.Part",
     "type": "object",
     "properties": {
         "supplier": {
@@ -28,7 +28,7 @@
             "type": "string"
         },
         "stock_quantity": {
-            "$ref": "JsonInteger.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
         },
         "stock_status": {
             "type": "string"
@@ -36,7 +36,7 @@
         "price_breaks": {
             "type": "array",
             "items": {
-                "$ref": "PriceBreak.json"
+                "$ref": "urn:supply-chain-monkey:schema:v1.declaration.PriceBreak"
             }
         },
         "lifecycle_status": {
@@ -48,7 +48,7 @@
         "extra_data": {
             "anyOf": [
                 {
-                    "$ref": "ProviderRawData.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.ProviderRawData"
                 },
                 {
                     "type": "null"

@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "JsonValue.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.JsonValue",
     "anyOf": [
         {
             "type": "string"
@@ -17,11 +17,11 @@
         {
             "type": "array",
             "items": {
-                "$ref": "JsonValue.json"
+                "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonValue"
             }
         },
         {
-            "$ref": "RecordJsonValue.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.RecordJsonValue"
         }
     ],
     "description": "JSON-compatible scalar, array, or object value."
