@@ -52,9 +52,9 @@ def scm_client():
 
         def mock_post(url, **kwargs):
             path = url
-            json_body = kwargs.get("json")
+            content = kwargs.get("data")
             headers = kwargs.get("headers")
-            response = tc.post(path, json=json_body, headers=headers)
+            response = tc.post(path, content=content, headers=headers)
             return response
 
         with (

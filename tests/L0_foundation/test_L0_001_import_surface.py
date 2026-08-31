@@ -3,11 +3,18 @@ from scm.models import (
     PARAMETER_FIELD_NAMES,
     SUPPLIERS,
     SUPPLIER_LOOKUP,
+    DetailEnvelope,
+    HealthResponse,
     PartResponse,
+    ProviderStatusResponse,
     RateLimitSnapshot,
+    SearchEnvelope,
     ServiceEnvelope,
+    SpnBatchEnvelope,
     SpnBatchItem,
     SpnBatchRequest,
+    SpnEnvelope,
+    StreamDoneEvent,
     SupplierCapabilities,
     SupplierType,
 )
@@ -46,11 +53,18 @@ def test_parameter_field_names():
 
 
 def test_contract_models_importable():
+    assert DetailEnvelope is not None
+    assert HealthResponse is not None
     assert PartResponse is not None
+    assert ProviderStatusResponse is not None
     assert RateLimitSnapshot is not None
+    assert SearchEnvelope is not None
     assert ServiceEnvelope is not None
+    assert SpnBatchEnvelope is not None
     assert SpnBatchItem is not None
     assert SpnBatchRequest is not None
+    assert SpnEnvelope is not None
+    assert StreamDoneEvent is not None
     assert SupplierCapabilities is not None
 
 

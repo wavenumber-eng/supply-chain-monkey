@@ -107,7 +107,7 @@ class SpnBatchRequest(BaseModel):
     )
     supplier: str
     spns: Annotated[list[str], Field(max_length=1000, min_length=1)]
-    include_raw: bool | None = False
+    include_raw: bool = False
 
 
 class StreamDoneEvent(BaseModel):

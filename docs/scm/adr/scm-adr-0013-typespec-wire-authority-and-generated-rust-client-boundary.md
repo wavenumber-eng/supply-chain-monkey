@@ -183,8 +183,11 @@ explicit Python 3.13/Pydantic v2 option set, schema-accurate nullability, and
 forbidden extra fields. The projection adds definition titles to preserve
 distinct catalog identities for structurally identical models and rewrites
 references into one local `$defs` bundle; these changes never reach runtime
-validation. A catalog-driven wrapper creates the complete schema input and
-runs the generator in write or `--check` mode. The official preview TypeSpec
+validation. The wrapper also narrows the generator's `bool | None = False`
+rendering for the optional, non-nullable `SpnBatchRequest.include_raw` property
+to `bool = False`; the unmodified schema remains the runtime authority and
+rejects explicit JSON null. A catalog-driven wrapper creates the complete
+schema input and runs the generator in write or `--check` mode. The official preview TypeSpec
 Python client emitter is not used because the supported
 handwritten `SCMClient` remains the transport boundary. Runtime validation uses
 the Draft 2020-12 validator from `jsonschema` before Pydantic decode; generated

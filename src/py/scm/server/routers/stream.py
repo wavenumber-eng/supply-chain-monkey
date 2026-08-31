@@ -12,9 +12,12 @@ from scm.models import (
     PARAMETER_FIELD_NAMES,
     SUPPLIER_LOOKUP,
     SUPPLIERS,
+    SearchEnvelope,
     ServiceEnvelope,
     ServiceErrorDetail,
+    StreamDoneEvent,
 )
+from ..contract_response import contract_json, contract_response
 from ..models import part_response_from_info
 from ..providers.base import create_supplier
 from .common import error_detail_from_exception, get_supplier_credentials
@@ -31,9 +34,12 @@ DEFAULT_MAX_RESULTS = 10
 DEFAULT_TIMEOUT = 15.0
 
 
-def _search_provider_sync(
-    supplier_key: str, mpn: str, max_results: int, include_raw: bool
-) -> str:
+def _search_event_json(envelope: ServiceEnvelope) -> str:
+    response = contract_response("SearchEnvelope", SearchEnvelope, envelope)
+    return contract_json("SearchEnvelope", response)
+
+
+def _search_provider_sync(supplier_key: str, mpn: str, max_results: int, include_raw: bool) -> str:
     """Run a single provider search synchronously (called from thread pool).
 
     Returns a JSON string ready to be sent as an SSE event.
@@ -45,40 +51,44 @@ def _search_provider_sync(
     try:
         client = create_supplier(supplier_type, **creds)
     except Exception as exc:
-        return ServiceEnvelope(
-            status="provider_error",
-            supplier=supplier_type.value,
-            parameter_field_name=field_name,
-            error=f"Supplier not available: {exc}",
-            error_detail=error_detail_from_exception(
-                exc, default_code="provider_unavailable"
-            ),
-        ).model_dump_json()
+        return _search_event_json(
+            ServiceEnvelope(
+                status="provider_error",
+                supplier=supplier_type.value,
+                parameter_field_name=field_name,
+                error=f"Supplier not available: {exc}",
+                error_detail=error_detail_from_exception(exc, default_code="provider_unavailable"),
+            )
+        )
 
     t0 = time.monotonic()
     try:
         results = client.search_by_mpn(mpn, max_results=max_results)
     except Exception as exc:
         latency = int((time.monotonic() - t0) * 1000)
-        return ServiceEnvelope(
-            status="provider_error",
-            supplier=supplier_type.value,
-            parameter_field_name=field_name,
-            provider_latency_ms=latency,
-            error=str(exc),
-            error_detail=error_detail_from_exception(exc),
-        ).model_dump_json()
+        return _search_event_json(
+            ServiceEnvelope(
+                status="provider_error",
+                supplier=supplier_type.value,
+                parameter_field_name=field_name,
+                provider_latency_ms=latency,
+                error=str(exc),
+                error_detail=error_detail_from_exception(exc),
+            )
+        )
 
     latency = int((time.monotonic() - t0) * 1000)
 
     if not results:
-        return ServiceEnvelope(
-            status="not_found",
-            supplier=supplier_type.value,
-            parameter_field_name=field_name,
-            provider_latency_ms=latency,
-            data=[],
-        ).model_dump_json()
+        return _search_event_json(
+            ServiceEnvelope(
+                status="not_found",
+                supplier=supplier_type.value,
+                parameter_field_name=field_name,
+                provider_latency_ms=latency,
+                data=[],
+            )
+        )
 
     # Limit results
     if len(results) > max_results:
@@ -90,18 +100,21 @@ def _search_provider_sync(
             parts.append(part_response_from_info(r, include_raw=include_raw))
         except Exception as exc:
             log.warning("Failed to convert result %s: %s", r.supplier_part_number, exc)
-    return ServiceEnvelope(
-        status="ok",
-        supplier=supplier_type.value,
-        parameter_field_name=field_name,
-        provider_latency_ms=latency,
-        data=[p.model_dump() for p in parts],
-    ).model_dump_json()
+    return _search_event_json(
+        ServiceEnvelope(
+            status="ok",
+            supplier=supplier_type.value,
+            parameter_field_name=field_name,
+            provider_latency_ms=latency,
+            data=[p.model_dump() for p in parts],
+        )
+    )
 
 
 def _verify_token(token: str) -> bool:
     """Check bearer token."""
     from ..settings import settings
+
     return bool(settings.service_token and token == settings.service_token)
 
 
@@ -130,7 +143,9 @@ async def search_stream(
 
     # Determine which suppliers to search
     if suppliers.strip():
-        target_suppliers = [s.strip().lower() for s in suppliers.split(",") if s.strip().lower() in SUPPLIER_LOOKUP]
+        target_suppliers = [
+            s.strip().lower() for s in suppliers.split(",") if s.strip().lower() in SUPPLIER_LOOKUP
+        ]
     else:
         target_suppliers = list(SUPPLIERS)
 
@@ -180,7 +195,7 @@ async def search_stream(
                             retryable=True,
                         ),
                     )
-                    yield f"data: {timeout_envelope.model_dump_json()}\n\n"
+                    yield f"data: {_search_event_json(timeout_envelope)}\n\n"
                 except Exception as exc:
                     supplier_type = SUPPLIER_LOOKUP.get(supplier_key)
                     error_envelope = ServiceEnvelope(
@@ -193,9 +208,10 @@ async def search_stream(
                             default_retryable=True,
                         ),
                     )
-                    yield f"data: {error_envelope.model_dump_json()}\n\n"
+                    yield f"data: {_search_event_json(error_envelope)}\n\n"
 
-        yield 'data: {"done": true}\n\n'
+        done_json = contract_json("StreamDoneEvent", StreamDoneEvent(done=True))
+        yield f"data: {done_json}\n\n"
 
     return StreamingResponse(
         generate(),

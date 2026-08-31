@@ -7,8 +7,9 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
 from scm import __version__
-from scm.models import SupplierType
+from scm.models import HealthResponse, ProviderStatusResponse, SupplierType
 from ..auth import verify_token
+from ..contract_response import contract_response
 from ..providers.base import (
     IMPLEMENTED_SUPPLIERS,
     create_supplier,
@@ -84,23 +85,22 @@ def _status_page_html() -> str:
             f'<span class="status-label">{st.value}</span>'
             f'<span class="status-value">{backend}</span>'
             f'<span class="status-value {css_class}">{status_text}</span>'
-            f'</div>'
+            f"</div>"
         )
 
     template = (_TEMPLATE_DIR / "status.html").read_text(encoding="utf-8")
     return (
-        template
-        .replace("{{MONKEY_ART}}", _MONKEY_ART)
+        template.replace("{{MONKEY_ART}}", _MONKEY_ART)
         .replace("{{VERSION}}", _VERSION)
         .replace("{{TIMESTAMP}}", now)
         .replace("{{PROVIDER_ROWS}}", provider_rows)
     )
 
 
-@router.get("/health")
+@router.get("/health", response_model=HealthResponse)
 async def health():
     """Basic health check. No auth required."""
-    return {"status": "ok"}
+    return contract_response("HealthResponse", HealthResponse, {"status": "ok"})
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -109,7 +109,12 @@ async def status_page():
     return _status_page_html()
 
 
-@router.get("/providers/status", dependencies=[Depends(verify_token)])
+@router.get(
+    "/providers/status",
+    dependencies=[Depends(verify_token)],
+    response_model=ProviderStatusResponse,
+    response_model_exclude_unset=True,
+)
 async def providers_status():
     """Report which providers are configured (have credentials)."""
     statuses = {}
@@ -136,4 +141,8 @@ async def providers_status():
                 "configured": bool(settings.mouser_api_key),
                 "capabilities": _capabilities_for_status(st),
             }
-    return {"providers": statuses}
+    return contract_response(
+        "ProviderStatusResponse",
+        ProviderStatusResponse,
+        {"providers": statuses},
+    )

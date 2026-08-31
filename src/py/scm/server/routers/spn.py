@@ -11,10 +11,13 @@ from scm.models import (
     PARAMETER_FIELD_NAMES,
     SUPPLIER_LOOKUP,
     ServiceEnvelope,
+    SpnBatchEnvelope,
     SpnBatchItem,
     SpnBatchRequest,
+    SpnEnvelope,
 )
 from ..auth import verify_token
+from ..contract_response import contract_response
 from ..models import part_response_from_info
 from ..providers.base import create_supplier, get_default_supplier_capabilities
 from .common import get_supplier_credentials
@@ -135,7 +138,7 @@ def _do_spn_batch(request: SpnBatchRequest) -> ServiceEnvelope:
 
     t0 = time.monotonic()
     for start in range(0, len(cleaned_spns), batch_size):
-        chunk = cleaned_spns[start:start + batch_size]
+        chunk = cleaned_spns[start : start + batch_size]
         try:
             chunk_results = client.get_part_details_batch(chunk)
         except Exception as exc:
@@ -146,9 +149,7 @@ def _do_spn_batch(request: SpnBatchRequest) -> ServiceEnvelope:
                 exc,
             )
             for spn in chunk:
-                items.append(
-                    SpnBatchItem(spn=spn, status="provider_error", error=str(exc))
-                )
+                items.append(SpnBatchItem(spn=spn, status="provider_error", error=str(exc)))
             continue
 
         for spn in chunk:
@@ -163,9 +164,7 @@ def _do_spn_batch(request: SpnBatchRequest) -> ServiceEnvelope:
                 )
             except Exception as exc:
                 log.warning("Failed to convert SPN result %s: %s", spn, exc)
-                items.append(
-                    SpnBatchItem(spn=spn, status="provider_error", error=str(exc))
-                )
+                items.append(SpnBatchItem(spn=spn, status="provider_error", error=str(exc)))
                 continue
             items.append(SpnBatchItem(spn=spn, status="ok", part=part_response))
 
@@ -181,7 +180,7 @@ def _do_spn_batch(request: SpnBatchRequest) -> ServiceEnvelope:
     )
 
 
-@router.get("/spn")
+@router.get("/spn", response_model=SpnEnvelope)
 async def spn(
     supplier: str = Query(..., description="Supplier name (jlcpcb, lcsc, digikey, mouser)"),
     spn: str = Query(..., description="Exact supplier part number"),
@@ -189,30 +188,29 @@ async def spn(
 ):
     supplier_key = supplier.strip().lower()
     if supplier_key not in SUPPLIER_LOOKUP:
-        return ServiceEnvelope(
+        result = ServiceEnvelope(
             status="provider_error",
             supplier=supplier,
             error=f"Unknown supplier: {supplier}. Valid: {', '.join(SUPPLIER_LOOKUP)}",
         )
+    else:
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            _executor, _do_spn, supplier_key, spn.strip(), include_raw
+        )
+    return contract_response("SpnEnvelope", SpnEnvelope, result)
 
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
-        _executor, _do_spn, supplier_key, spn.strip(), include_raw
-    )
 
-
-@router.post("/spn/batch")
+@router.post("/spn/batch", response_model=SpnBatchEnvelope)
 async def spn_batch(request: SpnBatchRequest):
     supplier_key = request.supplier.strip().lower()
     if supplier_key not in SUPPLIER_LOOKUP:
-        return ServiceEnvelope(
+        result = ServiceEnvelope(
             status="provider_error",
             supplier=request.supplier,
-            error=(
-                f"Unknown supplier: {request.supplier}. "
-                f"Valid: {', '.join(SUPPLIER_LOOKUP)}"
-            ),
+            error=(f"Unknown supplier: {request.supplier}. Valid: {', '.join(SUPPLIER_LOOKUP)}"),
         )
-
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(_executor, _do_spn_batch, request)
+    else:
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(_executor, _do_spn_batch, request)
+    return contract_response("SpnBatchEnvelope", SpnBatchEnvelope, result)
