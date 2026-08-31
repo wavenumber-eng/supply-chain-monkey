@@ -1,6 +1,6 @@
 {
   "providers": {
-    "digikey": {
+    "Digikey": {
       "configured": true,
       "backend": "api",
       "capabilities": {

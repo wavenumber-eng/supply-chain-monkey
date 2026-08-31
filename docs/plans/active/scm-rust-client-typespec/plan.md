@@ -74,13 +74,13 @@ depends_on = ["typespec-v1-contract"]
 [[steps]]
 id = "python-contract-cutover"
 title = "Cut the Python server and client over to generated contract models"
-status = "active"
+status = "pending"
 depends_on = ["python-runtime-viability"]
 
 [[steps]]
 id = "rust-standard-adoption"
 title = "Adopt the wn-dev-std 2026.8.12 Rust application guidance"
-status = "pending"
+status = "active"
 depends_on = ["contract-authority-design"]
 
 [[steps]]

@@ -1103,6 +1103,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "jsonschema" },
     { name = "pydantic" },
+    { name = "referencing" },
     { name = "requests" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -1141,6 +1142,7 @@ requires-dist = [
     { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.115.0" },
     { name = "jsonschema", specifier = ">=4.26,<5" },
     { name = "pydantic", specifier = ">=2.0" },
+    { name = "referencing", specifier = ">=0.36,<1" },
     { name = "requests", specifier = ">=2.32.0" },
     { name = "requests", marker = "extra == 'client'", specifier = ">=2.32.0" },
     { name = "requests", marker = "extra == 'server'", specifier = ">=2.32.0" },

@@ -333,10 +333,10 @@ class RecordJsonValue(RootModel[dict[str, Optional["JsonValue"]]]):
 
 
 class JsonValue(
-    RootModel[Optional[Union[str, float, bool, list[Optional["JsonValue"]], RecordJsonValue]]]
+    RootModel[Optional[Union[str, int, float, bool, list[Optional["JsonValue"]], RecordJsonValue]]]
 ):
     root: Annotated[
-        Optional[Union[str, float, bool, list[Optional["JsonValue"]], RecordJsonValue]],
+        Optional[Union[str, int, float, bool, list[Optional["JsonValue"]], RecordJsonValue]],
         Field(
             description="JSON-compatible scalar, array, or object value.",
             title="JsonValue",

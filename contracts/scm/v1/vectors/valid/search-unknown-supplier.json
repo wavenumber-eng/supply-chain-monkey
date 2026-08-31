@@ -1,0 +1,13 @@
+{
+  "status":"provider_error",
+  "supplier":"unknown",
+  "parameter_field_name":"",
+  "provider_latency_ms":0,
+  "provider_capabilities":null,
+  "rate_limit":null,
+  "service_timestamp":"2026-08-31T12:34:56Z",
+  "cached":false,
+  "data":null,
+  "error":"Unknown supplier: unknown. Valid: jlcpcb, lcsc, digikey, mouser",
+  "error_detail":null
+}
