@@ -18,8 +18,22 @@ RUST_ROOT = ROOT / "rust"
 PUBLIC_CRATES = ("scm-contracts", "scm-client", "scm-cli")
 
 
-def run(command: list[str], *, cwd: Path = ROOT) -> None:
-    result = subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False)
+def run(
+    command: list[str],
+    *,
+    cwd: Path = ROOT,
+    extra_env: dict[str, str] | None = None,
+) -> None:
+    environment = os.environ.copy()
+    environment.update(extra_env or {})
+    result = subprocess.run(
+        command,
+        cwd=cwd,
+        env=environment,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
     if result.returncode != 0:
         raise RuntimeError(
             f"{' '.join(command)} failed with exit code {result.returncode}\n"
@@ -100,6 +114,7 @@ def extract_crate(archive: Path, root: Path) -> Path:
 
 
 def build_rust_candidates(root: Path) -> list[Path]:
+    cargo_target = root / "cargo-target"
     run(
         [
             "cargo",
@@ -113,8 +128,9 @@ def build_rust_candidates(root: Path) -> list[Path]:
             "--locked",
         ],
         cwd=RUST_ROOT,
+        extra_env={"CARGO_TARGET_DIR": str(cargo_target)},
     )
-    package_root = RUST_ROOT / "target" / "package"
+    package_root = cargo_target / "package"
     archives = [package_root / f"{name}-0.1.0.crate" for name in PUBLIC_CRATES]
     missing = [str(path) for path in archives if not path.is_file()]
     if missing:
@@ -158,8 +174,9 @@ fn main() {
 """,
         encoding="utf-8",
     )
-    run(["cargo", "generate-lockfile"], cwd=consumer)
-    run(["cargo", "check", "--locked"], cwd=consumer)
+    consumer_env = {"RUSTUP_TOOLCHAIN": "1.96.1"}
+    run(["cargo", "generate-lockfile"], cwd=consumer, extra_env=consumer_env)
+    run(["cargo", "check", "--locked"], cwd=consumer, extra_env=consumer_env)
     return archives
 
 
