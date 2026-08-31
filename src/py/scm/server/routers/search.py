@@ -10,9 +10,11 @@ from fastapi import APIRouter, Depends, Query
 from scm.models import (
     PARAMETER_FIELD_NAMES,
     SUPPLIER_LOOKUP,
+    SearchEnvelope,
     ServiceEnvelope,
 )
 from ..auth import verify_token
+from ..contract_response import contract_response
 from ..models import part_response_from_info
 from ..providers.base import create_supplier
 from .common import error_detail_from_exception, get_supplier_credentials
@@ -85,7 +87,7 @@ def _do_search(supplier_key: str, mpn: str, include_raw: bool, max_results: int)
     )
 
 
-@router.get("/search")
+@router.get("/search", response_model=SearchEnvelope)
 async def search(
     supplier: str = Query(..., description="Supplier name (jlcpcb, lcsc, digikey, mouser)"),
     mpn: str = Query(..., description="Manufacturer part number"),
@@ -94,13 +96,14 @@ async def search(
 ):
     supplier_key = supplier.strip().lower()
     if supplier_key not in SUPPLIER_LOOKUP:
-        return ServiceEnvelope(
+        result = ServiceEnvelope(
             status="provider_error",
             supplier=supplier,
             error=f"Unknown supplier: {supplier}. Valid: {', '.join(SUPPLIER_LOOKUP)}",
         )
-
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
-        _executor, _do_search, supplier_key, mpn, include_raw, max_results
-    )
+    else:
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            _executor, _do_search, supplier_key, mpn, include_raw, max_results
+        )
+    return contract_response("SearchEnvelope", SearchEnvelope, result)

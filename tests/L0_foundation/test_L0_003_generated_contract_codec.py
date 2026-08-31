@@ -44,9 +44,7 @@ def test_contract_vectors_have_bound_digests_and_expected_outcomes(case):
 
 
 def test_catalog_root_inventory_has_generated_model_classes():
-    catalog_path = (
-        Path(generated_models.__file__).parent / "resources" / "contract_catalog.a0.json"
-    )
+    catalog_path = Path(generated_models.__file__).parent / "resources" / "contract_catalog.a0.json"
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
     vector_roots = {case["schema"] for case in MANIFEST["cases"] if case.get("catalog_root", True)}
     for root in catalog["roots"]:
@@ -98,16 +96,21 @@ def test_existing_python_client_and_public_contract_accept_shared_vectors(monkey
     class Response:
         def __init__(self, case_id: str):
             self.case_id = case_id
+            self.headers = {}
+            path = VECTOR_ROOT / _case(self.case_id)["path"]
+            self.content = path.read_bytes()
 
         def raise_for_status(self):
             return None
 
-        def json(self):
-            path = VECTOR_ROOT / _case(self.case_id)["path"]
-            return json.loads(path.read_text(encoding="utf-8"))
+        def close(self):
+            return None
 
     def fake_request(url, **_kwargs):
         route = next(path for path in payloads if url.endswith(path))
+        if route == "/v1/spn/batch":
+            assert decode("SpnBatchRequest", _kwargs["data"])
+            assert _kwargs["headers"]["Content-Type"] == "application/json"
         return Response(payloads[route])
 
     monkeypatch.setattr("scm.client.requests.get", fake_request)
@@ -121,10 +124,48 @@ def test_existing_python_client_and_public_contract_accept_shared_vectors(monkey
     monkeypatch.setitem(payloads, "/v1/spn", "spn-ok")
     assert isinstance(client.spn("lcsc", "C123"), ServiceEnvelope)
     assert client.spn_batch("digikey", ["one", "two"]).status == "partial"
-    assert isinstance(client.search_all("NE555P", suppliers=["digikey"])["digikey"], ServiceEnvelope)
+    assert isinstance(
+        client.search_all("NE555P", suppliers=["digikey"])["digikey"], ServiceEnvelope
+    )
 
     assert SUPPLIERS == ["jlcpcb", "lcsc", "digikey", "mouser"]
     assert PARAMETER_FIELD_NAMES[SupplierType.DIGIKEY] == "Digikey Part #"
+
+
+@pytest.mark.parametrize(
+    ("payload", "max_bytes", "error_type"),
+    [
+        (b'{"status":"ok","status":"ok"}', 1024, JsonPreflightError),
+        (b'{"status":"ok"}', 4, PayloadTooLargeError),
+    ],
+)
+def test_python_client_strictly_rejects_duplicate_and_oversized_responses(
+    monkeypatch, payload, max_bytes, error_type
+):
+    class Response:
+        headers = {}
+
+        def raise_for_status(self):
+            return None
+
+        def iter_content(self, chunk_size):
+            assert chunk_size > 0
+            midpoint = len(payload) // 2
+            yield payload[:midpoint]
+            yield payload[midpoint:]
+
+        def close(self):
+            return None
+
+    monkeypatch.setattr("scm.client.requests.get", lambda *_args, **_kwargs: Response())
+    client = SCMClient(
+        "https://scm.example.invalid",
+        "test-token",
+        max_response_bytes=max_bytes,
+    )
+
+    with pytest.raises(error_type):
+        client.health()
 
 
 def test_provider_raw_json_preserves_integer_and_fractional_number_kinds():

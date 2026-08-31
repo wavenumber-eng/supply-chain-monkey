@@ -7,8 +7,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import APIRouter, Depends, Query
 
-from scm.models import PARAMETER_FIELD_NAMES, SUPPLIER_LOOKUP, ServiceEnvelope
+from scm.models import DetailEnvelope, PARAMETER_FIELD_NAMES, SUPPLIER_LOOKUP, ServiceEnvelope
 from ..auth import verify_token
+from ..contract_response import contract_response
 from ..models import part_response_from_info
 from ..providers.base import create_supplier
 from .common import get_supplier_credentials
@@ -71,7 +72,7 @@ def _do_detail(supplier_key: str, part: str, include_raw: bool) -> ServiceEnvelo
     )
 
 
-@router.get("/detail")
+@router.get("/detail", response_model=DetailEnvelope)
 async def detail(
     supplier: str = Query(..., description="Supplier name (jlcpcb, lcsc, digikey, mouser)"),
     part: str = Query(..., description="Supplier part number (e.g., C2870085, 296-xxx-ND)"),
@@ -79,13 +80,12 @@ async def detail(
 ):
     supplier_key = supplier.strip().lower()
     if supplier_key not in SUPPLIER_LOOKUP:
-        return ServiceEnvelope(
+        result = ServiceEnvelope(
             status="provider_error",
             supplier=supplier,
             error=f"Unknown supplier: {supplier}. Valid: {', '.join(SUPPLIER_LOOKUP)}",
         )
-
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
-        _executor, _do_detail, supplier_key, part, include_raw
-    )
+    else:
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(_executor, _do_detail, supplier_key, part, include_raw)
+    return contract_response("DetailEnvelope", DetailEnvelope, result)

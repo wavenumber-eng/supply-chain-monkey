@@ -13,7 +13,9 @@ const checkOnly = process.argv.includes("--check");
 const temporaryRoot = await mkdtemp(join(tmpdir(), "scm-python-models-"));
 
 try {
-  runGenerator(resolve(temporaryRoot, "models.py"));
+  const generatedModelPath = resolve(temporaryRoot, "models.py");
+  runGenerator(generatedModelPath);
+  await applyNativeModelProjections(generatedModelPath);
   await writeFile(
     resolve(temporaryRoot, "__init__.py"),
     '"""Generated SCM v1 structural models. Do not edit."""\n\nfrom .models import *  # noqa: F403\n',
@@ -78,6 +80,19 @@ function runGenerator(output) {
   process.stderr.write(command.stderr ?? "");
   if (command.error) throw command.error;
   if (command.status !== 0) process.exit(command.status ?? 1);
+}
+
+async function applyNativeModelProjections(path) {
+  const source = await readFile(path, "utf8");
+  const optionalDefaultBoolean = "    include_raw: bool | None = False";
+  const schemaAccurateBoolean = "    include_raw: bool = False";
+  const matches = source.split(optionalDefaultBoolean).length - 1;
+  if (matches !== 1) {
+    throw new Error(
+      `Expected one datamodel-code-generator optional-default boolean projection; found ${matches}.`,
+    );
+  }
+  await writeFile(path, source.replace(optionalDefaultBoolean, schemaAccurateBoolean), "utf8");
 }
 
 async function snapshot(root, missingAllowed = false) {

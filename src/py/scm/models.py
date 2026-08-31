@@ -11,6 +11,17 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from .generated.v1.models import (
+    DetailEnvelope as DetailEnvelope,
+    HealthResponse as HealthResponse,
+    ProviderStatusResponse as ProviderStatusResponse,
+    SearchEnvelope as SearchEnvelope,
+    SpnBatchEnvelope as SpnBatchEnvelope,
+    SpnBatchRequest as SpnBatchRequest,
+    SpnEnvelope as SpnEnvelope,
+    StreamDoneEvent as StreamDoneEvent,
+)
+
 
 class SupplierType(str, Enum):
     """Supported component suppliers."""
@@ -84,14 +95,6 @@ class SupplierCapabilities(BaseModel):
     usage_unit: str = "requests"
     supports_quota_headers: bool = False
     notes: list[str] = Field(default_factory=list)
-
-
-class SpnBatchRequest(BaseModel):
-    """Request body for exact supplier part number batch lookups."""
-
-    supplier: str
-    spns: list[str] = Field(..., min_length=1, max_length=1000)
-    include_raw: bool = False
 
 
 class SpnBatchItem(BaseModel):
