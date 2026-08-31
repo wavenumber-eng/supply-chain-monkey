@@ -159,6 +159,12 @@ The checked package scripts are `generate:contracts`, `check:typespec`,
 emitter derived from the reviewed Wavenumber pattern in this repository rather
 than importing Alexandria by local path.
 
+The deterministic artifact builder assigns every declaration schema an
+absolute `urn:supply-chain-monkey:schema:v1.declaration.*` identity and rewrites
+external references to those identities. This normalization is part of the
+generated runtime authority: relative filename references cannot be resolved
+portably from root-level `urn:` identifiers.
+
 Python model projection uses `datamodel-code-generator==0.76.0` with an
 explicit Python 3.13/Pydantic v2 option set, schema-accurate nullability, and
 forbidden extra fields. The projection adds definition titles to preserve
@@ -171,6 +177,15 @@ handwritten `SCMClient` remains the transport boundary. Runtime validation uses
 the Draft 2020-12 validator from `jsonschema` before Pydantic decode; generated
 Pydantic validation is an additional native-type gate, not a replacement for
 the unmodified schema.
+
+Rust model projection uses `typify==0.7.0` through the unpublished
+`scm-codegen` crate. It bundles catalog-discovered references, translates the
+TypeSpec emitter's closure and record keywords for typify, preserves integer
+and fractional flexible-JSON variants, and adds `serde(deny_unknown_fields)` to
+generated named structs. Generated source is inventory-checked in `--check`
+mode. The Rust codec validates against the separately embedded, unmodified
+normalized schemas before Serde decode; the bundled typify input is never used
+for runtime validation.
 
 The repository root retains its `python-package` profile under
 `wn-dev-std 2026.8.12`. The Rust workspace receives a standalone

@@ -1,10 +1,10 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "EnvelopeMetadata.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeMetadata",
     "type": "object",
     "properties": {
         "status": {
-            "$ref": "EnvelopeStatus.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeStatus"
         },
         "supplier": {
             "type": "string"
@@ -13,12 +13,12 @@
             "type": "string"
         },
         "provider_latency_ms": {
-            "$ref": "JsonInteger.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
         },
         "provider_capabilities": {
             "anyOf": [
                 {
-                    "$ref": "SupplierCapabilities.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.SupplierCapabilities"
                 },
                 {
                     "type": "null"
@@ -28,7 +28,7 @@
         "rate_limit": {
             "anyOf": [
                 {
-                    "$ref": "RateLimitSnapshot.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.RateLimitSnapshot"
                 },
                 {
                     "type": "null"
@@ -36,7 +36,7 @@
             ]
         },
         "service_timestamp": {
-            "$ref": "Rfc3339Timestamp.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp"
         },
         "cached": {
             "type": "boolean"
@@ -54,7 +54,7 @@
         "error_detail": {
             "anyOf": [
                 {
-                    "$ref": "ServiceErrorDetail.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.ServiceErrorDetail"
                 },
                 {
                     "type": "null"

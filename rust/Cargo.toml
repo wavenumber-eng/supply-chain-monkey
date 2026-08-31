@@ -22,3 +22,16 @@ allow_attributes_without_reason = "deny"
 cognitive_complexity = "deny"
 too_many_arguments = "deny"
 too_many_lines = "deny"
+
+[workspace.dependencies]
+anyhow = "1.0.102"
+jsonschema = { version = "0.49.4", default-features = false }
+prettyplease = "0.2.37"
+regress = "0.11.1"
+schemars = "0.8.22"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = { version = "1.0.151", features = ["raw_value"] }
+sha2 = "0.11.0"
+syn = { version = "2.0.117", features = ["full"] }
+thiserror = "2.0.18"
+typify = { version = "0.7.0", default-features = false }

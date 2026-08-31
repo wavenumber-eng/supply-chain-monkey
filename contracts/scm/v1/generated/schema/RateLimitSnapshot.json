@@ -1,12 +1,12 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "RateLimitSnapshot.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.RateLimitSnapshot",
     "type": "object",
     "properties": {
         "request_limit": {
             "anyOf": [
                 {
-                    "$ref": "JsonInteger.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
                 },
                 {
                     "type": "null"
@@ -16,7 +16,7 @@
         "requests_remaining": {
             "anyOf": [
                 {
-                    "$ref": "JsonInteger.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
                 },
                 {
                     "type": "null"
@@ -26,7 +26,7 @@
         "burst_limit": {
             "anyOf": [
                 {
-                    "$ref": "JsonInteger.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
                 },
                 {
                     "type": "null"
@@ -36,7 +36,7 @@
         "burst_remaining": {
             "anyOf": [
                 {
-                    "$ref": "JsonInteger.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
                 },
                 {
                     "type": "null"
@@ -46,7 +46,7 @@
         "reset_seconds": {
             "anyOf": [
                 {
-                    "$ref": "JsonInteger.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
                 },
                 {
                     "type": "null"
@@ -66,7 +66,7 @@
         "retry_after_seconds": {
             "anyOf": [
                 {
-                    "$ref": "JsonInteger.json"
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
                 },
                 {
                     "type": "null"
@@ -74,7 +74,7 @@
             ]
         },
         "observed_at": {
-            "$ref": "Rfc3339Timestamp.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp"
         }
     },
     "required": [

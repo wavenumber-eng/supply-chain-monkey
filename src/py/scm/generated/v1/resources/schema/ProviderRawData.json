@@ -1,10 +1,10 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "ProviderRawData.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.ProviderRawData",
     "type": "object",
     "properties": {},
     "unevaluatedProperties": {
-        "$ref": "JsonValue.json"
+        "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonValue"
     },
     "description": "The one reviewed provider-owned flexible JSON object.",
     "x-wn-flexible-reason": "Raw provider data is returned only when include_raw is explicitly requested.",

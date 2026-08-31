@@ -1,12 +1,12 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "ValidationErrorDetail.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.ValidationErrorDetail",
     "type": "object",
     "properties": {
         "detail": {
             "type": "array",
             "items": {
-                "$ref": "ValidationErrorItem.json"
+                "$ref": "urn:supply-chain-monkey:schema:v1.declaration.ValidationErrorItem"
             }
         }
     },

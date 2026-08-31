@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "Rfc3339Timestamp.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp",
     "type": "string",
     "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$",
     "description": "RFC 3339 timestamp retained as the deployed Python string representation."

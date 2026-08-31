@@ -1,9 +1,9 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "RecordJsonValue.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.RecordJsonValue",
     "type": "object",
     "properties": {},
     "unevaluatedProperties": {
-        "$ref": "JsonValue.json"
+        "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonValue"
     }
 }

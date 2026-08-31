@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "ServerConfigurationErrorResponse.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.ServerConfigurationErrorResponse",
     "type": "object",
     "properties": {
         "status_code": {
@@ -8,7 +8,7 @@
             "const": 500
         },
         "body": {
-            "$ref": "HttpErrorDetail.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.HttpErrorDetail"
         }
     },
     "required": [

@@ -1,10 +1,10 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "PriceBreak.json",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.PriceBreak",
     "type": "object",
     "properties": {
         "qty": {
-            "$ref": "JsonInteger.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
         },
         "unit_price": {
             "type": "number"

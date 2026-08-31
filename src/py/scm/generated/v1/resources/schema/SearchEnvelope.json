@@ -8,7 +8,7 @@
                 {
                     "type": "array",
                     "items": {
-                        "$ref": "Part.json"
+                        "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Part"
                     }
                 },
                 {
@@ -22,7 +22,7 @@
     ],
     "allOf": [
         {
-            "$ref": "EnvelopeMetadata.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeMetadata"
         }
     ],
     "unevaluatedProperties": {

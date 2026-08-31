@@ -4,7 +4,7 @@
     "type": "object",
     "properties": {
         "providers": {
-            "$ref": "RecordProviderStatusEntry.json"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.RecordProviderStatusEntry"
         }
     },
     "required": [
