@@ -1,6 +1,6 @@
 """Bearer token authentication dependency and HTTP error metadata."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Header, HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -12,7 +12,7 @@ from .settings import settings
 
 bearer_scheme = HTTPBearer(auto_error=False, scheme_name="BearerAuth")
 
-CONTRACT_ERROR_RESPONSES = {
+CONTRACT_ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
     401: {"model": HttpErrorDetail, "description": "Access is unauthorized."},
     422: {"model": ValidationErrorDetail, "description": "Client error"},
     500: {"model": HttpErrorDetail, "description": "Server error"},
