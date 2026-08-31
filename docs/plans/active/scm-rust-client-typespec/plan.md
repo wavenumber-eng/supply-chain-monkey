@@ -74,7 +74,7 @@ depends_on = ["typespec-v1-contract"]
 [[steps]]
 id = "python-contract-cutover"
 title = "Cut the Python server and client over to generated contract models"
-status = "active"
+status = "done"
 depends_on = ["python-runtime-viability"]
 
 [[steps]]
@@ -104,7 +104,7 @@ depends_on = ["rust-client-library"]
 [[steps]]
 id = "cross-language-conformance"
 title = "Prove Python and Rust conformance against shared vectors"
-status = "pending"
+status = "active"
 depends_on = ["python-contract-cutover", "rust-client-library"]
 
 [[steps]]
