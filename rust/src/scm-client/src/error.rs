@@ -21,6 +21,9 @@ pub enum ConfigError {
     /// Authenticated non-loopback services must use TLS.
     #[error("authenticated remote SCM endpoints require https")]
     AuthenticatedRemoteHttp,
+    /// A proxy must never receive loopback-development bearer traffic.
+    #[error("authenticated loopback HTTP cannot use an explicit proxy")]
+    AuthenticatedLoopbackProxy,
     /// The bearer token was empty or could not be represented as a header.
     #[error("invalid SCM bearer token")]
     InvalidBearerToken,

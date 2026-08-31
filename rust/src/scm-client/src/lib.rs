@@ -6,6 +6,9 @@ mod client;
 mod config;
 mod error;
 
+/// Generated wire models and strict codec used by this client.
+pub use scm_contracts as contracts;
+
 pub use client::{
     DEFAULT_SUPPLIERS, LookupOptions, MultiSearchResults, ProviderOutcome, ScmClient, SearchOptions,
 };

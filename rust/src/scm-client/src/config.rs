@@ -104,6 +104,9 @@ impl ClientBuilder {
             .timeout(self.request_timeout)
             .connect_timeout(self.connect_timeout)
             .user_agent(concat!("scm-client/", env!("CARGO_PKG_VERSION")));
+        if is_authenticated_loopback_http(&self) {
+            transport = transport.no_proxy();
+        }
         if !self.root_certificates.is_empty() {
             transport = transport.tls_certs_merge(self.root_certificates);
         }
@@ -180,13 +183,21 @@ fn validate_bounds(builder: &ClientBuilder) -> Result<(), ConfigError> {
 }
 
 fn validate_authenticated_scheme(builder: &ClientBuilder) -> Result<(), ConfigError> {
-    if builder.bearer_token.is_some()
-        && builder.base_url.scheme() != "https"
-        && !is_loopback(&builder.base_url)
-    {
-        return Err(ConfigError::AuthenticatedRemoteHttp);
+    if builder.bearer_token.is_some() && builder.base_url.scheme() != "https" {
+        if !is_loopback(&builder.base_url) {
+            return Err(ConfigError::AuthenticatedRemoteHttp);
+        }
+        if builder.proxy.is_some() {
+            return Err(ConfigError::AuthenticatedLoopbackProxy);
+        }
     }
     Ok(())
+}
+
+fn is_authenticated_loopback_http(builder: &ClientBuilder) -> bool {
+    builder.bearer_token.is_some()
+        && builder.base_url.scheme() == "http"
+        && is_loopback(&builder.base_url)
 }
 
 fn is_loopback(url: &Url) -> bool {
