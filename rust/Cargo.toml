@@ -25,6 +25,7 @@ too_many_lines = "deny"
 
 [workspace.dependencies]
 anyhow = "1.0.102"
+clap = { version = "4.6.6", default-features = false, features = ["color", "derive", "env", "error-context", "help", "std", "suggestions", "usage"] }
 futures-util = "0.3.32"
 jsonschema = { version = "0.49.4", default-features = false }
 prettyplease = "0.2.37"
