@@ -337,7 +337,6 @@ fn project_for_typify(value: &mut Value) -> Result<()> {
             }
         }
         Value::Object(object) => {
-            object.remove("default");
             project_literal_union(object);
             project_record(object);
             project_flexible_json_number(object);

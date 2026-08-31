@@ -66,6 +66,13 @@
       "sha256": "360589e22473ddbdfb5d3d22937656f49582a20c0bc90e5ce8411f83b7ea0419"
     },
     {
+      "id": "spn-batch-request-default",
+      "path": "valid/spn-batch-request-default.json",
+      "schema": "SpnBatchRequest",
+      "valid": true,
+      "sha256": "4399942f44453ccedb710fdeca236a81e6d9962716cde71461dc3bd1dde1d4a3"
+    },
+    {
       "id": "stream-done",
       "path": "valid/stream-done.json",
       "schema": "StreamDoneEvent",
@@ -148,6 +155,14 @@
       "valid": false,
       "failure": "schema",
       "sha256": "459382c938e119c36978443685c75c10650f5e2412ed1f81c4e2a045fe98f3b6"
+    },
+    {
+      "id": "spn-batch-request-null",
+      "path": "invalid/spn-batch-request-null.json",
+      "schema": "SpnBatchRequest",
+      "valid": false,
+      "failure": "schema",
+      "sha256": "a5b75068533a150ffd451d7e6a39dc25d372cd79a905a2012d7851f44a58c22e"
     }
   ]
 }

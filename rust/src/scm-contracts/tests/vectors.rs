@@ -140,3 +140,12 @@ fn codec_enforces_bounds_and_duplicate_preflight() {
         Err(CodecError::Json(_))
     ));
 }
+
+#[test]
+fn optional_batch_boolean_uses_typespec_default() {
+    let omitted = br#"{"supplier":"LCSC","spns":["C123"]}"#;
+    let request: SpnBatchRequest =
+        decode(ContractRoot::SpnBatchRequest, omitted, DEFAULT_MAX_BYTES)
+            .expect("omitted include_raw uses the TypeSpec default");
+    assert!(!request.include_raw);
+}
