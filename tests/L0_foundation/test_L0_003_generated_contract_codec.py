@@ -11,9 +11,12 @@ from scm.contract_codec import (
     JsonPreflightError,
     PayloadTooLargeError,
     decode,
+    decode_schema,
     encode,
 )
+from scm.client import SCMClient
 from scm.generated.v1 import models as generated_models
+from scm.models import PARAMETER_FIELD_NAMES, SUPPLIERS, ServiceEnvelope, SupplierType
 
 
 VECTOR_ROOT = Path(__file__).parents[2] / "contracts" / "scm" / "v1" / "vectors"
@@ -30,8 +33,11 @@ def test_contract_vectors_have_bound_digests_and_expected_outcomes(case):
     assert hashlib.sha256(payload).hexdigest() == case["sha256"]
 
     if case["valid"]:
-        model = decode(case["schema"], payload)
-        assert decode(case["schema"], encode(case["schema"], model)) == model
+        if case.get("catalog_root", True):
+            model = decode(case["schema"], payload)
+            assert decode(case["schema"], encode(case["schema"], model)) == model
+        else:
+            assert decode_schema(case["schema"], payload)
     else:
         with pytest.raises(ContractCodecError):
             decode(case["schema"], payload)
@@ -42,9 +48,20 @@ def test_catalog_root_inventory_has_generated_model_classes():
         Path(generated_models.__file__).parent / "resources" / "contract_catalog.a0.json"
     )
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    vector_roots = {case["schema"] for case in MANIFEST["cases"] if case.get("catalog_root", True)}
     for root in catalog["roots"]:
         local_name = root["name"].rsplit(".", 1)[-1]
         assert getattr(generated_models, local_name)
+        assert local_name in vector_roots
+
+
+def test_primary_codec_rejects_non_root_declaration_schemas():
+    payload = (VECTOR_ROOT / _case("auth-error")["path"]).read_bytes()
+    with pytest.raises(KeyError, match="not an SCM v1 catalog root"):
+        decode("HttpErrorDetail", payload)
+    declaration = decode_schema("HttpErrorDetail", payload)
+    assert isinstance(declaration, generated_models.HttpErrorDetail)
+    assert declaration.detail == "Not authenticated"
 
 
 def test_codec_rejects_non_utf8_and_unpaired_surrogates():
@@ -66,3 +83,59 @@ def test_schema_validation_precedes_generated_model_validation():
     payload = (VECTOR_ROOT / _case("health-extra")["path"]).read_bytes()
     with pytest.raises(ContractSchemaError):
         decode("HealthResponse", payload)
+
+
+def test_existing_python_client_and_public_contract_accept_shared_vectors(monkeypatch):
+    payloads = {
+        "/v1/health": "health",
+        "/v1/providers/status": "provider-status",
+        "/v1/search": "search-ok",
+        "/v1/detail": "detail-ok",
+        "/v1/spn": "detail-ok",
+        "/v1/spn/batch": "spn-batch-partial",
+    }
+
+    class Response:
+        def __init__(self, case_id: str):
+            self.case_id = case_id
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            path = VECTOR_ROOT / _case(self.case_id)["path"]
+            return json.loads(path.read_text(encoding="utf-8"))
+
+    def fake_request(url, **_kwargs):
+        route = next(path for path in payloads if url.endswith(path))
+        return Response(payloads[route])
+
+    monkeypatch.setattr("scm.client.requests.get", fake_request)
+    monkeypatch.setattr("scm.client.requests.post", fake_request)
+    client = SCMClient("https://scm.example.invalid", "test-token")
+
+    assert client.health() == {"status": "ok"}
+    assert "Digikey" in client.providers_status()["providers"]
+    assert isinstance(client.search("digikey", "NE555P"), ServiceEnvelope)
+    assert isinstance(client.detail("lcsc", "C123"), ServiceEnvelope)
+    monkeypatch.setitem(payloads, "/v1/spn", "spn-ok")
+    assert isinstance(client.spn("lcsc", "C123"), ServiceEnvelope)
+    assert client.spn_batch("digikey", ["one", "two"]).status == "partial"
+    assert isinstance(client.search_all("NE555P", suppliers=["digikey"])["digikey"], ServiceEnvelope)
+
+    assert SUPPLIERS == ["jlcpcb", "lcsc", "digikey", "mouser"]
+    assert PARAMETER_FIELD_NAMES[SupplierType.DIGIKEY] == "Digikey Part #"
+
+
+def test_provider_raw_json_preserves_integer_and_fractional_number_kinds():
+    payload = (VECTOR_ROOT / _case("detail-ok")["path"]).read_bytes()
+    model = decode("DetailEnvelope", payload)
+    assert isinstance(model, generated_models.DetailEnvelope)
+    assert model.data is not None
+    assert model.data.extra_data is not None
+    integer_value = model.data.extra_data.root["integer_value"]
+    fractional_value = model.data.extra_data.root["fractional_value"]
+    assert integer_value is not None and integer_value.root == 7
+    assert isinstance(integer_value.root, int)
+    assert fractional_value is not None and fractional_value.root == 1.25
+    assert isinstance(fractional_value.root, float)

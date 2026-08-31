@@ -82,7 +82,13 @@ function projectionBundle(documents, recordsById, roots) {
   const definitions = {};
   for (const name of [...documents.keys()].sort()) {
     const { $schema: _schema, $id: _id, ...document } = documents.get(name);
-    definitions[name] = { title: name, ...rewriteRefs(document, idToName) };
+    const rewritten = rewriteRefs(document, idToName);
+    if (name === "JsonValue") {
+      const numberIndex = rewritten.anyOf.findIndex((value) => value.type === "number");
+      if (numberIndex === -1) throw new Error("JsonValue projection requires a number branch.");
+      rewritten.anyOf.splice(numberIndex, 0, { type: "integer" });
+    }
+    definitions[name] = { title: name, ...rewritten };
   }
   return {
     $schema: "https://json-schema.org/draft/2020-12/schema",

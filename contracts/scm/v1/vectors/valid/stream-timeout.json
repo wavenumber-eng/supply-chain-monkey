@@ -1,0 +1,13 @@
+{
+  "status":"provider_error",
+  "supplier":"Digikey",
+  "parameter_field_name":"Digikey Part #",
+  "provider_latency_ms":30000,
+  "provider_capabilities":null,
+  "rate_limit":null,
+  "service_timestamp":"2026-08-31T12:34:56Z",
+  "cached":false,
+  "data":null,
+  "error":"Search timed out after 30.0s",
+  "error_detail":{"code":"provider_timeout","retryable":true,"upstream_status_code":null,"upstream_request_id":null}
+}

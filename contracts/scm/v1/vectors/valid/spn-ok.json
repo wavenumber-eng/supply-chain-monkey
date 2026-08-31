@@ -6,7 +6,7 @@
   "provider_capabilities": null,
   "rate_limit": null,
   "service_timestamp": "2026-08-31T12:34:56Z",
-  "cached": true,
+  "cached": false,
   "data": {
     "supplier": "LCSC",
     "source_provider": "api",
@@ -21,7 +21,7 @@
     "price_breaks": [],
     "lifecycle_status": "active",
     "packaging": "Tube",
-    "extra_data": {"integer_value": 7, "fractional_value": 1.25}
+    "extra_data": null
   },
   "error": null,
   "error_detail": null

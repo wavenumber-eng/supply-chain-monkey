@@ -108,11 +108,12 @@ def _loads(payload: bytes, max_bytes: int) -> Any:
 
 
 @lru_cache(maxsize=1)
-def _contract_data() -> tuple[dict[str, dict[str, Any]], Registry]:
+def _contract_data() -> tuple[dict[str, dict[str, Any]], dict[str, str], Registry]:
     root = resources.files("scm.generated.v1.resources")
     catalog = json.loads(root.joinpath("contract_catalog.a0.json").read_text(encoding="utf-8"))
     schema_root = root.joinpath("schema")
     schemas: dict[str, dict[str, Any]] = {}
+    catalog_roots: dict[str, str] = {}
     registry: Registry = Registry()
     by_artifact = {entry["artifact"].rsplit("/", 1)[-1]: entry for entry in catalog["roots"]}
 
@@ -132,18 +133,29 @@ def _contract_data() -> tuple[dict[str, dict[str, Any]], Registry]:
             schemas[local_name] = schema
             schemas[root_entry["name"]] = schema
             schemas[root_entry["schema_id"]] = schema
+            catalog_roots[local_name] = local_name
+            catalog_roots[root_entry["name"]] = local_name
+            catalog_roots[root_entry["schema_id"]] = local_name
 
-    return schemas, registry
+    return schemas, catalog_roots, registry
 
 
-def _root(root: str) -> tuple[type[BaseModel], dict[str, Any], Registry]:
-    schemas, registry = _contract_data()
+def _selection(
+    name: str, *, catalog_only: bool
+) -> tuple[type[BaseModel], dict[str, Any], Registry]:
+    schemas, catalog_roots, registry = _contract_data()
     try:
-        schema = schemas[root]
+        schema = schemas[name]
     except KeyError as error:
-        raise KeyError(f"unknown SCM v1 contract root: {root}") from error
-    local_name = root.rsplit(".", 1)[-1]
-    if root.startswith("urn:"):
+        raise KeyError(f"unknown SCM v1 schema: {name}") from error
+    if catalog_only:
+        try:
+            local_name = catalog_roots[name]
+        except KeyError as error:
+            raise KeyError(f"not an SCM v1 catalog root: {name}") from error
+    else:
+        local_name = name.rsplit(".", 1)[-1].removesuffix(".json")
+    if name.startswith("urn:") and not catalog_only:
         local_name = next(
             name for name, candidate in schemas.items() if "." not in name and candidate is schema
         )
@@ -165,7 +177,19 @@ def decode(root: str, payload: bytes, *, max_bytes: int = DEFAULT_MAX_BYTES) -> 
     """Decode bounded strict JSON into the catalog-selected generated model."""
 
     value = _loads(payload, max_bytes)
-    model, schema, registry = _root(root)
+    model, schema, registry = _selection(root, catalog_only=True)
+    _validate(schema, registry, value)
+    try:
+        return model.model_validate(value)
+    except PydanticValidationError as error:
+        raise ContractModelError("generated model validation failed") from error
+
+
+def decode_schema(name: str, payload: bytes, *, max_bytes: int = DEFAULT_MAX_BYTES) -> BaseModel:
+    """Decode a named generated declaration schema outside the catalog root API."""
+
+    value = _loads(payload, max_bytes)
+    model, schema, registry = _selection(name, catalog_only=False)
     _validate(schema, registry, value)
     try:
         return model.model_validate(value)
@@ -181,7 +205,7 @@ def encode(
 ) -> bytes:
     """Validate a generated model/value against its root schema and encode it."""
 
-    model, schema, registry = _root(root)
+    model, schema, registry = _selection(root, catalog_only=True)
     try:
         instance = value if isinstance(value, model) else model.model_validate(value)
     except PydanticValidationError as error:

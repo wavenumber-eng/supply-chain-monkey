@@ -99,6 +99,7 @@ async function walk(root) {
   const entries = await readdir(root, { withFileTypes: true });
   const paths = [];
   for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
+    if (entry.name === "__pycache__" || entry.name.endsWith(".pyc")) continue;
     const path = resolve(root, entry.name);
     if (entry.isDirectory()) paths.push(...await walk(path));
     else if (entry.isFile()) paths.push(path);

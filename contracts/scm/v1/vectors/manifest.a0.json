@@ -14,7 +14,7 @@
       "path": "valid/provider-status.json",
       "schema": "ProviderStatusResponse",
       "valid": true,
-      "sha256": "40db8d6cdadd10f2af4dfc967d9e2150e8896c9369a737df120e00c39ea36224"
+      "sha256": "64aa6626ce711129950891dc2c0d9b1bc21b4d5118d727986e3ba7aefb1c8a10"
     },
     {
       "id": "search-ok",
@@ -42,7 +42,7 @@
       "path": "valid/detail-ok.json",
       "schema": "DetailEnvelope",
       "valid": true,
-      "sha256": "999db28a0fa906528be7cf313035033c439010c134049d3715b9d7466a5a9f99"
+      "sha256": "67020664c707e9d2c2028f4c366a649b459d8f7fc0983c29823982ea934d95e4"
     },
     {
       "id": "spn-batch-partial",
@@ -52,6 +52,20 @@
       "sha256": "b9f1a473dd0e7b5dc6fb9fca6a154a49d65e20cf43772e3e1196855e89ee097c"
     },
     {
+      "id": "spn-ok",
+      "path": "valid/spn-ok.json",
+      "schema": "SpnEnvelope",
+      "valid": true,
+      "sha256": "8156d27c0365a9f576050e52873648d54918002182ef13b27ae5949dea3a735f"
+    },
+    {
+      "id": "spn-batch-request",
+      "path": "valid/spn-batch-request.json",
+      "schema": "SpnBatchRequest",
+      "valid": true,
+      "sha256": "360589e22473ddbdfb5d3d22937656f49582a20c0bc90e5ce8411f83b7ea0419"
+    },
+    {
       "id": "stream-done",
       "path": "valid/stream-done.json",
       "schema": "StreamDoneEvent",
@@ -59,10 +73,32 @@
       "sha256": "747cdabd6bf031f659e13d3e82220675c2d4efefa870565345c1aedb32e24655"
     },
     {
+      "id": "stream-search-done",
+      "path": "valid/stream-done.json",
+      "schema": "StreamSearchEvent",
+      "valid": true,
+      "sha256": "747cdabd6bf031f659e13d3e82220675c2d4efefa870565345c1aedb32e24655"
+    },
+    {
+      "id": "stream-timeout",
+      "path": "valid/stream-timeout.json",
+      "schema": "StreamSearchEvent",
+      "valid": true,
+      "sha256": "d99be1551a8e0aae5a687ff82ca38ecc89e8183f07aea4098e58736cd40f6489"
+    },
+    {
+      "id": "search-unknown-supplier",
+      "path": "valid/search-unknown-supplier.json",
+      "schema": "SearchEnvelope",
+      "valid": true,
+      "sha256": "ea320ede1478965f2686b7f59401e3584e431e795293cc4d229b2f1234a34902"
+    },
+    {
       "id": "auth-error",
       "path": "valid/auth-error.json",
       "schema": "HttpErrorDetail",
       "valid": true,
+      "catalog_root": false,
       "sha256": "54f3c001dd9badd7aee7eca0fdb39cc8c2f052c8cf286213546dcdf56e29b72b"
     },
     {
@@ -70,6 +106,7 @@
       "path": "valid/validation-error.json",
       "schema": "ValidationErrorDetail",
       "valid": true,
+      "catalog_root": false,
       "sha256": "d823388bee4fda6bd2aad6fdebb98adb82346ec76b238832369ece8ae341d5b0"
     },
     {

@@ -249,13 +249,13 @@
     },
     "python_projection": {
       "path": "contracts/scm/v1/generated/projection/python-models.json",
-      "sha256": "f4503644e869716ab07ca87eefd4412fdd7b4e5c4dfee194c89fc0e0b4a00f9e",
+      "sha256": "ea0b0e2449f45a58e46ddb5d056398ba2028918e1d140ba01c944f13fc3927ca",
       "authority": false,
       "purpose": "datamodel-code-generator input with local $defs references"
     },
     "vectors": {
       "path": "contracts/scm/v1/vectors/manifest.a0.json",
-      "sha256": "2e381bae8210eb8f81a5cb5bc1a4711ed5845edc291f41d6821b18c6558f9a5b"
+      "sha256": "c9227ee114f30746fe6899655e98f3215a09adef6025fa040bf962f4c7456af5"
     },
     "schemas": [
       {
