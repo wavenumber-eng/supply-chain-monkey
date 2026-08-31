@@ -6,6 +6,7 @@ concerns = ["release", "deployment", "signoff"]
 
 objectives = [
     "Ruff, Pyright, and uv lock checks pass",
+    "Pinned dev-std and locked Rust workspace gates pass",
     "The wheel builds and passes twine metadata checks",
     "Appliku deployment config stays compatible with the managed uv build path",
     "Retired compatibility imports and environment loaders stay removed",
@@ -43,5 +44,13 @@ id = "L99_004"
 file = "test_L99_004_release_metadata.py"
 name = "Release Metadata"
 description = "Validate package identity, date versioning, release notes, and trusted publishing"
+concerns = ["release", "signoff"]
+test_case_type = "audit_meta"
+
+[[subtests]]
+id = "L99_005"
+file = "test_L99_005_rust_workspace.py"
+name = "Rust Workspace"
+description = "Run pinned policy, generation, format, check, Clippy, test, doctest, and rustdoc gates"
 concerns = ["release", "signoff"]
 test_case_type = "audit_meta"

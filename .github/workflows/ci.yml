@@ -19,3 +19,41 @@ jobs:
         run: uv sync --group dev
       - name: Run release signoff
         run: uv run rack run L99_signoff
+
+  rust-signoff:
+    name: Rust signoff (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.2.0
+      - name: Install pinned Rust toolchain
+        run: rustup toolchain install 1.96.1 --profile minimal --component rustfmt --component clippy
+      - name: Audit pinned Rust policy
+        run: uvx --from wn-dev-std==2026.8.12 dev-std audit rust --scope repo --scope language
+      - name: Verify generated Rust contracts
+        working-directory: rust
+        run: cargo run -p scm-codegen --locked -- --check
+      - name: Check Rust formatting
+        working-directory: rust
+        run: cargo fmt --all -- --check
+      - name: Check Rust workspace
+        working-directory: rust
+        run: cargo check --workspace --all-targets --all-features --locked
+      - name: Lint Rust workspace
+        working-directory: rust
+        run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+      - name: Test Rust workspace
+        working-directory: rust
+        run: cargo test --workspace --all-features --locked
+      - name: Test Rust documentation
+        working-directory: rust
+        run: cargo test --workspace --doc --locked
+      - name: Build Rust documentation
+        working-directory: rust
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --workspace --no-deps --locked
