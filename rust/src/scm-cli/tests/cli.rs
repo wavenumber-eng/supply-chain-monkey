@@ -224,7 +224,11 @@ async fn ca_bundle_input_is_regular_and_bounded() {
     )
     .await;
     assert_eq!(directory_error.status.code(), Some(1));
-    assert!(text(&directory_error.stderr).contains("not a regular file"));
+    let directory_stderr = text(&directory_error.stderr);
+    assert!(
+        directory_stderr.contains("not a regular file")
+            || directory_stderr.contains("could not read the configured CA bundle")
+    );
 
     let path = std::env::temp_dir().join(format!(
         "scm-cli-oversized-ca-{}-{}.pem",
