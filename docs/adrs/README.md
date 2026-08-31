@@ -14,3 +14,4 @@ ADRs for the `scm` service, client, and supplier/distributor package.
 - [ADR-010 JLC Local Index For MPN Search](ADR-010-jlc-local-index-for-mpn-search.md)
 - [ADR-011 Appliku Runtime Dependency Baseline](ADR-011-appliku-runtime-dependency-baseline.md)
 - [ADR-012 Date-Based PyPI Publishing](ADR-012-date-based-pypi-publishing.md)
+- [SCM ADR-0013 TypeSpec Wire Authority And Generated Rust Client Boundary](../scm/adr/scm-adr-0013-typespec-wire-authority-and-generated-rust-client-boundary.md)

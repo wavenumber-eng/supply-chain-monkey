@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.health-response",
+    "type": "object",
+    "properties": {
+        "status": {
+            "type": "string",
+            "const": "ok"
+        }
+    },
+    "required": [
+        "status"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

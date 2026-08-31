@@ -5,6 +5,7 @@ Maintained design records live in:
 - `docs/adrs/`
 - `docs/requirements/REQUIREMENTS.md`
 - `docs/guides/APPLIKU_FASTAPI_DEPLOYMENT.md`
+- `docs/scm/design/v1-contract-inventory.md`
 
 The PyPI distribution name is `supply-chain-monkey`; the Python import package
 is `scm`. No alternate import package is supported.

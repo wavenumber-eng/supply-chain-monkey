@@ -1,0 +1,24 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "PriceBreak.json",
+    "type": "object",
+    "properties": {
+        "qty": {
+            "type": "string"
+        },
+        "unit_price": {
+            "type": "number"
+        },
+        "currency": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "qty",
+        "unit_price",
+        "currency"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

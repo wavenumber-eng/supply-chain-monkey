@@ -1,0 +1,42 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "SpnBatchItem.json",
+    "type": "object",
+    "properties": {
+        "spn": {
+            "type": "string"
+        },
+        "status": {
+            "$ref": "BatchItemStatus.json"
+        },
+        "part": {
+            "anyOf": [
+                {
+                    "$ref": "Part.json"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "error": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        }
+    },
+    "required": [
+        "spn",
+        "status",
+        "part",
+        "error"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}
