@@ -124,6 +124,17 @@ async fn help_has_no_token_argument_and_missing_token_is_sanitized() {
     .await;
     assert_eq!(missing.status.code(), Some(1));
     assert!(text(&missing.stderr).contains("SCM_TOKEN is required"));
+
+    let usage = invoke(
+        vec![
+            "--url".to_owned(),
+            "http://127.0.0.1:1".to_owned(),
+            "search".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert_eq!(usage.status.code(), Some(2));
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -166,7 +177,7 @@ async fn every_supported_command_uses_the_public_client_and_typed_json() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn human_output_is_stable_and_provider_errors_have_exit_two() {
+async fn human_output_is_stable_and_provider_errors_have_exit_three() {
     let (base, _, task) = spawn_server().await;
     let providers = invoke(
         vec!["--url".to_owned(), base.clone(), "providers".to_owned()],
@@ -192,8 +203,47 @@ async fn human_output_is_stable_and_provider_errors_have_exit_two() {
         Some("CLI_SENSITIVE_MARKER"),
     )
     .await;
-    assert_eq!(error.status.code(), Some(2));
+    assert_eq!(error.status.code(), Some(3));
     assert!(text(&error.stdout).contains("status=provider_error"));
     assert!(!text(&error.stderr).contains("CLI_SENSITIVE_MARKER"));
     task.abort();
+}
+
+#[tokio::test]
+async fn ca_bundle_input_is_regular_and_bounded() {
+    let directory = std::env::temp_dir();
+    let directory_error = invoke(
+        vec![
+            "--url".to_owned(),
+            "http://127.0.0.1:1".to_owned(),
+            "--ca-bundle".to_owned(),
+            directory.display().to_string(),
+            "health".to_owned(),
+        ],
+        None,
+    )
+    .await;
+    assert_eq!(directory_error.status.code(), Some(1));
+    assert!(text(&directory_error.stderr).contains("not a regular file"));
+
+    let path = std::env::temp_dir().join(format!(
+        "scm-cli-oversized-ca-{}-{}.pem",
+        std::process::id(),
+        std::thread::current().name().unwrap_or("test")
+    ));
+    std::fs::write(&path, vec![b'x'; 1024 * 1024 + 1]).expect("oversized CA fixture");
+    let oversized = invoke(
+        vec![
+            "--url".to_owned(),
+            "http://127.0.0.1:1".to_owned(),
+            "--ca-bundle".to_owned(),
+            path.display().to_string(),
+            "health".to_owned(),
+        ],
+        None,
+    )
+    .await;
+    std::fs::remove_file(path).expect("remove oversized CA fixture");
+    assert_eq!(oversized.status.code(), Some(1));
+    assert!(text(&oversized.stderr).contains("exceeds the 1 MiB limit"));
 }

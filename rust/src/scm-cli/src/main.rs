@@ -1,8 +1,9 @@
 #![forbid(unsafe_code)]
 
 use std::env;
-use std::fs;
-use std::path::PathBuf;
+use std::fs::File;
+use std::io::Read;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::time::Duration;
 
@@ -13,6 +14,9 @@ use scm_client::{
 use serde::Serialize;
 use serde_json::Value;
 use thiserror::Error;
+
+const MAX_CA_BUNDLE_BYTES: usize = 1024 * 1024;
+const PROVIDER_ERROR_EXIT_CODE: u8 = 3;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -97,6 +101,10 @@ enum CliError {
     InvalidTokenEncoding,
     #[error("could not read the configured CA bundle")]
     CaBundle(#[source] std::io::Error),
+    #[error("configured CA bundle is not a regular file")]
+    CaBundleNotRegular,
+    #[error("configured CA bundle exceeds the 1 MiB limit")]
+    CaBundleTooLarge,
     #[error(transparent)]
     Config(#[from] ConfigError),
     #[error(transparent)]
@@ -126,7 +134,7 @@ async fn run(cli: Cli) -> Result<ExitCode, CliError> {
     let output = execute(&client, cli.command).await?;
     render(&output.value, cli.json)?;
     Ok(if output.provider_error {
-        ExitCode::from(2)
+        ExitCode::from(PROVIDER_ERROR_EXIT_CODE)
     } else {
         ExitCode::SUCCESS
     })
@@ -145,10 +153,29 @@ fn build_client(cli: &Cli) -> Result<ScmClient, CliError> {
         builder = builder.bearer_token(&token)?;
     }
     if let Some(path) = &cli.ca_bundle {
-        let pem = fs::read(path).map_err(CliError::CaBundle)?;
+        let pem = read_ca_bundle(path)?;
         builder = builder.add_root_certificates_pem(&pem)?;
     }
     builder.build().map_err(CliError::from)
+}
+
+fn read_ca_bundle(path: &Path) -> Result<Vec<u8>, CliError> {
+    let metadata = path.metadata().map_err(CliError::CaBundle)?;
+    if !metadata.is_file() {
+        return Err(CliError::CaBundleNotRegular);
+    }
+    if metadata.len() > MAX_CA_BUNDLE_BYTES as u64 {
+        return Err(CliError::CaBundleTooLarge);
+    }
+    let file = File::open(path).map_err(CliError::CaBundle)?;
+    let mut pem = Vec::with_capacity(metadata.len() as usize);
+    file.take(MAX_CA_BUNDLE_BYTES as u64 + 1)
+        .read_to_end(&mut pem)
+        .map_err(CliError::CaBundle)?;
+    if pem.len() > MAX_CA_BUNDLE_BYTES {
+        return Err(CliError::CaBundleTooLarge);
+    }
+    Ok(pem)
 }
 
 async fn execute(client: &ScmClient, command: Command) -> Result<CommandOutput, CliError> {
