@@ -160,14 +160,14 @@ fn build_client(cli: &Cli) -> Result<ScmClient, CliError> {
 }
 
 fn read_ca_bundle(path: &Path) -> Result<Vec<u8>, CliError> {
-    let metadata = path.metadata().map_err(CliError::CaBundle)?;
+    let file = File::open(path).map_err(CliError::CaBundle)?;
+    let metadata = file.metadata().map_err(CliError::CaBundle)?;
     if !metadata.is_file() {
         return Err(CliError::CaBundleNotRegular);
     }
     if metadata.len() > MAX_CA_BUNDLE_BYTES as u64 {
         return Err(CliError::CaBundleTooLarge);
     }
-    let file = File::open(path).map_err(CliError::CaBundle)?;
     let mut pem = Vec::with_capacity(metadata.len() as usize);
     file.take(MAX_CA_BUNDLE_BYTES as u64 + 1)
         .read_to_end(&mut pem)
