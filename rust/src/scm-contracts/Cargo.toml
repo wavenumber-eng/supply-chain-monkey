@@ -7,7 +7,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
-include = ["src/**/*.rs", "schema/**/*.json", "README.md"]
+include = ["src/**/*.rs", "schema/**/*.json", "LICENSE", "README.md"]
 
 [dependencies]
 jsonschema.workspace = true

@@ -7,7 +7,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
-include = ["src/**/*.rs", "README.md"]
+include = ["src/**/*.rs", "LICENSE", "README.md"]
 
 [dependencies]
 futures-util.workspace = true
