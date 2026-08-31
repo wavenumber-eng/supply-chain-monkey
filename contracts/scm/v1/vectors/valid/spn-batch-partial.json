@@ -1,0 +1,16 @@
+{
+  "status": "partial",
+  "supplier": "Digikey",
+  "parameter_field_name": "Digikey Part #",
+  "provider_latency_ms": 27,
+  "provider_capabilities": null,
+  "rate_limit": null,
+  "service_timestamp": "2026-08-31T12:34:56Z",
+  "cached": false,
+  "data": [
+    {"spn":"296-6501-1-ND","status":"not_found","part":null,"error":null},
+    {"spn":"missing","status":"provider_error","part":null,"error":"temporary failure"}
+  ],
+  "error": null,
+  "error_detail": null
+}

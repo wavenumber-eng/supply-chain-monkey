@@ -9,9 +9,15 @@
     "npm": "11.16.0"
   },
   "scripts": {
-    "check:typespec": "tsp compile src/tsp/scm/v1/main.tsp --config tspconfig.scm.yaml --no-emit",
-    "generate:contracts": "tsp compile src/tsp/scm/v1/main.tsp --config tspconfig.scm.yaml && node scripts/build-contract-catalog.mjs",
-    "check:contracts": "node scripts/check-contract-generation.mjs"
+    "preinstall": "node scripts/check-node-toolchain.mjs",
+    "check:toolchain": "node scripts/check-node-toolchain.mjs",
+    "check:typespec": "npm run check:toolchain && tsp compile src/tsp/scm/v1/main.tsp --config tspconfig.scm.yaml --no-emit",
+    "generate:vectors": "npm run check:toolchain && node scripts/generate-contract-vectors.mjs --write",
+    "check:vectors": "npm run check:toolchain && node scripts/generate-contract-vectors.mjs --check",
+    "generate:contracts": "npm run check:toolchain && node scripts/generate-contracts.mjs",
+    "check:contracts": "npm run check:toolchain && node scripts/check-contract-generation.mjs",
+    "generate:python": "npm run check:toolchain && node scripts/generate-python-models.mjs",
+    "check:python-generation": "npm run check:toolchain && node scripts/generate-python-models.mjs --check"
   },
   "devDependencies": {
     "@typespec/compiler": "1.14.0",

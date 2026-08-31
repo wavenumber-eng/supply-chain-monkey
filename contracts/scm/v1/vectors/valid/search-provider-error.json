@@ -1,0 +1,13 @@
+{
+  "status": "provider_error",
+  "supplier": "LCSC",
+  "parameter_field_name": "LCSC Part #",
+  "provider_latency_ms": 8,
+  "provider_capabilities": null,
+  "rate_limit": null,
+  "service_timestamp": "2026-08-31T12:34:56Z",
+  "cached": false,
+  "data": null,
+  "error": "supplier request failed",
+  "error_detail": {"code":"upstream_unavailable","retryable":true,"upstream_status_code":503,"upstream_request_id":null}
+}

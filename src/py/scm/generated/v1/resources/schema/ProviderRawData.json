@@ -1,0 +1,12 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "ProviderRawData.json",
+    "type": "object",
+    "properties": {},
+    "unevaluatedProperties": {
+        "$ref": "JsonValue.json"
+    },
+    "description": "The one reviewed provider-owned flexible JSON object.",
+    "x-wn-flexible-reason": "Raw provider data is returned only when include_raw is explicitly requested.",
+    "x-wn-flexible": true
+}

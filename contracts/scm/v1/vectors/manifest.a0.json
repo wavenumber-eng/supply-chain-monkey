@@ -1,0 +1,116 @@
+{
+  "type": "scm.contract_vectors",
+  "version": "a0",
+  "cases": [
+    {
+      "id": "health",
+      "path": "valid/health.json",
+      "schema": "HealthResponse",
+      "valid": true,
+      "sha256": "6489d6d7a33c5d40e18fc61eeb6c34c341279ee61816394dde5189aa4ad8fae5"
+    },
+    {
+      "id": "provider-status",
+      "path": "valid/provider-status.json",
+      "schema": "ProviderStatusResponse",
+      "valid": true,
+      "sha256": "40db8d6cdadd10f2af4dfc967d9e2150e8896c9369a737df120e00c39ea36224"
+    },
+    {
+      "id": "search-ok",
+      "path": "valid/search-ok.json",
+      "schema": "SearchEnvelope",
+      "valid": true,
+      "sha256": "2a8580c9194b07442d50554562cb5d166a38800ede83bb71ad8151bc00d31296"
+    },
+    {
+      "id": "search-not-found",
+      "path": "valid/search-not-found.json",
+      "schema": "SearchEnvelope",
+      "valid": true,
+      "sha256": "518c7d0f79a857dcaf7a60a279ca685cee32ca4ec5cd30469799e4bf9eaea020"
+    },
+    {
+      "id": "search-provider-error",
+      "path": "valid/search-provider-error.json",
+      "schema": "SearchEnvelope",
+      "valid": true,
+      "sha256": "d09b763d389e995b3357f94fce8144fe52ed5f49f84fbf3feae2ad66b4b7d1de"
+    },
+    {
+      "id": "detail-ok",
+      "path": "valid/detail-ok.json",
+      "schema": "DetailEnvelope",
+      "valid": true,
+      "sha256": "999db28a0fa906528be7cf313035033c439010c134049d3715b9d7466a5a9f99"
+    },
+    {
+      "id": "spn-batch-partial",
+      "path": "valid/spn-batch-partial.json",
+      "schema": "SpnBatchEnvelope",
+      "valid": true,
+      "sha256": "b9f1a473dd0e7b5dc6fb9fca6a154a49d65e20cf43772e3e1196855e89ee097c"
+    },
+    {
+      "id": "stream-done",
+      "path": "valid/stream-done.json",
+      "schema": "StreamDoneEvent",
+      "valid": true,
+      "sha256": "747cdabd6bf031f659e13d3e82220675c2d4efefa870565345c1aedb32e24655"
+    },
+    {
+      "id": "auth-error",
+      "path": "valid/auth-error.json",
+      "schema": "HttpErrorDetail",
+      "valid": true,
+      "sha256": "54f3c001dd9badd7aee7eca0fdb39cc8c2f052c8cf286213546dcdf56e29b72b"
+    },
+    {
+      "id": "validation-error",
+      "path": "valid/validation-error.json",
+      "schema": "ValidationErrorDetail",
+      "valid": true,
+      "sha256": "d823388bee4fda6bd2aad6fdebb98adb82346ec76b238832369ece8ae341d5b0"
+    },
+    {
+      "id": "health-duplicate",
+      "path": "invalid/health-duplicate.json",
+      "schema": "HealthResponse",
+      "valid": false,
+      "failure": "duplicate_member",
+      "sha256": "8073b7457dbb5236c0d358c52bf3be1329a175ef77fdb76192aaba3f2740e55d"
+    },
+    {
+      "id": "health-extra",
+      "path": "invalid/health-extra.json",
+      "schema": "HealthResponse",
+      "valid": false,
+      "failure": "schema",
+      "sha256": "591620add97b8c8191e95cfc8a7ae20706eb180a68ca2d15ac9b283966c22a4a"
+    },
+    {
+      "id": "search-nonfinite",
+      "path": "invalid/search-nonfinite.json",
+      "schema": "SearchEnvelope",
+      "valid": false,
+      "failure": "nonfinite",
+      "sha256": "a951278c863a528f192effbbcbc62e63b5edfa17762a437d9eadc5368458636b"
+    },
+    {
+      "id": "search-unsafe-integer",
+      "path": "invalid/search-unsafe-integer.json",
+      "schema": "SearchEnvelope",
+      "valid": false,
+      "failure": "unsafe_integer",
+      "sha256": "2a386a8f469d61ac96adca0e472d1b1b0de1033b07754d32e9e6ae00f5bf1b8e"
+    },
+    {
+      "id": "spn-batch-max-plus-one",
+      "path": "invalid/spn-batch-max-plus-one.json",
+      "schema": "SpnBatchRequest",
+      "valid": false,
+      "failure": "schema",
+      "sha256": "459382c938e119c36978443685c75c10650f5e2412ed1f81c4e2a045fe98f3b6"
+    }
+  ]
+}

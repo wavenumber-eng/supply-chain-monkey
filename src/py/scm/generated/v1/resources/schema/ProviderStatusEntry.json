@@ -1,0 +1,23 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "ProviderStatusEntry.json",
+    "type": "object",
+    "properties": {
+        "configured": {
+            "type": "boolean"
+        },
+        "backend": {
+            "type": "string"
+        },
+        "capabilities": {
+            "$ref": "SupplierCapabilities.json"
+        }
+    },
+    "required": [
+        "configured",
+        "capabilities"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

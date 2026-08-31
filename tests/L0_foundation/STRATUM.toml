@@ -8,6 +8,7 @@ objectives = [
     "The package exposes its expected public version",
     "Shared contracts and client imports remain stable",
     "Provider interface fixtures remain valid",
+    "Generated SCM v1 contracts reject invalid wire payloads consistently",
 ]
 
 [dependencies]
@@ -26,5 +27,13 @@ id = "L0_002"
 file = "test_supplier_interface.py"
 name = "Supplier Interface"
 description = "Validate supplier provider contracts; live supplier tests are opt-in"
+concerns = ["contracts"]
+test_case_type = "contract"
+
+[[subtests]]
+id = "L0_003"
+file = "test_L0_003_generated_contract_codec.py"
+name = "Generated Contract Codec"
+description = "Validate digest-bound SCM vectors through strict JSON, schema, and generated models"
 concerns = ["contracts"]
 test_case_type = "contract"

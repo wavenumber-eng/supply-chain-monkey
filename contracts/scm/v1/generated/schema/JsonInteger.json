@@ -1,0 +1,8 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "JsonInteger.json",
+    "type": "integer",
+    "minimum": -9007199254740991,
+    "maximum": 9007199254740991,
+    "description": "I-JSON interoperable integer range used by SCM JSON payloads."
+}

@@ -25,7 +25,7 @@ export async function $onEmit(context) {
   }
 
   await emitFile(context.program, {
-    path: `${context.emitterOutputDir}/wn_contract_roots.a0.json`,
+    path: `${context.emitterOutputDir}/contract_roots.a0.json`,
     content: `${JSON.stringify({
       type: "wn.contract_roots",
       version: "a0",

@@ -1,11 +1,26 @@
 import "@typespec/http";
 import "@typespec/json-schema";
+import "@typespec/openapi";
 
 using TypeSpec.Http;
 using TypeSpec.JsonSchema;
 
 @service(#{ title: "supply-chain-monkey" })
 namespace Wavenumber.SupplyChainMonkey.V1;
+
+/** I-JSON interoperable integer range used by SCM JSON payloads. */
+@minValue(-9007199254740991)
+@maxValue(9007199254740991)
+scalar JsonInteger extends safeint;
+
+/** Stream MPN after the deployed handler's trim normalization. */
+@minLength(3)
+@extension("x-scm-normalization", "trim before minimum-length validation")
+scalar StreamMpn extends string;
+
+/** RFC 3339 timestamp retained as the deployed Python string representation. */
+@pattern("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$")
+scalar Rfc3339Timestamp extends string;
 
 /** JSON-compatible scalar, array, or object value. */
 union JsonValue {
@@ -46,7 +61,7 @@ enum BatchItemStatus {
 }
 
 model PriceBreak {
-  qty: int64;
+  qty: JsonInteger;
   unit_price: float64;
   currency: string;
 }
@@ -60,7 +75,7 @@ model Part {
   description: string;
   datasheet_url: string;
   product_url: string;
-  stock_quantity: int64;
+  stock_quantity: JsonInteger;
   stock_status: string;
   price_breaks: PriceBreak[];
   lifecycle_status: string;
@@ -69,14 +84,14 @@ model Part {
 }
 
 model RateLimitSnapshot {
-  request_limit: int64 | null;
-  requests_remaining: int64 | null;
-  burst_limit: int64 | null;
-  burst_remaining: int64 | null;
-  reset_seconds: int64 | null;
+  request_limit: JsonInteger | null;
+  requests_remaining: JsonInteger | null;
+  burst_limit: JsonInteger | null;
+  burst_remaining: JsonInteger | null;
+  reset_seconds: JsonInteger | null;
   reset_time: string | null;
-  retry_after_seconds: int64 | null;
-  observed_at: string;
+  retry_after_seconds: JsonInteger | null;
+  observed_at: Rfc3339Timestamp;
 }
 
 model SupplierCapabilities {
@@ -86,10 +101,10 @@ model SupplierCapabilities {
   supports_keyword_search: boolean;
   supports_spn_lookup: boolean;
   supports_native_spn_batch: boolean;
-  max_spn_batch_size: int64;
+  max_spn_batch_size: JsonInteger;
   min_request_interval_seconds: float64;
-  rate_limit_per_minute: int64 | null;
-  rate_limit_per_day: int64 | null;
+  rate_limit_per_minute: JsonInteger | null;
+  rate_limit_per_day: JsonInteger | null;
   usage_unit: string;
   supports_quota_headers: boolean;
   notes: string[];
@@ -106,10 +121,10 @@ model EnvelopeMetadata {
   status: EnvelopeStatus;
   supplier: string;
   parameter_field_name: string;
-  provider_latency_ms: int64;
+  provider_latency_ms: JsonInteger;
   provider_capabilities: SupplierCapabilities | null;
   rate_limit: RateLimitSnapshot | null;
-  service_timestamp: string;
+  service_timestamp: Rfc3339Timestamp;
   cached: boolean;
   error: string | null;
   error_detail: ServiceErrorDetail | null;
@@ -179,7 +194,7 @@ model HttpErrorDetail {
 }
 
 model ValidationErrorItem {
-  loc: (string | int64)[];
+  loc: (string | JsonInteger)[];
   msg: string;
   type: string;
   input?: JsonValue;
@@ -229,7 +244,9 @@ union StreamSearchEvent {
 
 model EventStreamResponse {
   @statusCode status_code: 200;
-  @header content_type: "text/event-stream";
+  @header("Content-Type") content_type: "text/event-stream";
+  @header("Cache-Control") cache_control: "no-cache";
+  @header("X-Accel-Buffering") accelerator_buffering: "no";
   @body body: string;
 }
 
@@ -265,7 +282,7 @@ interface AuthenticatedOperations {
     @query supplier: string,
     @query mpn: string,
     @query include_raw?: boolean = false,
-    @query max_results?: int64 = 10,
+    @query max_results?: JsonInteger = 10,
   ):
     | SearchEnvelope
     | UnauthorizedResponse
@@ -308,11 +325,13 @@ interface AuthenticatedOperations {
 @useAuth(ApiKeyAuth<ApiKeyLocation.query, "token">)
 @route("/v1")
 interface LegacyStreamingOperations {
+  #deprecated "Legacy query-token SSE surface; excluded from new clients."
+  @TypeSpec.OpenAPI.extension("x-scm-event-roots", #["StreamSearchEvent"])
   @get
   @route("/search/stream")
   searchStream(
-    @query mpn: string,
-    @query max_results?: int64 = 10,
+    @query mpn: StreamMpn,
+    @query max_results?: JsonInteger = 10,
     @query timeout?: float64 = 15.0,
     @query include_raw?: boolean = false,
     @query suppliers?: string = "",

@@ -62,19 +62,19 @@ depends_on = ["integration-baseline"]
 [[steps]]
 id = "typespec-v1-contract"
 title = "Author the existing v1 HTTP and data contract in TypeSpec"
-status = "active"
+status = "done"
 depends_on = ["contract-authority-design"]
 
 [[steps]]
 id = "python-runtime-viability"
 title = "Prove generated Python contract and codec viability"
-status = "pending"
+status = "done"
 depends_on = ["typespec-v1-contract"]
 
 [[steps]]
 id = "python-contract-cutover"
 title = "Cut the Python server and client over to generated contract models"
-status = "pending"
+status = "active"
 depends_on = ["python-runtime-viability"]
 
 [[steps]]

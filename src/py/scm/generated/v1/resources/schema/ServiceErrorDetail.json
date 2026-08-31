@@ -1,0 +1,44 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "ServiceErrorDetail.json",
+    "type": "object",
+    "properties": {
+        "code": {
+            "type": "string"
+        },
+        "retryable": {
+            "type": "boolean"
+        },
+        "upstream_status_code": {
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimum": -2147483648,
+                    "maximum": 2147483647
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "upstream_request_id": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        }
+    },
+    "required": [
+        "code",
+        "retryable",
+        "upstream_status_code",
+        "upstream_request_id"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    }
+}

@@ -9,6 +9,7 @@ dependencies = [
     "requests>=2.32.0",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.34.0",
+    "jsonschema>=4.26,<5",
 ]
 
 [project.optional-dependencies]
@@ -39,6 +40,7 @@ dev = [
     "ruff>=0.8.0",
     "twine>=5.0.0",
     "wn-rack>=1.1.0",
+    "datamodel-code-generator==0.76.0",
 ]
 
 [build-system]

@@ -68,7 +68,8 @@
       "request_roots": [],
       "responses": {
         "200": []
-      }
+      },
+      "event_roots": []
     },
     {
       "operation_id": "AuthenticatedOperations_detail",
@@ -93,7 +94,8 @@
         "500": [
           "HttpErrorDetail"
         ]
-      }
+      },
+      "event_roots": []
     },
     {
       "operation_id": "PublicOperations_health",
@@ -105,7 +107,8 @@
         "200": [
           "HealthResponse"
         ]
-      }
+      },
+      "event_roots": []
     },
     {
       "operation_id": "AuthenticatedOperations_providersStatus",
@@ -130,7 +133,8 @@
         "500": [
           "HttpErrorDetail"
         ]
-      }
+      },
+      "event_roots": []
     },
     {
       "operation_id": "AuthenticatedOperations_search",
@@ -155,7 +159,8 @@
         "500": [
           "HttpErrorDetail"
         ]
-      }
+      },
+      "event_roots": []
     },
     {
       "operation_id": "LegacyStreamingOperations_searchStream",
@@ -168,14 +173,19 @@
       ],
       "request_roots": [],
       "responses": {
-        "200": [],
+        "200": [
+          "StreamSearchEvent"
+        ],
         "400": [
           "HttpErrorDetail"
         ],
         "401": [
           "HttpErrorDetail"
         ]
-      }
+      },
+      "event_roots": [
+        "StreamSearchEvent"
+      ]
     },
     {
       "operation_id": "AuthenticatedOperations_spn",
@@ -200,7 +210,8 @@
         "500": [
           "HttpErrorDetail"
         ]
-      }
+      },
+      "event_roots": []
     },
     {
       "operation_id": "AuthenticatedOperations_spnBatch",
@@ -227,13 +238,24 @@
         "500": [
           "HttpErrorDetail"
         ]
-      }
+      },
+      "event_roots": []
     }
   ],
   "artifacts": {
     "openapi": {
       "path": "contracts/scm/v1/generated/openapi.json",
-      "sha256": "bb730d072803a064543287d7d6714785f6599e27f3fbb58ad04869b369d0db23"
+      "sha256": "f042ff9700d8d64acda86b8c32f73167c847ea4a875610404bdf413595cf1ccd"
+    },
+    "python_projection": {
+      "path": "contracts/scm/v1/generated/projection/python-models.json",
+      "sha256": "f4503644e869716ab07ca87eefd4412fdd7b4e5c4dfee194c89fc0e0b4a00f9e",
+      "authority": false,
+      "purpose": "datamodel-code-generator input with local $defs references"
+    },
+    "vectors": {
+      "path": "contracts/scm/v1/vectors/manifest.a0.json",
+      "sha256": "2e381bae8210eb8f81a5cb5bc1a4711ed5845edc291f41d6821b18c6558f9a5b"
     },
     "schemas": [
       {
@@ -258,7 +280,7 @@
         "name": "EnvelopeMetadata",
         "schema_id": "EnvelopeMetadata.json",
         "path": "contracts/scm/v1/generated/schema/EnvelopeMetadata.json",
-        "sha256": "935b50604d25012547110dcf07e4074cf0ef8097e1bc095cc71e68465de4b052"
+        "sha256": "f33d570ea12c3bbfb8bd9ffbdd9e8f734527d83a85d15c326d5e193707b68e0f"
       },
       {
         "name": "EnvelopeStatus",
@@ -270,7 +292,7 @@
         "name": "EventStreamResponse",
         "schema_id": "EventStreamResponse.json",
         "path": "contracts/scm/v1/generated/schema/EventStreamResponse.json",
-        "sha256": "c5db1adb7adc8ceb62a50c50421637427c4e34f4de4feedc780f137272215563"
+        "sha256": "b12d5507b9c1bb39c193920fe089299e46403d6d911ebe2a287a2b5433787ccd"
       },
       {
         "name": "HealthResponse",
@@ -285,6 +307,12 @@
         "sha256": "d73c6f870e7c5eb91aeef6914be50eb0ed581dcc0c712aec758f37a38d5ab62a"
       },
       {
+        "name": "JsonInteger",
+        "schema_id": "JsonInteger.json",
+        "path": "contracts/scm/v1/generated/schema/JsonInteger.json",
+        "sha256": "1015bfc4e6fa07e994fa48192247d66be5bd67fe193d60f85355c343d6b1e79b"
+      },
+      {
         "name": "JsonValue",
         "schema_id": "JsonValue.json",
         "path": "contracts/scm/v1/generated/schema/JsonValue.json",
@@ -294,13 +322,13 @@
         "name": "Part",
         "schema_id": "Part.json",
         "path": "contracts/scm/v1/generated/schema/Part.json",
-        "sha256": "8b9849d1de68b48e73afd28e50e2ad9a0973e7e7fdb4d4efe5d09bd95d501649"
+        "sha256": "9245b3a91ac49ef7f8f6e62e6c6802d97c1ef2259aef2357b6ec9b63c0b3b65d"
       },
       {
         "name": "PriceBreak",
         "schema_id": "PriceBreak.json",
         "path": "contracts/scm/v1/generated/schema/PriceBreak.json",
-        "sha256": "1071e6c64f661f1a9e6bc5b21517eac4a1dd3063ffca06def3da35492e2be1f6"
+        "sha256": "6b609394966167bb7b99fe4475f9c03d6704fc34c861bb940573613942d8ea90"
       },
       {
         "name": "ProviderRawData",
@@ -324,7 +352,7 @@
         "name": "RateLimitSnapshot",
         "schema_id": "RateLimitSnapshot.json",
         "path": "contracts/scm/v1/generated/schema/RateLimitSnapshot.json",
-        "sha256": "a4d5516f141622970dace99979cb16cc70406a241cfb4a7eb69daddc3a7cb24d"
+        "sha256": "cbd6bda3fe8f3fd12e6b5dd05b79efb9ed4b8a84767b893e1a9023ffb2f73921"
       },
       {
         "name": "RecordJsonValue",
@@ -337,6 +365,12 @@
         "schema_id": "RecordProviderStatusEntry.json",
         "path": "contracts/scm/v1/generated/schema/RecordProviderStatusEntry.json",
         "sha256": "9e555c45f1aea69db9e835f3e94c55b7e0d15b3bb883e6a46bedfb552177c40b"
+      },
+      {
+        "name": "Rfc3339Timestamp",
+        "schema_id": "Rfc3339Timestamp.json",
+        "path": "contracts/scm/v1/generated/schema/Rfc3339Timestamp.json",
+        "sha256": "e9857310c894b0134b919cb89d446e2f1043bfdbf3dee510cd76b76ad670c902"
       },
       {
         "name": "SearchEnvelope",
@@ -387,6 +421,12 @@
         "sha256": "55fe7f4d0bffb20aa387dda7e190ceef998f8197e96fd047b5e175f262d4ebab"
       },
       {
+        "name": "StreamMpn",
+        "schema_id": "StreamMpn.json",
+        "path": "contracts/scm/v1/generated/schema/StreamMpn.json",
+        "sha256": "13adf768e395f7d2101f441d83d14e20da006be4bc40be59db4d2baa7fa999c8"
+      },
+      {
         "name": "StreamSearchEvent",
         "schema_id": "urn:supply-chain-monkey:schema:v1.stream-search-event",
         "path": "contracts/scm/v1/generated/schema/StreamSearchEvent.json",
@@ -402,7 +442,7 @@
         "name": "SupplierCapabilities",
         "schema_id": "SupplierCapabilities.json",
         "path": "contracts/scm/v1/generated/schema/SupplierCapabilities.json",
-        "sha256": "b9c40b7a39c9eb89c733007e8d4bac36a9492955cfda3a29ef7667fdaf9f3305"
+        "sha256": "6969a0e730a6b17a17b0e9f52b82598327f1a2c70d0190fe80723fa717f16eaa"
       },
       {
         "name": "UnauthorizedResponse",
@@ -420,7 +460,7 @@
         "name": "ValidationErrorItem",
         "schema_id": "ValidationErrorItem.json",
         "path": "contracts/scm/v1/generated/schema/ValidationErrorItem.json",
-        "sha256": "d92137482ef8273c04b64bac446d5db304788bd55deb838643edbecb52d8b3c6"
+        "sha256": "87b711b56d7a288fb6e3bdcd7b6aaf65a09f932cd89632504d678503eceda02a"
       },
       {
         "name": "ValidationErrorResponse",
