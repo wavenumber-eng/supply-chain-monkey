@@ -255,7 +255,7 @@
     },
     "vectors": {
       "path": "contracts/scm/v1/vectors/manifest.a0.json",
-      "sha256": "67cb2875cf6ac6fbd57f4741bd568e50e48ff3bbcbf77890999f801e2ac14014"
+      "sha256": "e001c2ba39bf6699aaf22c5be65179b86c15dc7a737ca0c8f62960c165aa6ae5"
     },
     "schemas": [
       {

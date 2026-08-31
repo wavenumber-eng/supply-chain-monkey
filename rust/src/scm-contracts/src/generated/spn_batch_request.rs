@@ -46,6 +46,7 @@ pub mod error {
 ///  ],
 ///  "properties": {
 ///    "include_raw": {
+///      "default": false,
 ///      "type": "boolean"
 ///    },
 ///    "spns": {
@@ -66,8 +67,8 @@ pub mod error {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct SpnBatchRequest {
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub include_raw: ::std::option::Option<bool>,
+    #[serde(default)]
+    pub include_raw: bool,
     pub spns: ::std::vec::Vec<::std::string::String>,
     pub supplier: ::std::string::String,
 }

@@ -271,7 +271,7 @@ impl ScmClient {
         options: LookupOptions,
     ) -> Result<ProviderOutcome<SpnBatchEnvelope>, ClientError> {
         let model = SpnBatchRequest {
-            include_raw: Some(options.include_raw),
+            include_raw: options.include_raw,
             spns,
             supplier: supplier.to_owned(),
         };

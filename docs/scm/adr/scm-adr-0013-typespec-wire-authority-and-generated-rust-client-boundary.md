@@ -197,7 +197,8 @@ the unmodified schema.
 Rust model projection uses `typify==0.7.0` through the unpublished
 `scm-codegen` crate. It bundles catalog-discovered references, translates the
 TypeSpec emitter's closure and record keywords for typify, preserves integer
-and fractional flexible-JSON variants, and adds `serde(deny_unknown_fields)` to
+and fractional flexible-JSON variants, retains scalar defaults such as
+`SpnBatchRequest.include_raw = false`, and adds `serde(deny_unknown_fields)` to
 generated named structs. Generated source is inventory-checked in `--check`
 mode. The Rust codec validates against the separately embedded, unmodified
 normalized schemas before Serde decode; the bundled typify input is never used
