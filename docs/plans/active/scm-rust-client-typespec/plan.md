@@ -92,13 +92,13 @@ depends_on = ["typespec-v1-contract", "rust-standard-adoption"]
 [[steps]]
 id = "rust-client-library"
 title = "Implement the async Rust SCM client library"
-status = "active"
+status = "done"
 depends_on = ["rust-contract-generation"]
 
 [[steps]]
 id = "scm-cli-proof"
 title = "Build a bounded scm CLI on the Rust client"
-status = "pending"
+status = "active"
 depends_on = ["rust-client-library"]
 
 [[steps]]
