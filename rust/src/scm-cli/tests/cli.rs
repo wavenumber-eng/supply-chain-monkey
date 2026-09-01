@@ -86,17 +86,8 @@ fn requested_supplier(uri: &str) -> Option<&str> {
 
 fn search_payload(uri: &str) -> Vec<u8> {
     let supplier = requested_supplier(uri).unwrap_or_default();
-    if uri.contains("%1B") || uri.contains("%1b") {
-        return NOT_FOUND.to_vec();
-    }
-    if supplier == "broken" {
-        return PROVIDER_ERROR.to_vec();
-    }
-    if supplier == "invalid" {
-        return b"{}".to_vec();
-    }
-    if supplier == "notfound" {
-        return NOT_FOUND.to_vec();
+    if let Some(payload) = fixed_search_payload(uri, supplier) {
+        return payload.to_vec();
     }
     let mut value: serde_json::Value = serde_json::from_slice(SEARCH).expect("search fixture");
     let part = &mut value["data"][0];
@@ -116,6 +107,18 @@ fn search_payload(uri: &str) -> Vec<u8> {
         _ => {}
     }
     serde_json::to_vec(&value).expect("search fixture mutation")
+}
+
+fn fixed_search_payload(uri: &str, supplier: &str) -> Option<&'static [u8]> {
+    if uri.contains("%1B") || uri.contains("%1b") {
+        return Some(NOT_FOUND);
+    }
+    match supplier {
+        "broken" => Some(PROVIDER_ERROR),
+        "invalid" => Some(b"{}"),
+        "notfound" => Some(NOT_FOUND),
+        _ => None,
+    }
 }
 
 fn providers_payload(names: &[&str]) -> Vec<u8> {
