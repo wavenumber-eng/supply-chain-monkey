@@ -65,6 +65,7 @@ function runGenerator(output) {
   const uv = process.platform === "win32" ? "uv.exe" : "uv";
   const command = spawnSync(uv, [
     "run",
+    "--group", "dev",
     "datamodel-codegen",
     "--input", PROJECTION_PATH,
     "--input-file-type", "jsonschema",
@@ -87,7 +88,9 @@ function runGenerator(output) {
 }
 
 async function applyNativeModelProjections(path) {
-  const source = await readFile(path, "utf8");
+  const source = (await readFile(path, "utf8"))
+    .replaceAll("\r\n", "\n")
+    .replaceAll("\r", "\n");
   const classMarker = "class SpnBatchRequest(BaseModel):";
   const classStart = source.indexOf(classMarker);
   const classEnd = source.indexOf("\nclass ", classStart + classMarker.length);
