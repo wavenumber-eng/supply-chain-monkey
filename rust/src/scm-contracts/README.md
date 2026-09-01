@@ -1,4 +1,4 @@
-# scm-contracts
+# supply-chain-monkey-contracts
 
 Generated Supply Chain Monkey v1 wire models and a strict, bounded JSON codec.
 

@@ -1834,35 +1834,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "scm-cli"
-version = "0.1.0"
-dependencies = [
- "axum",
- "clap",
- "scm-client",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
-]
-
-[[package]]
-name = "scm-client"
-version = "0.1.0"
-dependencies = [
- "axum",
- "axum-server",
- "futures-util",
- "rcgen",
- "reqwest",
- "scm-contracts",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
-]
-
-[[package]]
 name = "scm-codegen"
 version = "0.1.0"
 dependencies = [
@@ -1872,18 +1843,6 @@ dependencies = [
  "serde_json",
  "syn 2.0.119",
  "typify",
-]
-
-[[package]]
-name = "scm-contracts"
-version = "0.1.0"
-dependencies = [
- "jsonschema",
- "regress",
- "serde",
- "serde_json",
- "sha2",
- "thiserror",
 ]
 
 [[package]]
@@ -2091,6 +2050,47 @@ name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
+
+[[package]]
+name = "supply-chain-monkey-cli"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "clap",
+ "serde",
+ "serde_json",
+ "supply-chain-monkey-client",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "supply-chain-monkey-client"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "axum-server",
+ "futures-util",
+ "rcgen",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "supply-chain-monkey-contracts",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "supply-chain-monkey-contracts"
+version = "0.1.0"
+dependencies = [
+ "jsonschema",
+ "regress",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
+]
 
 [[package]]
 name = "syn"

@@ -11,6 +11,8 @@ permissions:
 jobs:
   publish:
     name: Build and publish distribution
+    # Rust releases use a separate rust-v* identity and publication workflow.
+    if: ${{ !startsWith(github.event.release.tag_name, 'rust-v') }}
     runs-on: ubuntu-latest
     environment: pypi
 

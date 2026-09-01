@@ -5,10 +5,12 @@ future Rust-only SCM broker. It is deliberately not an Alexandria workspace
 member or production route: Alexandria's own active plan still gates supplier
 runtime integration.
 
-The manifest names the registry boundary `scm-client = "=0.1.0"` and contains
-no machine path. `scripts/prove-artifact-candidates.py` copies this crate into
-an isolated directory, temporarily patches that dependency to the extracted
-`scm-client` and `scm-contracts` candidate archives, and runs Clippy plus all
+The manifest aliases the registry package
+`supply-chain-monkey-client = "=0.1.0"` as the ergonomic Rust dependency
+`scm-client` and contains no machine path. `scripts/prove-artifact-candidates.py`
+copies this crate into an isolated directory, temporarily patches that
+dependency to the extracted `supply-chain-monkey-client` and
+`supply-chain-monkey-contracts` candidate archives, and runs Clippy plus all
 tests with a fresh Cargo target. The proof covers missing configuration,
 unreachable SCM, mixed provider outcomes, cancellation, successful concurrent
 search, and authorization-header-only credential transport.
