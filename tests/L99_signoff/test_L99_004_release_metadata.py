@@ -107,3 +107,11 @@ def test_ci_checks_pinned_contract_and_cross_platform_rust_gates() -> None:
 
     linux_steps = "\n".join(str(step) for step in workflow["jobs"]["signoff"]["steps"])
     assert "cargo +1.96.1 install --locked cargo-deny --version 0.20.2" in linux_steps
+
+
+def test_python_generator_provisions_its_declared_dev_dependency() -> None:
+    generator = (ROOT / "scripts" / "generate-python-models.mjs").read_text(
+        encoding="utf-8"
+    )
+    run_arguments = generator.split("const command = spawnSync", maxsplit=1)[1]
+    assert '"run",\n    "--group", "dev",\n    "datamodel-codegen"' in run_arguments
