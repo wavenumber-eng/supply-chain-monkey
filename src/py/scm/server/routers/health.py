@@ -97,13 +97,23 @@ def _status_page_html() -> str:
     )
 
 
-@router.get("/health", response_model=HealthResponse)
+@router.get(
+    "/health",
+    response_model=HealthResponse,
+    summary="Check service health",
+    description="Return the current service health marker.",
+)
 async def health():
     """Basic health check. No auth required."""
     return contract_response("HealthResponse", HealthResponse, {"status": "ok"})
 
 
-@router.get("/", response_class=HTMLResponse)
+@router.get(
+    "/",
+    response_class=HTMLResponse,
+    summary="View the SCM status page",
+    description="Return the human-facing SCM status and demonstration page.",
+)
 async def status_page():
     """Visual status page with test panel."""
     return _status_page_html()
@@ -115,6 +125,8 @@ async def status_page():
     response_model=ProviderStatusResponse,
     response_model_exclude_unset=True,
     responses=CONTRACT_ERROR_RESPONSES,
+    summary="List provider status and capabilities",
+    description="Return configuration and capabilities for every known provider.",
 )
 async def providers_status():
     """Report which providers are configured (have credentials)."""

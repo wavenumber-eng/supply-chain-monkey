@@ -5,10 +5,12 @@
     "properties": {
         "status_code": {
             "type": "number",
-            "const": 500
+            "const": 500,
+            "description": "HTTP internal-server-error status."
         },
         "body": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.HttpErrorDetail"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.HttpErrorDetail",
+            "description": "Sanitized server configuration failure."
         }
     },
     "required": [
@@ -17,5 +19,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Response returned when SCM authentication is not configured."
 }

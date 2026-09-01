@@ -3,25 +3,31 @@
     "$id": "urn:supply-chain-monkey:schema:v1.declaration.JsonValue",
     "anyOf": [
         {
-            "type": "string"
+            "type": "string",
+            "description": "JSON string value."
         },
         {
-            "type": "number"
+            "type": "number",
+            "description": "JSON number value."
         },
         {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "JSON boolean value."
         },
         {
-            "type": "null"
+            "type": "null",
+            "description": "JSON null value."
         },
         {
             "type": "array",
             "items": {
                 "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonValue"
-            }
+            },
+            "description": "JSON array containing recursively compatible values."
         },
         {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.RecordJsonValue"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.RecordJsonValue",
+            "description": "JSON object containing recursively compatible values."
         }
     ],
     "description": "JSON-compatible scalar, array, or object value."

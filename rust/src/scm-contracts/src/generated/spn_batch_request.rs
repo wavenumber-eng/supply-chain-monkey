@@ -31,7 +31,7 @@ pub mod error {
         }
     }
 }
-///`SpnBatchRequest`
+///Request for multiple exact supplier-part-number lookups.
 ///
 /// <details><summary>JSON schema</summary>
 ///
@@ -39,6 +39,7 @@ pub mod error {
 ///{
 ///  "$id": "urn:supply-chain-monkey:schema:v1.spn-batch-request",
 ///  "title": "SpnBatchRequest",
+///  "description": "Request for multiple exact supplier-part-number lookups.",
 ///  "type": "object",
 ///  "required": [
 ///    "spns",
@@ -46,10 +47,12 @@ pub mod error {
 ///  ],
 ///  "properties": {
 ///    "include_raw": {
+///      "description": "Include provider-owned raw data in returned parts.",
 ///      "default": false,
 ///      "type": "boolean"
 ///    },
 ///    "spns": {
+///      "description": "Supplier part numbers to resolve; between one and 1,000 items.",
 ///      "type": "array",
 ///      "items": {
 ///        "type": "string"
@@ -58,6 +61,7 @@ pub mod error {
 ///      "minItems": 1
 ///    },
 ///    "supplier": {
+///      "description": "Supplier whose part numbers should be resolved.",
 ///      "type": "string"
 ///    }
 ///  }
@@ -67,8 +71,11 @@ pub mod error {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct SpnBatchRequest {
+    ///Include provider-owned raw data in returned parts.
     #[serde(default)]
     pub include_raw: bool,
+    ///Supplier part numbers to resolve; between one and 1,000 items.
     pub spns: ::std::vec::Vec<::std::string::String>,
+    ///Supplier whose part numbers should be resolved.
     pub supplier: ::std::string::String,
 }

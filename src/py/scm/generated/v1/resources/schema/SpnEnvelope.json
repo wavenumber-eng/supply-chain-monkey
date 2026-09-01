@@ -11,7 +11,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Resolved normalized part, or null when unavailable."
         }
     },
     "required": [
@@ -24,5 +25,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Result envelope for exact supplier-part-number lookup."
 }

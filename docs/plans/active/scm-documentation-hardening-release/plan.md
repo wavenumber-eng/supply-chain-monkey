@@ -57,6 +57,12 @@ title = "Verify the production-triggered Appliku deployment"
 status = "pending"
 depends_on = ["release-production"]
 
+[[steps]]
+id = "publish-python"
+title = "Publish and verify the v2026-09-01 Python release"
+status = "pending"
+depends_on = ["deployment-verification"]
+
 [[exit_criteria]]
 id = "signoff"
 title = "Focused signoff passes"
@@ -96,6 +102,16 @@ status = "pending"
 id = "deployment-health"
 title = "Appliku reports the production commit deployed and live health/schema smoke checks pass"
 status = "pending"
+
+[[exit_criteria]]
+id = "immutable-rust-consumption"
+title = "An isolated consumer builds the Rust client from the documented immutable Git revision"
+status = "pending"
+
+[[exit_criteria]]
+id = "python-publication"
+title = "GitHub Release v2026-09-01 publishes and a clean environment installs Python 2026.9.1 from PyPI"
+status = "pending"
 +++
 
 # SCM documentation hardening and 2026.9.1 release
@@ -119,6 +135,11 @@ deployment.
   endpoint examples, `ProviderOutcome` and error handling, concurrent generic
   search, CLI table/JSON behavior, security constraints, and the generated-code
   boundary.
+- Document a pre-crates.io Cargo dependency that aliases
+  `supply-chain-monkey-client` as `scm-client` and pins an immutable repository
+  commit. Prove the stanza from a clean external project without sibling paths
+  or machine-local source overrides; otherwise Alexandria consumption remains
+  explicitly blocked.
 - Document every supported public handwritten Rust API. Enforce missing-doc
   coverage for handwritten public surfaces while explicitly treating generated
   models as projections whose semantic documentation originates in TypeSpec.
@@ -133,6 +154,9 @@ deployment.
   runtime `/openapi.json`, the canonical generated TypeSpec artifact, bearer
   authorization, unauthenticated health, and the deprecated query-token stream
   warning.
+- Host the packaged canonical TypeSpec document from the local SCM test server
+  with its own Swagger view. Include PowerShell and POSIX commands and prohibit
+  uploading internal specifications or tokens to third-party editors.
 - Explain that TypeSpec-generated OpenAPI is structural authority while the
   FastAPI-served document is the interactive runtime projection. Document how
   parity is tested and how generated artifacts are refreshed and checked.
@@ -153,6 +177,9 @@ deployment.
   independently governed SemVer versions unless a separate crate publication
   decision explicitly changes them. No crates.io, Homebrew, or WinGet
   publication is authorized by this plan.
+- The Python distribution is published only through the existing trusted
+  publisher workflow: exact production commit tag `v2026-09-01`, GitHub Release,
+  successful release workflow, and clean PyPI installation are required.
 - `dev` is the integration branch and is not tied to deployment. Only merging
   the signed release into `production` is expected to trigger Appliku.
 
@@ -165,11 +192,20 @@ deployment.
   cargo-deny, and the pinned wn-dev-std Rust audits.
 - Add or retain fast tests proving `/docs`, `/redoc`, and `/openapi.json` are
   reachable and that served schema roots/security match the TypeSpec catalog.
-  Inspect the canonical OpenAPI for summaries/descriptions on all supported
-  operations and core schemas.
+  Require the runtime and canonical documents to agree on operation summaries,
+  descriptions, service version, and deprecation. Both legacy stream views must
+  warn never to enter a real token, and the operation/security scheme must be
+  marked deprecated/sensitive.
+- Run an executable TypeSpec-program coverage check requiring documentation on
+  every authored model, scalar, enum, union, interface, member, operation, and
+  parameter, plus generated OpenAPI summaries/descriptions for every operation,
+  schema, and property.
 - Run root pytest, Rack L99, Python sdist/wheel build, Twine checks, and the
   packaged Alexandria Rust consumer proof required by the existing release
   boundary.
+- Run a local Markdown-link/path checker over the documentation map and touched
+  READMEs. Compile Rust snippets through doctests and exercise shell/API examples
+  in isolated tests where practical.
 - Record dev-std logs after the documentation slice, independent review and
   remediation, final exact-source signoff, branch integration, and deployment
   verification. Commit coherent slices as work proceeds.
@@ -178,18 +214,30 @@ deployment.
 
 ## Release and deployment gate
 
-1. Update service/Python version metadata, changelog, and release notes to
+1. Update service/Python version metadata, TypeSpec OpenAPI metadata, changelog,
+   and release notes to
    `2026.9.1`; create a clean candidate commit and run the complete signoff on
    that exact commit.
-2. Fetch remote state, integrate the exact candidate into `dev` without
-   discarding unrelated work, and rerun any checks affected by the integration
-   result.
-3. Confirm `production` has not advanced unexpectedly. Merge the exact signed
-   `dev` release into `production` without force-pushing and push only after all
-   gates and independent review are recorded.
-4. Verify Appliku identifies the pushed production commit and reaches a healthy
+2. Fetch remote state and integrate into `dev` without discarding unrelated
+   work. Record candidate/dev commit and tree IDs. If the integrated tree differs
+   from the reviewed candidate, treat it as a new candidate and repeat the full
+   signoff and independent exact-tree review before production.
+3. Confirm `production` has not advanced unexpectedly. Record its previous
+   commit/tree and the last known healthy deployment. The recovery procedure is
+   a reviewed revert commit on `production` followed by Appliku redeployment;
+   never force-push or auto-rollback blindly.
+4. Merge the exact signed `dev` release into `production` without force-pushing
+   and push only after all gates and independent review are recorded. Compare
+   the production tree ID with the signed candidate tree ID.
+5. Verify Appliku identifies the pushed production commit and reaches a healthy
    terminal deployment state. Smoke-test `/v1/health`, `/docs`,
-   `/openapi.json`, and one authenticated non-live-provider contract request
-   using credentials and deployment URL supplied outside source control.
-5. Stop and report rather than retrying blindly if remote branch state,
+   `/docs/typespec`, both OpenAPI documents, their `2026.9.1` identity, and one
+   authenticated non-live-provider contract request using credentials and
+   deployment URL supplied outside source control.
+6. Tag that exact healthy production commit as `v2026-09-01`, create the GitHub
+   Release that triggers trusted publishing, monitor the release workflow, and
+   install `supply-chain-monkey[client]==2026.9.1` from PyPI in a clean
+   environment. Do not create the public package release before deployment is
+   healthy.
+7. Stop and report rather than retrying blindly if remote branch state,
    deployment identity, credentials, or health cannot be established.

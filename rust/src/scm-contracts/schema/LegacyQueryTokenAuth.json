@@ -1,0 +1,31 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.LegacyQueryTokenAuth",
+    "type": "object",
+    "properties": {
+        "type": {
+            "type": "string",
+            "const": "apiKey",
+            "description": "API key authentication"
+        },
+        "in": {
+            "type": "string",
+            "const": "query",
+            "description": "location of the API key"
+        },
+        "name": {
+            "type": "string",
+            "const": "token",
+            "description": "name of the API key"
+        }
+    },
+    "required": [
+        "type",
+        "in",
+        "name"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    },
+    "description": "Deprecated v1 query-token compatibility surface. Never place a real service token in this query, Swagger operation, logs, or shared URLs."
+}

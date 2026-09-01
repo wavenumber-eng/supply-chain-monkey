@@ -22,7 +22,12 @@ const MAX_IJSON_INTEGER: u64 = 9_007_199_254_740_991;
 pub enum CodecError {
     /// Payload exceeded its configured byte limit.
     #[error("payload is {actual} bytes; limit is {limit}")]
-    PayloadTooLarge { actual: usize, limit: usize },
+    PayloadTooLarge {
+        /// Number of bytes presented to the codec.
+        actual: usize,
+        /// Maximum number of bytes accepted by the caller.
+        limit: usize,
+    },
     /// Payload was not strict I-JSON.
     #[error("invalid strict JSON: {0}")]
     Json(String),

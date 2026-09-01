@@ -4,13 +4,16 @@
     "type": "object",
     "properties": {
         "configured": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Whether the provider is currently configured for use."
         },
         "backend": {
-            "type": "string"
+            "type": "string",
+            "description": "Selected backend implementation, when available."
         },
         "capabilities": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.SupplierCapabilities"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.SupplierCapabilities",
+            "description": "Features and operational limits exposed by the provider."
         }
     },
     "required": [
@@ -19,5 +22,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Configuration and capabilities reported for one provider."
 }

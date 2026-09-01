@@ -26,25 +26,33 @@ class EventStreamResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    status_code: Literal[200]
-    content_type: Literal["text/event-stream"]
-    cache_control: Literal["no-cache"]
-    accelerator_buffering: Literal["no"]
-    body: str
+    status_code: Annotated[Literal[200], Field(description="HTTP success status.")]
+    content_type: Annotated[
+        Literal["text/event-stream"], Field(description="Server-sent-event media type.")
+    ]
+    cache_control: Annotated[
+        Literal["no-cache"], Field(description="Directive preventing response caching.")
+    ]
+    accelerator_buffering: Annotated[
+        Literal["no"], Field(description="Directive disabling reverse-proxy buffering.")
+    ]
+    body: Annotated[str, Field(description="Serialized server-sent-event byte stream.")]
 
 
 class HealthResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    status: Literal["ok"]
+    status: Annotated[
+        Literal["ok"], Field(description="Constant healthy-state marker.")
+    ]
 
 
 class HttpErrorDetail(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    detail: str
+    detail: Annotated[str, Field(description="Human-readable request or server error.")]
 
 
 class JsonInteger(RootModel[int]):
@@ -59,13 +67,30 @@ class JsonInteger(RootModel[int]):
     ]
 
 
+class LegacyQueryTokenAuth(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Annotated[Literal["apiKey"], Field(description="API key authentication")]
+    in_: Annotated[
+        Literal["query"], Field(alias="in", description="location of the API key")
+    ]
+    name: Annotated[Literal["token"], Field(description="name of the API key")]
+
+
 class PriceBreak(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    qty: JsonInteger
-    unit_price: float
-    currency: str
+    qty: Annotated[
+        JsonInteger, Field(description="Minimum order quantity for this unit price.")
+    ]
+    unit_price: Annotated[
+        float, Field(description="Price per component at the associated quantity.")
+    ]
+    currency: Annotated[
+        str, Field(description="Supplier-reported ISO-style currency code.")
+    ]
 
 
 class QueryInteger(RootModel[int]):
@@ -93,38 +118,70 @@ class ServerConfigurationErrorResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    status_code: Literal[500]
-    body: HttpErrorDetail
+    status_code: Annotated[
+        Literal[500], Field(description="HTTP internal-server-error status.")
+    ]
+    body: Annotated[
+        HttpErrorDetail, Field(description="Sanitized server configuration failure.")
+    ]
 
 
 class UpstreamStatusCode(RootModel[int]):
-    root: Annotated[int, Field(ge=-2147483648, le=2147483647)]
+    root: Annotated[
+        int,
+        Field(
+            description="Sanitized upstream HTTP status, when available.",
+            ge=-2147483648,
+            le=2147483647,
+        ),
+    ]
 
 
 class ServiceErrorDetail(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    code: str
-    retryable: bool
-    upstream_status_code: UpstreamStatusCode | None
-    upstream_request_id: str | None
+    code: Annotated[str, Field(description="Stable SCM error category.")]
+    retryable: Annotated[bool, Field(description="Whether retrying later may succeed.")]
+    upstream_status_code: Annotated[
+        UpstreamStatusCode | None,
+        Field(description="Sanitized upstream HTTP status, when available."),
+    ]
+    upstream_request_id: Annotated[
+        str | None,
+        Field(description="Sanitized upstream request identifier, when available."),
+    ]
 
 
 class SpnBatchRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    supplier: str
-    spns: Annotated[list[str], Field(max_length=1000, min_length=1)]
-    include_raw: bool = False
+    supplier: Annotated[
+        str, Field(description="Supplier whose part numbers should be resolved.")
+    ]
+    spns: Annotated[
+        list[str],
+        Field(
+            description="Supplier part numbers to resolve; between one and 1,000 items.",
+            max_length=1000,
+            min_length=1,
+        ),
+    ]
+    include_raw: Annotated[
+        bool,
+        Field(description="Include provider-owned raw data in returned parts."),
+    ] = False
 
 
 class StreamDoneEvent(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    done: Literal[True]
+    done: Annotated[
+        Literal[True],
+        Field(description="Constant marker identifying the terminal stream event."),
+    ]
 
 
 class StreamMpn(RootModel[str]):
@@ -149,58 +206,126 @@ class SupplierCapabilities(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    supplier: str
-    provider_kind: str
-    supports_mpn_search: bool
-    supports_keyword_search: bool
-    supports_spn_lookup: bool
-    supports_native_spn_batch: bool
-    max_spn_batch_size: JsonInteger
-    min_request_interval_seconds: float
-    rate_limit_per_minute: JsonInteger | None
-    rate_limit_per_day: JsonInteger | None
-    usage_unit: str
-    supports_quota_headers: bool
-    notes: list[str]
+    supplier: Annotated[
+        str, Field(description="Canonical supplier represented by the backend.")
+    ]
+    provider_kind: Annotated[
+        str, Field(description="Implementation category used for provider diagnostics.")
+    ]
+    supports_mpn_search: Annotated[
+        bool, Field(description="Whether manufacturer-part-number search is supported.")
+    ]
+    supports_keyword_search: Annotated[
+        bool, Field(description="Whether general keyword search is supported.")
+    ]
+    supports_spn_lookup: Annotated[
+        bool,
+        Field(description="Whether exact supplier-part-number lookup is supported."),
+    ]
+    supports_native_spn_batch: Annotated[
+        bool,
+        Field(description="Whether the upstream provider has a native batch lookup."),
+    ]
+    max_spn_batch_size: Annotated[
+        JsonInteger,
+        Field(description="Maximum batch size accepted by SCM for this provider."),
+    ]
+    min_request_interval_seconds: Annotated[
+        float, Field(description="Minimum delay SCM applies between provider requests.")
+    ]
+    rate_limit_per_minute: Annotated[
+        JsonInteger | None,
+        Field(description="Provider request quota per minute, when known."),
+    ]
+    rate_limit_per_day: Annotated[
+        JsonInteger | None,
+        Field(description="Provider request quota per day, when known."),
+    ]
+    usage_unit: Annotated[
+        str, Field(description="Unit consumed by one reported quota usage event.")
+    ]
+    supports_quota_headers: Annotated[
+        bool,
+        Field(
+            description="Whether upstream quota headers are exposed in envelope metadata."
+        ),
+    ]
+    notes: Annotated[
+        list[str], Field(description="Human-readable capability and operational notes.")
+    ]
 
 
 class UnauthorizedResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    status_code: Literal[401]
-    body: HttpErrorDetail
+    status_code: Annotated[Literal[401], Field(description="HTTP unauthorized status.")]
+    body: Annotated[
+        HttpErrorDetail, Field(description="Sanitized authentication failure.")
+    ]
 
 
 class BadRequestResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    status_code: Literal[400]
-    body: HttpErrorDetail
+    status_code: Annotated[Literal[400], Field(description="HTTP bad-request status.")]
+    body: Annotated[HttpErrorDetail, Field(description="Sanitized request failure.")]
 
 
 class ProviderStatusEntry(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    configured: bool
-    backend: str | None = None
-    capabilities: SupplierCapabilities
+    configured: Annotated[
+        bool, Field(description="Whether the provider is currently configured for use.")
+    ]
+    backend: Annotated[
+        str | None,
+        Field(description="Selected backend implementation, when available."),
+    ] = None
+    capabilities: Annotated[
+        SupplierCapabilities,
+        Field(description="Features and operational limits exposed by the provider."),
+    ]
 
 
 class RateLimitSnapshot(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    request_limit: JsonInteger | None
-    requests_remaining: JsonInteger | None
-    burst_limit: JsonInteger | None
-    burst_remaining: JsonInteger | None
-    reset_seconds: JsonInteger | None
-    reset_time: str | None
-    retry_after_seconds: JsonInteger | None
-    observed_at: Rfc3339Timestamp
+    request_limit: Annotated[
+        JsonInteger | None, Field(description="Total request quota, when reported.")
+    ]
+    requests_remaining: Annotated[
+        JsonInteger | None,
+        Field(
+            description="Requests remaining in the current quota window, when reported."
+        ),
+    ]
+    burst_limit: Annotated[
+        JsonInteger | None, Field(description="Burst quota, when reported.")
+    ]
+    burst_remaining: Annotated[
+        JsonInteger | None,
+        Field(description="Burst requests remaining, when reported."),
+    ]
+    reset_seconds: Annotated[
+        JsonInteger | None,
+        Field(description="Seconds until the quota resets, when reported."),
+    ]
+    reset_time: Annotated[
+        str | None,
+        Field(description="Provider-formatted quota reset time, when reported."),
+    ]
+    retry_after_seconds: Annotated[
+        JsonInteger | None,
+        Field(description="Provider-requested retry delay in seconds, when reported."),
+    ]
+    observed_at: Annotated[
+        Rfc3339Timestamp,
+        Field(description="Time at which SCM observed this rate-limit state."),
+    ]
 
 
 class RecordProviderStatusEntry(RootModel[dict[str, ProviderStatusEntry]]):
@@ -211,111 +336,226 @@ class EnvelopeMetadata(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    status: EnvelopeStatus
-    supplier: str
-    parameter_field_name: str
-    provider_latency_ms: JsonInteger
-    provider_capabilities: SupplierCapabilities | None
-    rate_limit: RateLimitSnapshot | None
-    service_timestamp: Rfc3339Timestamp
-    cached: bool
-    error: str | None
-    error_detail: ServiceErrorDetail | None
+    status: Annotated[EnvelopeStatus, Field(description="High-level provider outcome.")]
+    supplier: Annotated[
+        str,
+        Field(
+            description="Canonical or requested supplier name associated with the outcome."
+        ),
+    ]
+    parameter_field_name: Annotated[
+        str,
+        Field(description="Query parameter name used to identify the requested part."),
+    ]
+    provider_latency_ms: Annotated[
+        JsonInteger,
+        Field(description="Provider execution time measured by SCM in milliseconds."),
+    ]
+    provider_capabilities: Annotated[
+        SupplierCapabilities | None,
+        Field(description="Provider features known at request time."),
+    ]
+    rate_limit: Annotated[
+        RateLimitSnapshot | None,
+        Field(description="Provider rate-limit state observed for this request."),
+    ]
+    service_timestamp: Annotated[
+        Rfc3339Timestamp, Field(description="Time at which SCM produced the response.")
+    ]
+    cached: Annotated[
+        bool, Field(description="Whether SCM returned a cached provider result.")
+    ]
+    error: Annotated[
+        str | None,
+        Field(
+            description="Sanitized human-readable error, or null for normal outcomes."
+        ),
+    ]
+    error_detail: Annotated[
+        ServiceErrorDetail | None,
+        Field(description="Sanitized structured error details, when available."),
+    ]
 
 
 class ProviderStatusResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    providers: RecordProviderStatusEntry
+    providers: Annotated[
+        RecordProviderStatusEntry,
+        Field(description="Provider status keyed by canonical provider name."),
+    ]
 
 
 class DetailEnvelope(EnvelopeMetadata):
     model_config = ConfigDict(
         extra="forbid",
     )
-    data: Part | None
+    data: Annotated[
+        Part | None,
+        Field(description="Resolved normalized part, or null when unavailable."),
+    ]
 
 
 class Part(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    supplier: str
-    source_provider: str
-    supplier_part_number: str
-    manufacturer: str
-    manufacturer_part_number: str
-    description: str
-    datasheet_url: str
-    product_url: str
-    stock_quantity: JsonInteger
-    stock_status: str
-    price_breaks: list[PriceBreak]
-    lifecycle_status: str
-    packaging: str
-    extra_data: ProviderRawData | None
+    supplier: Annotated[
+        str, Field(description="Canonical supplier associated with this result.")
+    ]
+    source_provider: Annotated[
+        str, Field(description="Backend that produced the normalized result.")
+    ]
+    supplier_part_number: Annotated[
+        str, Field(description="Supplier-owned ordering or catalog number.")
+    ]
+    manufacturer: Annotated[str, Field(description="Component manufacturer name.")]
+    manufacturer_part_number: Annotated[
+        str, Field(description="Manufacturer-owned part number.")
+    ]
+    description: Annotated[
+        str, Field(description="Human-readable supplier description.")
+    ]
+    datasheet_url: Annotated[
+        str, Field(description="Datasheet URL, or an empty string when unavailable.")
+    ]
+    product_url: Annotated[
+        str,
+        Field(
+            description="Supplier product-page URL, or an empty string when unavailable."
+        ),
+    ]
+    stock_quantity: Annotated[
+        JsonInteger, Field(description="Supplier-reported available stock quantity.")
+    ]
+    stock_status: Annotated[
+        str, Field(description="Human-readable supplier stock status.")
+    ]
+    price_breaks: Annotated[
+        list[PriceBreak], Field(description="Quantity-based prices in provider order.")
+    ]
+    lifecycle_status: Annotated[
+        str, Field(description="Supplier-reported lifecycle state.")
+    ]
+    packaging: Annotated[
+        str, Field(description="Supplier-reported packaging description.")
+    ]
+    extra_data: Annotated[
+        ProviderRawData | None,
+        Field(
+            description="Provider-owned data, present only when explicitly requested."
+        ),
+    ]
 
 
 class SearchEnvelope(EnvelopeMetadata):
     model_config = ConfigDict(
         extra="forbid",
     )
-    data: list[Part] | None
+    data: Annotated[
+        list[Part] | None,
+        Field(
+            description="Matching normalized parts, or null when the provider did not return data."
+        ),
+    ]
 
 
 class SpnBatchEnvelope(EnvelopeMetadata):
     model_config = ConfigDict(
         extra="forbid",
     )
-    data: list[SpnBatchItem] | None
+    data: Annotated[
+        list[SpnBatchItem] | None,
+        Field(
+            description="Per-item results, or null when the provider could not process the batch."
+        ),
+    ]
 
 
 class SpnBatchItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    spn: str
-    status: BatchItemStatus
-    part: Part | None
-    error: str | None
+    spn: Annotated[
+        str,
+        Field(description="Supplier part number from the corresponding request item."),
+    ]
+    status: Annotated[
+        BatchItemStatus, Field(description="Outcome of resolving this item.")
+    ]
+    part: Annotated[
+        Part | None,
+        Field(description="Resolved normalized part, or null when unavailable."),
+    ]
+    error: Annotated[
+        str | None,
+        Field(
+            description="Sanitized item-specific error, or null for normal outcomes."
+        ),
+    ]
 
 
 class SpnEnvelope(EnvelopeMetadata):
     model_config = ConfigDict(
         extra="forbid",
     )
-    data: Part | None
+    data: Annotated[
+        Part | None,
+        Field(description="Resolved normalized part, or null when unavailable."),
+    ]
 
 
 class ValidationErrorDetail(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    detail: list[ValidationErrorItem]
+    detail: Annotated[
+        list[ValidationErrorItem], Field(description="Individual validation failures.")
+    ]
 
 
 class ValidationErrorItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    loc: list[str | JsonInteger]
-    msg: str
-    type: str
-    input: JsonValue | None = None
-    ctx: RecordJsonValue | None = None
+    loc: Annotated[
+        list[str | JsonInteger],
+        Field(description="Request location of the invalid value."),
+    ]
+    msg: Annotated[str, Field(description="Human-readable validation message.")]
+    type: Annotated[str, Field(description="Stable validation error type.")]
+    input: Annotated[
+        JsonValue | None,
+        Field(description="Rejected input value, when included by FastAPI."),
+    ] = None
+    ctx: Annotated[
+        RecordJsonValue | None,
+        Field(description="Additional validation context, when included by FastAPI."),
+    ] = None
 
 
 class ValidationErrorResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    status_code: Literal[422]
-    body: ValidationErrorDetail
+    status_code: Annotated[
+        Literal[422], Field(description="HTTP unprocessable-content status.")
+    ]
+    body: Annotated[
+        ValidationErrorDetail,
+        Field(description="Structured request validation failures."),
+    ]
 
 
 class StreamSearchEvent(RootModel[SearchEnvelope | StreamDoneEvent]):
-    root: Annotated[SearchEnvelope | StreamDoneEvent, Field(title="StreamSearchEvent")]
+    root: Annotated[
+        SearchEnvelope | StreamDoneEvent,
+        Field(
+            description="One result or terminal event from the legacy search stream.",
+            title="StreamSearchEvent",
+        ),
+    ]
 
 
 class Model(

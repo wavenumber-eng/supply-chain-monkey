@@ -4,28 +4,36 @@
     "type": "object",
     "properties": {
         "supplier": {
-            "type": "string"
+            "type": "string",
+            "description": "Canonical supplier represented by the backend."
         },
         "provider_kind": {
-            "type": "string"
+            "type": "string",
+            "description": "Implementation category used for provider diagnostics."
         },
         "supports_mpn_search": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Whether manufacturer-part-number search is supported."
         },
         "supports_keyword_search": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Whether general keyword search is supported."
         },
         "supports_spn_lookup": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Whether exact supplier-part-number lookup is supported."
         },
         "supports_native_spn_batch": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Whether the upstream provider has a native batch lookup."
         },
         "max_spn_batch_size": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger",
+            "description": "Maximum batch size accepted by SCM for this provider."
         },
         "min_request_interval_seconds": {
-            "type": "number"
+            "type": "number",
+            "description": "Minimum delay SCM applies between provider requests."
         },
         "rate_limit_per_minute": {
             "anyOf": [
@@ -35,7 +43,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Provider request quota per minute, when known."
         },
         "rate_limit_per_day": {
             "anyOf": [
@@ -45,19 +54,23 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Provider request quota per day, when known."
         },
         "usage_unit": {
-            "type": "string"
+            "type": "string",
+            "description": "Unit consumed by one reported quota usage event."
         },
         "supports_quota_headers": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Whether upstream quota headers are exposed in envelope metadata."
         },
         "notes": {
             "type": "array",
             "items": {
                 "type": "string"
-            }
+            },
+            "description": "Human-readable capability and operational notes."
         }
     },
     "required": [
@@ -77,5 +90,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Search and lookup features exposed by one configured provider backend."
 }

@@ -172,6 +172,12 @@ pub(crate) const GENERATED_SCHEMAS: &[(&str, &str)] = &[
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/JsonValue.json")),
     ),
     (
+        "urn:supply-chain-monkey:schema:v1.declaration.LegacyQueryTokenAuth",
+        include_str!(
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/LegacyQueryTokenAuth.json")
+        ),
+    ),
+    (
         "urn:supply-chain-monkey:schema:v1.declaration.Part",
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/Part.json")),
     ),

@@ -9,6 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from scm import __version__
 from scm.contract_codec import decode
 from scm.models import (
     DetailEnvelope,
@@ -38,6 +39,7 @@ CATALOG_PATH = (
     / "generated"
     / "contract_catalog.a0.json"
 )
+OPENAPI_PATH = CATALOG_PATH.with_name("openapi.json")
 
 
 def test_fastapi_routes_and_openapi_declare_generated_roots():
@@ -90,14 +92,19 @@ def test_served_stream_openapi_matches_legacy_typespec_authority():
         endpoint for endpoint in catalog["endpoints"] if endpoint["path"] == "/v1/search/stream"
     )
 
-    assert operation["security"] == authority["security"] == [{"ApiKeyAuth": []}]
-    security = served_openapi["components"]["securitySchemes"]["ApiKeyAuth"]
+    assert operation["security"] == authority["security"] == [{"LegacyQueryTokenAuth": []}]
+    security = served_openapi["components"]["securitySchemes"]["LegacyQueryTokenAuth"]
     assert security == {
         "type": "apiKey",
-        "description": "Deprecated v1 query-token compatibility surface",
+        "description": (
+            "Deprecated v1 query-token compatibility surface. Never place a real service token "
+            "in this query, Swagger operation, logs, or shared URLs."
+        ),
         "in": "query",
         "name": "token",
     }
+    assert operation["deprecated"] is True
+    assert "Never place a real service token" in operation["description"]
     assert operation["x-scm-event-roots"] == authority["event_roots"] == [
         "StreamSearchEvent"
     ]
@@ -113,6 +120,54 @@ def test_served_stream_openapi_matches_legacy_typespec_authority():
     )["schema"]
     assert "minimum" not in max_results
     assert "maximum" not in max_results
+
+
+def test_openapi_explorers_and_documentation_match_typespec_authority():
+    """Keep runtime explorers useful without creating a second documentation contract."""
+
+    client = TestClient(app)
+    for path, content_type in (
+        ("/docs", "text/html"),
+        ("/docs/typespec", "text/html"),
+        ("/redoc", "text/html"),
+        ("/openapi.json", "application/json"),
+        ("/openapi-typespec.json", "application/json"),
+    ):
+        response = client.get(path)
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith(content_type)
+
+    served = client.get("/openapi.json").json()
+    canonical = json.loads(OPENAPI_PATH.read_text(encoding="utf-8"))
+    assert client.get("/openapi-typespec.json").json() == canonical
+    assert served["openapi"] == canonical["openapi"] == "3.1.0"
+    assert served["info"]["version"] == canonical["info"]["version"] == __version__
+    assert set(served["paths"]) == set(canonical["paths"])
+
+    for path, canonical_path in canonical["paths"].items():
+        for method in {"get", "post", "put", "patch", "delete"} & set(canonical_path):
+            canonical_operation = canonical_path[method]
+            served_operation = served["paths"][path][method]
+            assert served_operation["summary"] == canonical_operation["summary"]
+            assert _normalized(served_operation["description"]) == _normalized(
+                canonical_operation["description"]
+            )
+            assert served_operation.get("deprecated", False) == canonical_operation.get(
+                "deprecated", False
+            )
+
+    warning = "Never place a real service token"
+    for document in (served, canonical):
+        legacy = document["paths"]["/v1/search/stream"]["get"]
+        assert legacy["deprecated"] is True
+        assert warning in legacy["description"]
+        assert warning in document["components"]["securitySchemes"][
+            "LegacyQueryTokenAuth"
+        ]["description"]
+
+
+def _normalized(value: str) -> str:
+    return " ".join(value.split())
 
 
 def test_deployed_query_integers_remain_unbounded():

@@ -4,10 +4,12 @@
     "type": "object",
     "properties": {
         "spn": {
-            "type": "string"
+            "type": "string",
+            "description": "Supplier part number from the corresponding request item."
         },
         "status": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.BatchItemStatus"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.BatchItemStatus",
+            "description": "Outcome of resolving this item."
         },
         "part": {
             "anyOf": [
@@ -17,7 +19,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Resolved normalized part, or null when unavailable."
         },
         "error": {
             "anyOf": [
@@ -27,7 +30,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Sanitized item-specific error, or null for normal outcomes."
         }
     },
     "required": [
@@ -38,5 +42,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Result for one supplier part number in a batch lookup."
 }

@@ -15,7 +15,8 @@
     "generate:vectors": "npm run check:toolchain && node scripts/generate-contract-vectors.mjs --write",
     "check:vectors": "npm run check:toolchain && node scripts/generate-contract-vectors.mjs --check",
     "generate:contracts": "npm run check:toolchain && node scripts/generate-contracts.mjs",
-    "check:contracts": "npm run check:toolchain && node scripts/check-contract-generation.mjs",
+    "check:contracts": "npm run check:toolchain && node scripts/check-contract-generation.mjs && node scripts/check-typespec-documentation.mjs",
+    "check:documentation": "npm run check:toolchain && node scripts/check-typespec-documentation.mjs",
     "generate:python": "npm run check:toolchain && node scripts/generate-python-models.mjs",
     "check:python-generation": "npm run check:toolchain && node scripts/generate-python-models.mjs --check"
   },

@@ -4,7 +4,8 @@
     "type": "object",
     "properties": {
         "supplier": {
-            "type": "string"
+            "type": "string",
+            "description": "Supplier whose part numbers should be resolved."
         },
         "spns": {
             "type": "array",
@@ -12,11 +13,13 @@
                 "type": "string"
             },
             "minItems": 1,
-            "maxItems": 1000
+            "maxItems": 1000,
+            "description": "Supplier part numbers to resolve; between one and 1,000 items."
         },
         "include_raw": {
             "type": "boolean",
-            "default": false
+            "default": false,
+            "description": "Include provider-owned raw data in returned parts."
         }
     },
     "required": [
@@ -25,5 +28,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Request for multiple exact supplier-part-number lookups."
 }

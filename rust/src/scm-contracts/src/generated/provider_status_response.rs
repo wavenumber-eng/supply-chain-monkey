@@ -90,12 +90,13 @@ impl ::std::fmt::Display for ExternalUrnSupplyChainMonkeySchemaV1DeclarationJson
         self.0.fmt(f)
     }
 }
-///`ExternalUrnSupplyChainMonkeySchemaV1DeclarationProviderStatusEntry`
+///Configuration and capabilities reported for one provider.
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
+///  "description": "Configuration and capabilities reported for one provider.",
 ///  "type": "object",
 ///  "required": [
 ///    "capabilities",
@@ -103,12 +104,15 @@ impl ::std::fmt::Display for ExternalUrnSupplyChainMonkeySchemaV1DeclarationJson
 ///  ],
 ///  "properties": {
 ///    "backend": {
+///      "description": "Selected backend implementation, when available.",
 ///      "type": "string"
 ///    },
 ///    "capabilities": {
+///      "description": "Features and operational limits exposed by the provider.",
 ///      "$ref": "#/$defs/External_urn_supply_chain_monkey_schema_v1_declaration_SupplierCapabilities"
 ///    },
 ///    "configured": {
+///      "description": "Whether the provider is currently configured for use.",
 ///      "type": "boolean"
 ///    }
 ///  }
@@ -118,9 +122,12 @@ impl ::std::fmt::Display for ExternalUrnSupplyChainMonkeySchemaV1DeclarationJson
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct ExternalUrnSupplyChainMonkeySchemaV1DeclarationProviderStatusEntry {
+    ///Selected backend implementation, when available.
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub backend: ::std::option::Option<::std::string::String>,
+    ///Features and operational limits exposed by the provider.
     pub capabilities: ExternalUrnSupplyChainMonkeySchemaV1DeclarationSupplierCapabilities,
+    ///Whether the provider is currently configured for use.
     pub configured: bool,
 }
 ///`ExternalUrnSupplyChainMonkeySchemaV1DeclarationRecordProviderStatusEntry`
@@ -187,12 +194,13 @@ impl ::std::convert::From<
         Self(value)
     }
 }
-///`ExternalUrnSupplyChainMonkeySchemaV1DeclarationSupplierCapabilities`
+///Search and lookup features exposed by one configured provider backend.
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
+///  "description": "Search and lookup features exposed by one configured provider backend.",
 ///  "type": "object",
 ///  "required": [
 ///    "max_spn_batch_size",
@@ -211,21 +219,26 @@ impl ::std::convert::From<
 ///  ],
 ///  "properties": {
 ///    "max_spn_batch_size": {
+///      "description": "Maximum batch size accepted by SCM for this provider.",
 ///      "$ref": "#/$defs/External_urn_supply_chain_monkey_schema_v1_declaration_JsonInteger"
 ///    },
 ///    "min_request_interval_seconds": {
+///      "description": "Minimum delay SCM applies between provider requests.",
 ///      "type": "number"
 ///    },
 ///    "notes": {
+///      "description": "Human-readable capability and operational notes.",
 ///      "type": "array",
 ///      "items": {
 ///        "type": "string"
 ///      }
 ///    },
 ///    "provider_kind": {
+///      "description": "Implementation category used for provider diagnostics.",
 ///      "type": "string"
 ///    },
 ///    "rate_limit_per_day": {
+///      "description": "Provider request quota per day, when known.",
 ///      "anyOf": [
 ///        {
 ///          "$ref": "#/$defs/External_urn_supply_chain_monkey_schema_v1_declaration_JsonInteger"
@@ -236,6 +249,7 @@ impl ::std::convert::From<
 ///      ]
 ///    },
 ///    "rate_limit_per_minute": {
+///      "description": "Provider request quota per minute, when known.",
 ///      "anyOf": [
 ///        {
 ///          "$ref": "#/$defs/External_urn_supply_chain_monkey_schema_v1_declaration_JsonInteger"
@@ -246,24 +260,31 @@ impl ::std::convert::From<
 ///      ]
 ///    },
 ///    "supplier": {
+///      "description": "Canonical supplier represented by the backend.",
 ///      "type": "string"
 ///    },
 ///    "supports_keyword_search": {
+///      "description": "Whether general keyword search is supported.",
 ///      "type": "boolean"
 ///    },
 ///    "supports_mpn_search": {
+///      "description": "Whether manufacturer-part-number search is supported.",
 ///      "type": "boolean"
 ///    },
 ///    "supports_native_spn_batch": {
+///      "description": "Whether the upstream provider has a native batch lookup.",
 ///      "type": "boolean"
 ///    },
 ///    "supports_quota_headers": {
+///      "description": "Whether upstream quota headers are exposed in envelope metadata.",
 ///      "type": "boolean"
 ///    },
 ///    "supports_spn_lookup": {
+///      "description": "Whether exact supplier-part-number lookup is supported.",
 ///      "type": "boolean"
 ///    },
 ///    "usage_unit": {
+///      "description": "Unit consumed by one reported quota usage event.",
 ///      "type": "string"
 ///    }
 ///  }
@@ -273,25 +294,38 @@ impl ::std::convert::From<
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct ExternalUrnSupplyChainMonkeySchemaV1DeclarationSupplierCapabilities {
+    ///Maximum batch size accepted by SCM for this provider.
     pub max_spn_batch_size: ExternalUrnSupplyChainMonkeySchemaV1DeclarationJsonInteger,
+    ///Minimum delay SCM applies between provider requests.
     pub min_request_interval_seconds: f64,
+    ///Human-readable capability and operational notes.
     pub notes: ::std::vec::Vec<::std::string::String>,
+    ///Implementation category used for provider diagnostics.
     pub provider_kind: ::std::string::String,
+    ///Provider request quota per day, when known.
     pub rate_limit_per_day: ::std::option::Option<
         ExternalUrnSupplyChainMonkeySchemaV1DeclarationJsonInteger,
     >,
+    ///Provider request quota per minute, when known.
     pub rate_limit_per_minute: ::std::option::Option<
         ExternalUrnSupplyChainMonkeySchemaV1DeclarationJsonInteger,
     >,
+    ///Canonical supplier represented by the backend.
     pub supplier: ::std::string::String,
+    ///Whether general keyword search is supported.
     pub supports_keyword_search: bool,
+    ///Whether manufacturer-part-number search is supported.
     pub supports_mpn_search: bool,
+    ///Whether the upstream provider has a native batch lookup.
     pub supports_native_spn_batch: bool,
+    ///Whether upstream quota headers are exposed in envelope metadata.
     pub supports_quota_headers: bool,
+    ///Whether exact supplier-part-number lookup is supported.
     pub supports_spn_lookup: bool,
+    ///Unit consumed by one reported quota usage event.
     pub usage_unit: ::std::string::String,
 }
-///`ProviderStatusResponse`
+///Map of provider names to current configuration and capabilities.
 ///
 /// <details><summary>JSON schema</summary>
 ///
@@ -299,12 +333,14 @@ pub struct ExternalUrnSupplyChainMonkeySchemaV1DeclarationSupplierCapabilities {
 ///{
 ///  "$id": "urn:supply-chain-monkey:schema:v1.provider-status-response",
 ///  "title": "ProviderStatusResponse",
+///  "description": "Map of provider names to current configuration and capabilities.",
 ///  "type": "object",
 ///  "required": [
 ///    "providers"
 ///  ],
 ///  "properties": {
 ///    "providers": {
+///      "description": "Provider status keyed by canonical provider name.",
 ///      "$ref": "#/$defs/External_urn_supply_chain_monkey_schema_v1_declaration_RecordProviderStatusEntry"
 ///    }
 ///  }
@@ -314,5 +350,6 @@ pub struct ExternalUrnSupplyChainMonkeySchemaV1DeclarationSupplierCapabilities {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct ProviderStatusResponse {
+    ///Provider status keyed by canonical provider name.
     pub providers: ExternalUrnSupplyChainMonkeySchemaV1DeclarationRecordProviderStatusEntry,
 }

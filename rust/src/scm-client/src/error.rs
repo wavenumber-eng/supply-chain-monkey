@@ -77,30 +77,41 @@ pub enum ClientError {
     MissingBearerToken,
     /// A static endpoint could not be joined to the configured base URL.
     #[error("could not construct SCM endpoint for {operation}")]
-    Endpoint { operation: &'static str },
+    Endpoint {
+        /// Stable operation name used without request data or credentials.
+        operation: &'static str,
+    },
     /// The HTTP exchange failed before a response was available.
     #[error("SCM transport failed during {operation}")]
     Transport {
+        /// Stable operation name used without request data or credentials.
         operation: &'static str,
+        /// Underlying sanitized HTTP transport error.
         #[source]
         source: reqwest::Error,
     },
     /// The response exceeded the configured body limit.
     #[error("SCM response during {operation} exceeded {limit} bytes")]
     ResponseTooLarge {
+        /// Stable operation name used without request data or credentials.
         operation: &'static str,
+        /// Configured maximum response size in bytes.
         limit: usize,
     },
     /// The server returned a non-success HTTP status.
     #[error("SCM HTTP status {status} during {operation}")]
     Http {
+        /// Stable operation name used without request data or credentials.
         operation: &'static str,
+        /// HTTP response status code.
         status: u16,
     },
     /// A request or response failed the generated wire contract.
     #[error("SCM contract failure during {operation}")]
     Contract {
+        /// Stable operation name used without request data or credentials.
         operation: &'static str,
+        /// Contract-enforcement phase that rejected the payload.
         failure: ContractFailure,
     },
 }

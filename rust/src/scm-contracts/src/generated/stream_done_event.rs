@@ -31,7 +31,7 @@ pub mod error {
         }
     }
 }
-///`StreamDoneEvent`
+///Terminal event emitted after all legacy stream providers complete.
 ///
 /// <details><summary>JSON schema</summary>
 ///
@@ -39,12 +39,14 @@ pub mod error {
 ///{
 ///  "$id": "urn:supply-chain-monkey:schema:v1.stream-done-event",
 ///  "title": "StreamDoneEvent",
+///  "description": "Terminal event emitted after all legacy stream providers complete.",
 ///  "type": "object",
 ///  "required": [
 ///    "done"
 ///  ],
 ///  "properties": {
 ///    "done": {
+///      "description": "Constant marker identifying the terminal stream event.",
 ///      "type": "boolean",
 ///      "enum": [
 ///        true
@@ -57,5 +59,6 @@ pub mod error {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct StreamDoneEvent {
+    ///Constant marker identifying the terminal stream event.
     pub done: bool,
 }

@@ -7,5 +7,6 @@
         "partial",
         "not_found",
         "provider_error"
-    ]
+    ],
+    "description": "High-level outcome reported by an SCM response envelope."
 }

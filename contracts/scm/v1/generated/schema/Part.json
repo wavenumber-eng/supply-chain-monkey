@@ -4,46 +4,59 @@
     "type": "object",
     "properties": {
         "supplier": {
-            "type": "string"
+            "type": "string",
+            "description": "Canonical supplier associated with this result."
         },
         "source_provider": {
-            "type": "string"
+            "type": "string",
+            "description": "Backend that produced the normalized result."
         },
         "supplier_part_number": {
-            "type": "string"
+            "type": "string",
+            "description": "Supplier-owned ordering or catalog number."
         },
         "manufacturer": {
-            "type": "string"
+            "type": "string",
+            "description": "Component manufacturer name."
         },
         "manufacturer_part_number": {
-            "type": "string"
+            "type": "string",
+            "description": "Manufacturer-owned part number."
         },
         "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Human-readable supplier description."
         },
         "datasheet_url": {
-            "type": "string"
+            "type": "string",
+            "description": "Datasheet URL, or an empty string when unavailable."
         },
         "product_url": {
-            "type": "string"
+            "type": "string",
+            "description": "Supplier product-page URL, or an empty string when unavailable."
         },
         "stock_quantity": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger",
+            "description": "Supplier-reported available stock quantity."
         },
         "stock_status": {
-            "type": "string"
+            "type": "string",
+            "description": "Human-readable supplier stock status."
         },
         "price_breaks": {
             "type": "array",
             "items": {
                 "$ref": "urn:supply-chain-monkey:schema:v1.declaration.PriceBreak"
-            }
+            },
+            "description": "Quantity-based prices in provider order."
         },
         "lifecycle_status": {
-            "type": "string"
+            "type": "string",
+            "description": "Supplier-reported lifecycle state."
         },
         "packaging": {
-            "type": "string"
+            "type": "string",
+            "description": "Supplier-reported packaging description."
         },
         "extra_data": {
             "anyOf": [
@@ -53,7 +66,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Provider-owned data, present only when explicitly requested."
         }
     },
     "required": [
@@ -74,5 +88,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Normalized electronic-component result returned by supplier operations."
 }

@@ -91,7 +91,12 @@ def _do_search(supplier_key: str, mpn: str, include_raw: bool, max_results: int)
     )
 
 
-@router.get("/search", response_model=SearchEnvelope)
+@router.get(
+    "/search",
+    response_model=SearchEnvelope,
+    summary="Search a supplier by manufacturer part number",
+    description="Search one supplier for a manufacturer part number.",
+)
 async def search(
     supplier: str = Query(..., description="Supplier name (jlcpcb, lcsc, digikey, mouser)"),
     mpn: str = Query(..., description="Manufacturer part number"),
