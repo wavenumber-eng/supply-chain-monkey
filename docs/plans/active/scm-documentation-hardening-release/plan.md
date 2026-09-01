@@ -18,19 +18,19 @@ depends_on = ["work"]
 [[steps]]
 id = "design-doc-intent-audit"
 title = "Audit design docs, ADRs, and requirements against implementation"
-status = "active"
+status = "done"
 depends_on = ["work"]
 
 [[steps]]
 id = "test-runtime-impact-audit"
 title = "Audit new test runtime impact"
-status = "pending"
+status = "done"
 depends_on = ["work"]
 
 [[steps]]
 id = "external-review"
 title = "Obtain independent external review"
-status = "pending"
+status = "active"
 depends_on = ["documentation-verification", "design-doc-intent-audit", "test-runtime-impact-audit"]
 
 [[steps]]
