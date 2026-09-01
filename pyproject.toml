@@ -59,6 +59,8 @@ core-metadata-version = "2.4"
 core-metadata-version = "2.4"
 exclude = [
     "/rust/target",
+    "/tests/consumers/alexandria-scm/Cargo.lock",
+    "/tests/consumers/alexandria-scm/target",
 ]
 
 [tool.uv]
