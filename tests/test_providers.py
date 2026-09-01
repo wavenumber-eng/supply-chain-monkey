@@ -16,6 +16,7 @@ from scm.server.providers import digikey as digikey_module
 from scm.server.providers.digikey import DigikeyProviderError, DigikeySupplier
 from scm.server.providers.jlc import JLCPCBSupplier
 from scm.server.providers.jlc_openapi import JLCOpenAPIClient
+from scm.server.providers.lcsc import LCSCSupplier
 from scm.server.providers.lcsc_api import LCSCProduct
 from scm.models import SupplierType
 
@@ -369,10 +370,29 @@ class TestJLCPublicSearchParsing:
             packaging="Tray",
             product_url="https://www.lcsc.com/product-detail/C3216634.html",
             search_backend="lcsc_third_party",
+            vendor_code="G16057",
+            product_source="marketplace",
         )
+
+        def fake_detail(self, supplier_part_number: str, **kwargs) -> SupplierPartInfo:
+            assert supplier_part_number == "C3216634"
+            assert kwargs["expected_mpn"] == "MIMXRT685SFVKB"
+            return SupplierPartInfo(
+                supplier=SupplierType.JLCPCB,
+                source_provider="jlcpcb",
+                supplier_part_number=supplier_part_number,
+                manufacturer="NXP",
+                manufacturer_part_number="MIMXRT685SFVKB",
+                description="JLC-verified i.MX RT crossover MCU",
+                stock_quantity=7,
+                price_breaks=[],
+                extra_data={"detail_backend": "scraper"},
+            )
+
         monkeypatch.setattr(jlc_module.requests, "post", fake_post)
         monkeypatch.setattr(jlc_module, "search_lcsc", lambda *args, **kwargs: [lcsc_product])
         monkeypatch.setattr(jlc_module, "search_jlcpcb_by_mpn", fail_scraper)
+        monkeypatch.setattr(JLCPCBSupplier, "get_part_details", fake_detail)
 
         parts = JLCPCBSupplier().search_by_mpn("RT685", max_results=1)
 
@@ -381,9 +401,12 @@ class TestJLCPublicSearchParsing:
         assert part.supplier == SupplierType.JLCPCB
         assert part.supplier_part_number == "C3216634"
         assert part.manufacturer_part_number == "MIMXRT685SFVKB"
-        assert part.stock_quantity == 110_500
+        assert part.source_provider == "jlcpcb"
+        assert part.stock_quantity == 7
+        assert part.price_breaks == []
         assert part.extra_data["search_backend"] == "lcsc_c_code_resolution"
         assert part.extra_data["lcsc_search_backend"] == "lcsc_third_party"
+        assert part.extra_data["lcsc_vendor_code"] == "G16057"
 
 
 class TestLCSCSearchParsing:
@@ -476,7 +499,31 @@ class TestLCSCSearchParsing:
                                 "encapStandard": "BGA",
                                 "pdfUrl": "https://example.test/rt685.pdf",
                                 "productPriceList": [{"ladder": 999, "currencyPrice": 168.1166}],
-                            }
+                                "vendorCode": "G-expensive",
+                                "productSource": "marketplace",
+                            },
+                            {
+                                "productCode": "C3216634",
+                                "productModel": "MIMXRT685SFVKB NXP 25+",
+                                "productCodeManufacturer": "MIMXRT685SFVKB",
+                                "brandNameEn": "NXP",
+                                "productIntroEn": None,
+                                "stockNumber": 34291,
+                                "encapStandard": "BGA",
+                                "pdfUrl": "https://example.test/rt685.pdf",
+                                "productPriceList": [{"ladder": 1, "currencyPrice": 9.9269}],
+                                "vendorCode": "G-best",
+                                "productSource": "marketplace",
+                            },
+                            {
+                                "productCode": "C1019520",
+                                "productCodeManufacturer": "MIMXRT685SFFOB",
+                                "brandNameEn": "NXP",
+                                "stockNumber": 5937,
+                                "productPriceList": [{"ladder": 1, "currencyPrice": 12.1271}],
+                                "vendorCode": "G-other",
+                                "productSource": "marketplace",
+                            },
                         ],
                     },
                 }
@@ -487,14 +534,60 @@ class TestLCSCSearchParsing:
         products = lcsc_api.search_lcsc("RT685", page_size=10)
 
         assert len(paths) == 2
-        assert len(products) == 1
+        assert len(products) == 2
         product = products[0]
         assert product.product_code == "C3216634"
         assert product.product_model == "MIMXRT685SFVKB"
         assert product.description == "MIMXRT685SFVKB"
-        assert product.stock == 110500
-        assert product.price_breaks == [{"qty": 999, "unit_price": 168.1166, "currency": "USD"}]
+        assert product.stock == 34291
+        assert product.price_breaks == [{"qty": 1, "unit_price": 9.9269, "currency": "USD"}]
         assert product.search_backend == "lcsc_third_party"
+        assert product.vendor_code == "G-best"
+        assert product.product_source == "marketplace"
+
+
+class TestLCSCSupplierSearch:
+    def test_search_filters_unrelated_suggestions_and_enforces_max_results(self, monkeypatch):
+        from scm.server.providers import lcsc as lcsc_module
+
+        def product(code: str, model: str) -> LCSCProduct:
+            return LCSCProduct(
+                product_code=code,
+                product_model=model,
+                brand="NXP",
+                description=model,
+                stock=1,
+                datasheet_url="",
+                price_breaks=[],
+                lifecycle="Active",
+                package="",
+                packaging="",
+                product_url=f"https://www.lcsc.com/product-detail/{code}.html",
+                search_backend="lcsc_third_party",
+            )
+
+        page_sizes = []
+
+        def fake_search(keyword: str, *, page_size: int):
+            page_sizes.append(page_size)
+            return [
+                product("C0", "UNRELATED"),
+                product("C1", "MIMXRT685SFVKB"),
+                product("C2", "MIMXRT685SFFOB"),
+            ]
+
+        monkeypatch.setattr(lcsc_module, "_api_search", fake_search)
+        supplier = LCSCSupplier()
+
+        matching = supplier.search_by_mpn("RT685", verify_parts=True, max_results=1)
+        missing = supplier.search_by_mpn(
+            "NONEXISTENT_PART_12345_XYZ", verify_parts=True, max_results=3
+        )
+
+        assert [part.supplier_part_number for part in matching] == ["C1"]
+        assert matching[0].source_provider == "lcsc_third_party"
+        assert missing == []
+        assert page_sizes == [1, 3]
 
 
 class TestDigikeyParsing:
