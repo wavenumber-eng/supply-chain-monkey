@@ -24,7 +24,7 @@ from .jlc_openapi import (
 )
 from .base import SupplierInterface, SupplierPartInfo, SupplierType, resolve_stock
 from .jlc_scraper import JLCPartInfo, get_jlcpcb_part_details, search_jlcpcb_by_mpn
-from .lcsc_api import LCSCProduct, search_lcsc
+from .lcsc_api import search_lcsc
 
 log = logging.getLogger(__name__)
 
@@ -203,7 +203,7 @@ class JLCPCBSupplier(SupplierInterface):
         verify_parts: bool,
         max_results: int,
     ) -> list[SupplierPartInfo]:
-        page_size = max_results if max_results > 0 else 25
+        page_size = max_results if max_results > 0 else 10
         try:
             products = search_lcsc(keyword, page_size=page_size)
         except Exception as exc:
@@ -211,38 +211,32 @@ class JLCPCBSupplier(SupplierInterface):
             return []
 
         results = []
+        seen_codes = set()
         for product in products:
             if verify_parts and not _matches_search_keyword(product.product_model, keyword):
                 continue
-            results.append(self._convert_lcsc_search_part(product))
+            if not product.product_code or product.product_code in seen_codes:
+                continue
+            seen_codes.add(product.product_code)
+            part = self.get_part_details(
+                product.product_code,
+                expected_mpn=product.product_model,
+            )
+            if part is None:
+                continue
+            part.extra_data.update(
+                {
+                    "search_backend": "lcsc_c_code_resolution",
+                    "lcsc_search_backend": product.search_backend,
+                    "lcsc_product_url": product.product_url,
+                    "lcsc_vendor_code": product.vendor_code,
+                    "lcsc_product_source": product.product_source,
+                }
+            )
+            results.append(part)
             if max_results > 0 and len(results) >= max_results:
                 break
         return results
-
-    @staticmethod
-    def _convert_lcsc_search_part(product: LCSCProduct) -> SupplierPartInfo:
-        stock_qty, stock_status = resolve_stock(product.stock, product.lifecycle)
-        return SupplierPartInfo(
-            supplier=SupplierType.JLCPCB,
-            source_provider="jlcpcb",
-            supplier_part_number=product.product_code,
-            manufacturer=product.brand,
-            manufacturer_part_number=product.product_model,
-            description=product.description,
-            datasheet_url=product.datasheet_url,
-            product_url=detail_url_for_code(product.product_code),
-            stock_quantity=stock_qty,
-            stock_status=stock_status,
-            price_breaks=product.price_breaks,
-            lifecycle_status=product.lifecycle,
-            extra_data={
-                "search_backend": "lcsc_c_code_resolution",
-                "lcsc_search_backend": product.search_backend,
-                "lcsc_product_url": product.product_url,
-                "package": product.package,
-                "packaging": product.packaging,
-            },
-        )
 
     def get_part_details(self, supplier_part_number: str, **kwargs) -> SupplierPartInfo | None:
         """

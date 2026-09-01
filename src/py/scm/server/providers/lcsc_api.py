@@ -46,6 +46,8 @@ class LCSCProduct:
     packaging: str
     product_url: str
     search_backend: str = "lcsc_primary"
+    vendor_code: str = ""
+    product_source: str = ""
 
 
 def search_lcsc(keyword: str, page: int = 1, page_size: int = 25) -> list[LCSCProduct]:
@@ -71,7 +73,8 @@ def search_lcsc(keyword: str, page: int = 1, page_size: int = 25) -> list[LCSCPr
         product_list = list(third_party.get("productList") or [])
         search_backend = "lcsc_third_party"
 
-    return [_parse_product(item, search_backend=search_backend) for item in product_list]
+    products = [_parse_product(item, search_backend=search_backend) for item in product_list]
+    return _deduplicate_products(products)
 
 
 def _post_search(path: str, body: dict[str, Any]) -> dict[str, Any]:
@@ -169,4 +172,33 @@ def _parse_product(item: dict, *, search_backend: str = "lcsc_primary") -> LCSCP
         packaging=item.get("productArrange") or "",
         product_url=product_url,
         search_backend=search_backend,
+        vendor_code=str(item.get("vendorCode") or ""),
+        product_source=str(item.get("productSource") or ""),
     )
+
+
+def _deduplicate_products(products: list[LCSCProduct]) -> list[LCSCProduct]:
+    selected: dict[str, LCSCProduct] = {}
+    order: list[str] = []
+    for product in products:
+        identity = product.product_code or f"{product.brand}\0{product.product_model}"
+        if identity not in selected:
+            selected[identity] = product
+            order.append(identity)
+            continue
+        if _offer_rank(product) < _offer_rank(selected[identity]):
+            selected[identity] = product
+    return [selected[identity] for identity in order]
+
+
+def _offer_rank(product: LCSCProduct) -> tuple[float, int, str]:
+    prices = [
+        float(row["unit_price"])
+        for row in product.price_breaks
+        if isinstance(row.get("unit_price"), int | float) and float(row["unit_price"]) > 0
+    ]
+    try:
+        stock = int(product.stock)
+    except (TypeError, ValueError):
+        stock = 0
+    return (min(prices, default=float("inf")), -stock, product.vendor_code)

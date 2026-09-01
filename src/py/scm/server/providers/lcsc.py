@@ -13,6 +13,16 @@ from .lcsc_api import search_lcsc as _api_search, get_lcsc_detail as _api_detail
 log = logging.getLogger(__name__)
 
 
+def _normalize_token(value: str) -> str:
+    return value.upper().replace("-", "").replace(" ", "")
+
+
+def _matches_search_keyword(actual_mpn: str, keyword: str) -> bool:
+    actual = _normalize_token(actual_mpn)
+    expected = _normalize_token(keyword)
+    return bool(actual and expected and (actual == expected or expected in actual))
+
+
 class LCSCSupplier(SupplierInterface):
     """
     LCSC implementation of the supplier interface.
@@ -34,12 +44,24 @@ class LCSCSupplier(SupplierInterface):
 
     def search_by_mpn(self, manufacturer_part_number: str, **kwargs) -> list[SupplierPartInfo]:
         """Search LCSC by manufacturer part number."""
+        verify_parts = kwargs.get("verify_parts", True)
+        max_results = kwargs.get("max_results", 0)
+        page_size = max_results if max_results > 0 else 25
         try:
-            products = _api_search(manufacturer_part_number)
-            return [self._convert(p) for p in products]
+            products = _api_search(manufacturer_part_number, page_size=page_size)
         except Exception as e:
             log.info("Error searching LCSC for %s: %s", manufacturer_part_number, e)
             return []
+
+        if verify_parts:
+            products = [
+                product
+                for product in products
+                if _matches_search_keyword(product.product_model, manufacturer_part_number)
+            ]
+        if max_results > 0:
+            products = products[:max_results]
+        return [self._convert(product) for product in products]
 
     def get_part_details(self, supplier_part_number: str, **kwargs) -> SupplierPartInfo | None:
         """Get detail for a specific LCSC C code."""
@@ -72,7 +94,7 @@ class LCSCSupplier(SupplierInterface):
         stock_qty, stock_status = resolve_stock(product.stock, product.lifecycle)
         return SupplierPartInfo(
             supplier=SupplierType.LCSC,
-            source_provider="lcsc",
+            source_provider=product.search_backend,
             supplier_part_number=product.product_code,
             manufacturer=product.brand,
             manufacturer_part_number=product.product_model,
@@ -87,5 +109,7 @@ class LCSCSupplier(SupplierInterface):
                 "package": product.package,
                 "packaging": product.packaging,
                 "search_backend": product.search_backend,
+                "vendor_code": product.vendor_code,
+                "product_source": product.product_source,
             },
         )
