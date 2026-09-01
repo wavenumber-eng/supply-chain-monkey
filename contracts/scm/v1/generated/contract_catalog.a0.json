@@ -248,7 +248,7 @@
   "artifacts": {
     "openapi": {
       "path": "contracts/scm/v1/generated/openapi.json",
-      "sha256": "ba9c3b5f41717127110fb0c350a64269f995ba0701f520d142208191a64fb1d5"
+      "sha256": "ef833d667f72a7efd7267b96f88369172cac8965713407684216863a36964ae0"
     },
     "python_projection": {
       "path": "contracts/scm/v1/generated/projection/python-models.json",
