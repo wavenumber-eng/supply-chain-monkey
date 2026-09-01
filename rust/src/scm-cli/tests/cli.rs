@@ -13,6 +13,7 @@ const PROVIDERS: &[u8] =
 const SEARCH: &[u8] = include_bytes!("../../../../contracts/scm/v1/vectors/valid/search-ok.json");
 const PROVIDER_ERROR: &[u8] =
     include_bytes!("../../../../contracts/scm/v1/vectors/valid/search-provider-error.json");
+const EMPTY_PROVIDERS: &[u8] = br#"{"providers":{}}"#;
 const DETAIL: &[u8] = include_bytes!("../../../../contracts/scm/v1/vectors/valid/detail-ok.json");
 const SPN: &[u8] = include_bytes!("../../../../contracts/scm/v1/vectors/valid/spn-ok.json");
 const BATCH: &[u8] =
@@ -25,9 +26,19 @@ struct RecordedRequest {
     body: Vec<u8>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 struct TestState {
     requests: Arc<Mutex<Vec<RecordedRequest>>>,
+    providers: Arc<Vec<u8>>,
+}
+
+impl TestState {
+    fn new(providers: &[u8]) -> Self {
+        Self {
+            requests: Arc::default(),
+            providers: Arc::new(providers.to_vec()),
+        }
+    }
 }
 
 async fn handler(State(state): State<TestState>, request: Request) -> Response<Body> {
@@ -51,21 +62,40 @@ async fn handler(State(state): State<TestState>, request: Request) -> Response<B
         .lock()
         .expect("record lock")
         .push(RecordedRequest {
-            uri,
+            uri: uri.clone(),
             authorization,
             body,
         });
     let payload = match path.as_str() {
-        "/v1/health" => HEALTH,
-        "/v1/providers/status" => PROVIDERS,
-        "/v1/search" if provider_error => PROVIDER_ERROR,
-        "/v1/search" => SEARCH,
-        "/v1/detail" => DETAIL,
-        "/v1/spn" => SPN,
-        "/v1/spn/batch" => BATCH,
+        "/v1/health" => HEALTH.to_vec(),
+        "/v1/providers/status" => state.providers.as_ref().clone(),
+        "/v1/search" if provider_error => PROVIDER_ERROR.to_vec(),
+        "/v1/search" if request_has_supplier(&uri, "invalid") => b"{}".to_vec(),
+        "/v1/search" if request_has_supplier(&uri, "long") => long_search_payload(),
+        "/v1/search" => SEARCH.to_vec(),
+        "/v1/detail" => DETAIL.to_vec(),
+        "/v1/spn" => SPN.to_vec(),
+        "/v1/spn/batch" => BATCH.to_vec(),
         _ => return response(StatusCode::NOT_FOUND, b"not found"),
     };
-    response(StatusCode::OK, payload)
+    response(StatusCode::OK, &payload)
+}
+
+fn request_has_supplier(uri: &str, supplier: &str) -> bool {
+    uri.split('?').nth(1).is_some_and(|query| {
+        query
+            .split('&')
+            .any(|item| item == format!("supplier={supplier}"))
+    })
+}
+
+fn long_search_payload() -> Vec<u8> {
+    let mut value: serde_json::Value = serde_json::from_slice(SEARCH).expect("search fixture");
+    let part = &mut value["data"][0];
+    part["manufacturer"] = serde_json::json!("Manufacturer\nwith extra words");
+    part["description"] = serde_json::json!("A long\tdescription that must be truncated safely");
+    part["price_breaks"] = serde_json::json!([]);
+    serde_json::to_vec(&value).expect("long search fixture")
 }
 
 fn response(status: StatusCode, payload: &[u8]) -> Response<Body> {
@@ -77,7 +107,13 @@ fn response(status: StatusCode, payload: &[u8]) -> Response<Body> {
 }
 
 async fn spawn_server() -> (String, TestState, tokio::task::JoinHandle<()>) {
-    let state = TestState::default();
+    spawn_server_with_providers(PROVIDERS).await
+}
+
+async fn spawn_server_with_providers(
+    providers: &[u8],
+) -> (String, TestState, tokio::task::JoinHandle<()>) {
+    let state = TestState::new(providers);
     let app = Router::new().fallback(handler).with_state(state.clone());
     let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
     let address = listener.local_addr().expect("address");
@@ -113,6 +149,12 @@ async fn help_has_no_token_argument_and_missing_token_is_sanitized() {
     assert!(help.contains("SCM_TOKEN"));
     assert!(!help.contains("--token"));
 
+    let search_help = invoke(vec!["search".to_owned(), "--help".to_owned()], None).await;
+    assert!(search_help.status.success());
+    let search_help = text(&search_help.stdout);
+    assert!(search_help.contains("search [OPTIONS] <MPN>"));
+    assert!(search_help.contains("--supplier <SUPPLIERS>"));
+
     let missing = invoke(
         vec![
             "--url".to_owned(),
@@ -143,7 +185,7 @@ async fn every_supported_command_uses_the_public_client_and_typed_json() {
     let commands = [
         vec!["health"],
         vec!["providers"],
-        vec!["search", "jlcpcb", "A/B", "--include-raw"],
+        vec!["search", "A/B", "--include-raw"],
         vec!["detail", "jlcpcb", "C123"],
         vec!["spn", "jlcpcb", "C123"],
         vec!["batch", "jlcpcb", "C123", "C456"],
@@ -165,13 +207,35 @@ async fn every_supported_command_uses_the_public_client_and_typed_json() {
         assert!(!text(&output.stderr).contains("CLI_SENSITIVE_MARKER"));
     }
     let requests = state.requests.lock().expect("record lock");
-    assert_eq!(requests.len(), 6);
+    assert_eq!(requests.len(), 8);
     assert!(requests[0].authorization.is_none());
     assert!(requests[1..].iter().all(|request| {
         request.authorization.as_deref() == Some("Bearer CLI_SENSITIVE_MARKER")
             && !request.uri.contains("CLI_SENSITIVE_MARKER")
     }));
-    let batch: serde_json::Value = serde_json::from_slice(&requests[5].body).expect("batch body");
+    let search_requests = requests
+        .iter()
+        .filter(|request| request.uri.starts_with("/v1/search?"))
+        .collect::<Vec<_>>();
+    assert_eq!(search_requests.len(), 2);
+    assert!(
+        search_requests
+            .iter()
+            .any(|request| request.uri.contains("supplier=jlcpcb"))
+    );
+    assert!(
+        search_requests
+            .iter()
+            .any(|request| request.uri.contains("supplier=lcsc"))
+    );
+    assert!(search_requests.iter().all(|request| {
+        !request.uri.contains("supplier=digikey") && !request.uri.contains("supplier=mouser")
+    }));
+    let batch_request = requests
+        .iter()
+        .find(|request| request.uri == "/v1/spn/batch")
+        .expect("batch request");
+    let batch: serde_json::Value = serde_json::from_slice(&batch_request.body).expect("batch body");
     assert_eq!(batch["spns"], serde_json::json!(["C123", "C456"]));
     task.abort();
 }
@@ -192,20 +256,153 @@ async fn human_output_is_stable_and_provider_errors_have_exit_three() {
     let mouser = providers.find("Mouser").expect("Mouser");
     assert!(digikey < jlcpcb && jlcpcb < lcsc && lcsc < mouser);
 
+    let table = invoke(
+        vec![
+            "--url".to_owned(),
+            base.clone(),
+            "search".to_owned(),
+            "NE555P".to_owned(),
+            "--supplier".to_owned(),
+            "digikey".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert!(table.status.success(), "{}", text(&table.stderr));
+    let table = text(&table.stdout);
+    for heading in [
+        "Supplier",
+        "Manufacturer",
+        "MPN",
+        "Supplier PN",
+        "Description",
+        "Price",
+        "Stock",
+    ] {
+        assert!(table.contains(heading));
+    }
+    assert!(table.contains("Texas Ins..."));
+    assert!(table.contains("NE555P"));
+    assert!(table.contains("296-6501-1-ND"));
+    assert!(table.contains("USD 0.42 @ 1"));
+    assert!(table.contains("1,250"));
+    assert!(table.is_ascii());
+
     let error = invoke(
         vec![
             "--url".to_owned(),
             base,
             "search".to_owned(),
-            "broken".to_owned(),
             "X".to_owned(),
+            "--supplier".to_owned(),
+            "broken".to_owned(),
         ],
         Some("CLI_SENSITIVE_MARKER"),
     )
     .await;
     assert_eq!(error.status.code(), Some(3));
-    assert!(text(&error.stdout).contains("status=provider_error"));
+    assert!(text(&error.stdout).contains("broken: provider_error"));
     assert!(!text(&error.stderr).contains("CLI_SENSITIVE_MARKER"));
+    task.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn supplier_filters_dedupe_and_mixed_failures_remain_visible() {
+    let (base, state, task) = spawn_server().await;
+    let duplicate = invoke(
+        vec![
+            "--url".to_owned(),
+            base.clone(),
+            "--json".to_owned(),
+            "search".to_owned(),
+            "X".to_owned(),
+            "--supplier".to_owned(),
+            "LCSC".to_owned(),
+            "--supplier".to_owned(),
+            "lcsc".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert!(duplicate.status.success(), "{}", text(&duplicate.stderr));
+    let document: serde_json::Value =
+        serde_json::from_slice(&duplicate.stdout).expect("search JSON");
+    assert_eq!(document["query"], "X");
+    assert_eq!(
+        document["providers"].as_object().expect("providers").len(),
+        1
+    );
+    assert_eq!(document["providers"]["lcsc"]["outcome"], "response");
+
+    let mixed = invoke(
+        vec![
+            "--url".to_owned(),
+            base,
+            "search".to_owned(),
+            "X".to_owned(),
+            "--supplier".to_owned(),
+            "jlcpcb".to_owned(),
+            "--supplier".to_owned(),
+            "invalid".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert_eq!(mixed.status.code(), Some(1));
+    assert!(text(&mixed.stdout).contains("client_error"));
+    assert!(text(&mixed.stdout).contains("NE555P"));
+    assert!(!text(&mixed.stderr).contains("CLI_SENSITIVE_MARKER"));
+
+    let requests = state.requests.lock().expect("record lock");
+    let lcsc_requests = requests
+        .iter()
+        .filter(|request| request.uri.contains("supplier=lcsc"))
+        .count();
+    assert_eq!(lcsc_requests, 1);
+    task.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn table_normalizes_truncates_and_handles_absent_prices() {
+    let (base, _, task) = spawn_server().await;
+    let output = invoke(
+        vec![
+            "--url".to_owned(),
+            base,
+            "search".to_owned(),
+            "X".to_owned(),
+            "--supplier".to_owned(),
+            "long".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert!(output.status.success(), "{}", text(&output.stderr));
+    let output = text(&output.stdout);
+    assert!(output.contains("Manufactu..."));
+    assert!(output.contains("A long description that m..."));
+    assert!(output.lines().any(|line| line.contains("| -")));
+    assert!(!output.contains('\t'));
+    assert!(output.is_ascii());
+    task.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn generic_search_fails_cleanly_when_no_provider_is_configured() {
+    let (base, _, task) = spawn_server_with_providers(EMPTY_PROVIDERS).await;
+    let output = invoke(
+        vec![
+            "--url".to_owned(),
+            base,
+            "search".to_owned(),
+            "X".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert_eq!(output.status.code(), Some(1));
+    assert!(text(&output.stderr).contains("no configured search providers"));
+    assert!(!text(&output.stderr).contains("CLI_SENSITIVE_MARKER"));
     task.abort();
 }
 

@@ -7,6 +7,22 @@ only from `SCM_TOKEN`; there is intentionally no token command-line option.
 Use `--json` for the complete typed envelope or the default stable summary for
 interactive checks.
 
+Search every configured provider concurrently and render a compact ASCII table:
+
+```text
+scm search RT685
+```
+
+Restrict the search with one or more repeatable provider filters:
+
+```text
+scm search RT685 --supplier LCSC --supplier Mouser
+```
+
+The default table shows supplier, manufacturer, MPN, supplier part number,
+description, first price break, and stock. `--json` emits the stable
+multi-provider result document instead.
+
 Exit codes are stable for automation: `0` is a valid non-provider-error
 response, `1` is configuration/client failure, `2` is invalid CLI usage from
 Clap, and `3` is a structurally valid SCM `provider_error` envelope.

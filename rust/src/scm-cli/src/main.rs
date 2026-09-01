@@ -1,5 +1,8 @@
 #![forbid(unsafe_code)]
 
+mod output;
+
+use std::collections::BTreeMap;
 use std::env;
 use std::fs::File;
 use std::io::Read;
@@ -12,11 +15,11 @@ use scm_client::{
     ClientError, ConfigError, LookupOptions, ProviderOutcome, ScmClient, SearchOptions,
 };
 use serde::Serialize;
-use serde_json::Value;
 use thiserror::Error;
 
+use output::{CommandOutput, render};
+
 const MAX_CA_BUNDLE_BYTES: usize = 1024 * 1024;
-const PROVIDER_ERROR_EXIT_CODE: u8 = 3;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -54,10 +57,12 @@ enum Command {
     Health,
     /// List configured providers and capabilities.
     Providers,
-    /// Search one supplier by manufacturer part number.
+    /// Search configured suppliers by manufacturer part number.
     Search {
-        supplier: String,
         mpn: String,
+        /// Restrict search to one supplier. Repeat to select several suppliers.
+        #[arg(long = "supplier")]
+        suppliers: Vec<String>,
         #[arg(long)]
         include_raw: bool,
         #[arg(long, default_value_t = 10)]
@@ -105,17 +110,14 @@ enum CliError {
     CaBundleNotRegular,
     #[error("configured CA bundle exceeds the 1 MiB limit")]
     CaBundleTooLarge,
+    #[error("SCM reports no configured search providers")]
+    NoConfiguredProviders,
     #[error(transparent)]
     Config(#[from] ConfigError),
     #[error(transparent)]
     Client(#[from] ClientError),
     #[error("could not serialize the typed SCM response")]
     Serialize(#[source] serde_json::Error),
-}
-
-struct CommandOutput {
-    value: Value,
-    provider_error: bool,
 }
 
 #[tokio::main]
@@ -132,12 +134,8 @@ async fn main() -> ExitCode {
 async fn run(cli: Cli) -> Result<ExitCode, CliError> {
     let client = build_client(&cli)?;
     let output = execute(&client, cli.command).await?;
-    render(&output.value, cli.json)?;
-    Ok(if output.provider_error {
-        ExitCode::from(PROVIDER_ERROR_EXIT_CODE)
-    } else {
-        ExitCode::SUCCESS
-    })
+    render(&output, cli.json)?;
+    Ok(output.exit_code())
 }
 
 fn build_client(cli: &Cli) -> Result<ScmClient, CliError> {
@@ -183,22 +181,24 @@ async fn execute(client: &ScmClient, command: Command) -> Result<CommandOutput, 
         Command::Health => plain_output(client.health().await?),
         Command::Providers => plain_output(client.providers_status().await?),
         Command::Search {
-            supplier,
             mpn,
+            suppliers,
             include_raw,
             max_results,
-        } => provider_output(
-            client
-                .search_with_options(
-                    &supplier,
+        } => {
+            let suppliers = resolve_search_suppliers(client, suppliers).await?;
+            let results = client
+                .search_all_with_options(
                     &mpn,
+                    suppliers,
                     SearchOptions {
                         include_raw,
                         max_results,
                     },
                 )
-                .await?,
-        ),
+                .await;
+            Ok(CommandOutput::search(mpn, results))
+        }
         Command::Detail {
             supplier,
             part,
@@ -230,52 +230,43 @@ async fn execute(client: &ScmClient, command: Command) -> Result<CommandOutput, 
 }
 
 fn plain_output<T: Serialize>(value: T) -> Result<CommandOutput, CliError> {
-    Ok(CommandOutput {
-        value: serde_json::to_value(value).map_err(CliError::Serialize)?,
-        provider_error: false,
-    })
+    CommandOutput::plain(value)
 }
 
 fn provider_output<T: Serialize>(outcome: ProviderOutcome<T>) -> Result<CommandOutput, CliError> {
-    let provider_error = matches!(&outcome, ProviderOutcome::ProviderError(_));
-    Ok(CommandOutput {
-        value: serde_json::to_value(outcome.into_envelope()).map_err(CliError::Serialize)?,
-        provider_error,
-    })
+    CommandOutput::provider(outcome)
 }
 
-fn render(value: &Value, json: bool) -> Result<(), CliError> {
-    if json {
-        println!(
-            "{}",
-            serde_json::to_string_pretty(value).map_err(CliError::Serialize)?
-        );
-        return Ok(());
+async fn resolve_search_suppliers(
+    client: &ScmClient,
+    requested: Vec<String>,
+) -> Result<Vec<String>, CliError> {
+    let normalized = normalize_suppliers(requested);
+    if !normalized.is_empty() {
+        return Ok(normalized);
     }
-    if let Some(providers) = value.get("providers").and_then(Value::as_object) {
-        let mut names = providers.keys().collect::<Vec<_>>();
-        names.sort_unstable();
-        println!("providers={}", names.len());
-        for name in names {
-            let configured = providers[name]["configured"].as_bool().unwrap_or(false);
-            let backend = providers[name]["backend"].as_str().unwrap_or("-");
-            println!("{name}\tconfigured={configured}\tbackend={backend}");
-        }
-        return Ok(());
+    let status = client.providers_status().await?;
+    let configured = status
+        .providers
+        .iter()
+        .filter(|(_, provider)| provider.configured)
+        .map(|(supplier, _)| supplier.to_ascii_lowercase())
+        .collect::<Vec<_>>();
+    let configured = normalize_suppliers(configured);
+    if configured.is_empty() {
+        return Err(CliError::NoConfiguredProviders);
     }
-    let status = value
-        .get("status")
-        .and_then(Value::as_str)
-        .unwrap_or("unknown");
-    let supplier = value.get("supplier").and_then(Value::as_str);
-    let item_count = value.get("data").and_then(Value::as_array).map(Vec::len);
-    print!("status={status}");
-    if let Some(supplier) = supplier {
-        print!(" supplier={supplier}");
-    }
-    if let Some(item_count) = item_count {
-        print!(" items={item_count}");
-    }
-    println!();
-    Ok(())
+    Ok(configured)
+}
+
+fn normalize_suppliers(suppliers: Vec<String>) -> Vec<String> {
+    suppliers
+        .into_iter()
+        .filter_map(|supplier| {
+            let supplier = supplier.trim().to_ascii_lowercase();
+            (!supplier.is_empty()).then_some((supplier.clone(), supplier))
+        })
+        .collect::<BTreeMap<_, _>>()
+        .into_values()
+        .collect()
 }
