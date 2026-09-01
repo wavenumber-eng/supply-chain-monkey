@@ -25,7 +25,7 @@ depends_on = ["work"]
 [[steps]]
 id = "external-review"
 title = "Obtain independent external review"
-status = "pending"
+status = "active"
 depends_on = ["work", "design-doc-intent-audit", "test-runtime-impact-audit"]
 
 [[exit_criteria]]
