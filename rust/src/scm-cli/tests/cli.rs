@@ -13,6 +13,8 @@ const PROVIDERS: &[u8] =
 const SEARCH: &[u8] = include_bytes!("../../../../contracts/scm/v1/vectors/valid/search-ok.json");
 const PROVIDER_ERROR: &[u8] =
     include_bytes!("../../../../contracts/scm/v1/vectors/valid/search-provider-error.json");
+const NOT_FOUND: &[u8] =
+    include_bytes!("../../../../contracts/scm/v1/vectors/valid/search-not-found.json");
 const EMPTY_PROVIDERS: &[u8] = br#"{"providers":{}}"#;
 const DETAIL: &[u8] = include_bytes!("../../../../contracts/scm/v1/vectors/valid/detail-ok.json");
 const SPN: &[u8] = include_bytes!("../../../../contracts/scm/v1/vectors/valid/spn-ok.json");
@@ -44,10 +46,6 @@ impl TestState {
 async fn handler(State(state): State<TestState>, request: Request) -> Response<Body> {
     let uri = request.uri().to_string();
     let path = request.uri().path().to_owned();
-    let provider_error = request
-        .uri()
-        .query()
-        .is_some_and(|query| query.contains("supplier=broken"));
     let authorization = request
         .headers()
         .get("authorization")
@@ -69,10 +67,7 @@ async fn handler(State(state): State<TestState>, request: Request) -> Response<B
     let payload = match path.as_str() {
         "/v1/health" => HEALTH.to_vec(),
         "/v1/providers/status" => state.providers.as_ref().clone(),
-        "/v1/search" if provider_error => PROVIDER_ERROR.to_vec(),
-        "/v1/search" if request_has_supplier(&uri, "invalid") => b"{}".to_vec(),
-        "/v1/search" if request_has_supplier(&uri, "long") => long_search_payload(),
-        "/v1/search" => SEARCH.to_vec(),
+        "/v1/search" => search_payload(&uri),
         "/v1/detail" => DETAIL.to_vec(),
         "/v1/spn" => SPN.to_vec(),
         "/v1/spn/batch" => BATCH.to_vec(),
@@ -81,21 +76,57 @@ async fn handler(State(state): State<TestState>, request: Request) -> Response<B
     response(StatusCode::OK, &payload)
 }
 
-fn request_has_supplier(uri: &str, supplier: &str) -> bool {
-    uri.split('?').nth(1).is_some_and(|query| {
-        query
-            .split('&')
-            .any(|item| item == format!("supplier={supplier}"))
-    })
+fn requested_supplier(uri: &str) -> Option<&str> {
+    uri.split('?')
+        .nth(1)?
+        .split('&')
+        .find_map(|item| item.strip_prefix("supplier="))
 }
 
-fn long_search_payload() -> Vec<u8> {
+fn search_payload(uri: &str) -> Vec<u8> {
+    let supplier = requested_supplier(uri).unwrap_or_default();
+    if supplier == "broken" {
+        return PROVIDER_ERROR.to_vec();
+    }
+    if supplier == "invalid" {
+        return b"{}".to_vec();
+    }
+    if supplier == "notfound" {
+        return NOT_FOUND.to_vec();
+    }
     let mut value: serde_json::Value = serde_json::from_slice(SEARCH).expect("search fixture");
     let part = &mut value["data"][0];
-    part["manufacturer"] = serde_json::json!("Manufacturer\nwith extra words");
-    part["description"] = serde_json::json!("A long\tdescription that must be truncated safely");
-    part["price_breaks"] = serde_json::json!([]);
-    serde_json::to_vec(&value).expect("long search fixture")
+    part["supplier"] = serde_json::json!(supplier);
+    match supplier {
+        "long" => {
+            part["manufacturer"] = serde_json::json!("\u{1b}\u{7}Mégacorp with extra words");
+            part["description"] =
+                serde_json::json!("A long\tdescription Ω that must be truncated safely");
+            part["price_breaks"] = serde_json::json!([]);
+        }
+        "high" => part["stock_quantity"] = serde_json::json!(2_000),
+        "low" => part["stock_quantity"] = serde_json::json!(10),
+        "equal-a" | "equal-b" => part["stock_quantity"] = serde_json::json!(100),
+        "tiny-price" => part["price_breaks"][0]["unit_price"] = serde_json::json!(0.0001),
+        "large-price" => part["price_breaks"][0]["unit_price"] = serde_json::json!(123_456_789.25),
+        _ => {}
+    }
+    serde_json::to_vec(&value).expect("search fixture mutation")
+}
+
+fn providers_payload(names: &[&str]) -> Vec<u8> {
+    let source: serde_json::Value = serde_json::from_slice(PROVIDERS).expect("provider fixture");
+    let template = source["providers"]["LCSC"].clone();
+    let providers = names
+        .iter()
+        .map(|name| {
+            let mut entry = template.clone();
+            entry["configured"] = serde_json::json!(true);
+            entry["capabilities"]["supplier"] = serde_json::json!(name);
+            ((*name).to_owned(), entry)
+        })
+        .collect::<serde_json::Map<_, _>>();
+    serde_json::to_vec(&serde_json::json!({"providers": providers})).expect("providers fixture")
 }
 
 fn response(status: StatusCode, payload: &[u8]) -> Response<Body> {
@@ -153,7 +184,7 @@ async fn help_has_no_token_argument_and_missing_token_is_sanitized() {
     assert!(search_help.status.success());
     let search_help = text(&search_help.stdout);
     assert!(search_help.contains("search [OPTIONS] <MPN>"));
-    assert!(search_help.contains("--supplier <SUPPLIERS>"));
+    assert!(search_help.contains("--supplier <NAME>"));
 
     let missing = invoke(
         vec![
@@ -177,6 +208,34 @@ async fn help_has_no_token_argument_and_missing_token_is_sanitized() {
     )
     .await;
     assert_eq!(usage.status.code(), Some(2));
+
+    let empty_supplier = invoke(
+        vec![
+            "--url".to_owned(),
+            "http://127.0.0.1:1".to_owned(),
+            "search".to_owned(),
+            "RT685".to_owned(),
+            "--supplier".to_owned(),
+            "   ".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert_eq!(empty_supplier.status.code(), Some(2));
+    assert!(text(&empty_supplier.stderr).contains("supplier name must not be empty"));
+
+    let retired_positional = invoke(
+        vec![
+            "--url".to_owned(),
+            "http://127.0.0.1:1".to_owned(),
+            "search".to_owned(),
+            "LCSC".to_owned(),
+            "RT685".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert_eq!(retired_positional.status.code(), Some(2));
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -263,7 +322,7 @@ async fn human_output_is_stable_and_provider_errors_have_exit_three() {
             "search".to_owned(),
             "NE555P".to_owned(),
             "--supplier".to_owned(),
-            "digikey".to_owned(),
+            "lcsc".to_owned(),
         ],
         Some("CLI_SENSITIVE_MARKER"),
     )
@@ -288,10 +347,12 @@ async fn human_output_is_stable_and_provider_errors_have_exit_three() {
     assert!(table.contains("1,250"));
     assert!(table.is_ascii());
 
+    let error_providers = providers_payload(&["broken"]);
+    let (error_base, _, error_task) = spawn_server_with_providers(&error_providers).await;
     let error = invoke(
         vec![
             "--url".to_owned(),
-            base,
+            error_base,
             "search".to_owned(),
             "X".to_owned(),
             "--supplier".to_owned(),
@@ -303,12 +364,14 @@ async fn human_output_is_stable_and_provider_errors_have_exit_three() {
     assert_eq!(error.status.code(), Some(3));
     assert!(text(&error.stdout).contains("broken: provider_error"));
     assert!(!text(&error.stderr).contains("CLI_SENSITIVE_MARKER"));
+    error_task.abort();
     task.abort();
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn supplier_filters_dedupe_and_mixed_failures_remain_visible() {
-    let (base, state, task) = spawn_server().await;
+    let providers = providers_payload(&["lcsc", "jlcpcb", "invalid", "broken"]);
+    let (base, state, task) = spawn_server_with_providers(&providers).await;
     let duplicate = invoke(
         vec![
             "--url".to_owned(),
@@ -344,12 +407,15 @@ async fn supplier_filters_dedupe_and_mixed_failures_remain_visible() {
             "jlcpcb".to_owned(),
             "--supplier".to_owned(),
             "invalid".to_owned(),
+            "--supplier".to_owned(),
+            "broken".to_owned(),
         ],
         Some("CLI_SENSITIVE_MARKER"),
     )
     .await;
     assert_eq!(mixed.status.code(), Some(1));
     assert!(text(&mixed.stdout).contains("client_error"));
+    assert!(text(&mixed.stdout).contains("provider_error"));
     assert!(text(&mixed.stdout).contains("NE555P"));
     assert!(!text(&mixed.stderr).contains("CLI_SENSITIVE_MARKER"));
 
@@ -364,7 +430,8 @@ async fn supplier_filters_dedupe_and_mixed_failures_remain_visible() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn table_normalizes_truncates_and_handles_absent_prices() {
-    let (base, _, task) = spawn_server().await;
+    let providers = providers_payload(&["long"]);
+    let (base, _, task) = spawn_server_with_providers(&providers).await;
     let output = invoke(
         vec![
             "--url".to_owned(),
@@ -379,10 +446,11 @@ async fn table_normalizes_truncates_and_handles_absent_prices() {
     .await;
     assert!(output.status.success(), "{}", text(&output.stderr));
     let output = text(&output.stdout);
-    assert!(output.contains("Manufactu..."));
-    assert!(output.contains("A long description that m..."));
+    assert!(output.contains("\\x1B\\x07M..."));
     assert!(output.lines().any(|line| line.contains("| -")));
     assert!(!output.contains('\t'));
+    assert!(!output.contains('\u{1b}'));
+    assert!(!output.contains('\u{7}'));
     assert!(output.is_ascii());
     task.abort();
 }
@@ -403,6 +471,93 @@ async fn generic_search_fails_cleanly_when_no_provider_is_configured() {
     assert_eq!(output.status.code(), Some(1));
     assert!(text(&output.stderr).contains("no configured search providers"));
     assert!(!text(&output.stderr).contains("CLI_SENSITIVE_MARKER"));
+    task.abort();
+
+    let (base, _, task) = spawn_server_with_providers(EMPTY_PROVIDERS).await;
+    let explicit = invoke(
+        vec![
+            "--url".to_owned(),
+            base,
+            "search".to_owned(),
+            "X".to_owned(),
+            "--supplier".to_owned(),
+            "lcsc".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert_eq!(explicit.status.code(), Some(1));
+    assert!(text(&explicit.stderr).contains("no configured search providers"));
+    task.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn explicit_unconfigured_provider_is_rejected_before_search() {
+    let (base, state, task) = spawn_server().await;
+    let output = invoke(
+        vec![
+            "--url".to_owned(),
+            base,
+            "search".to_owned(),
+            "X".to_owned(),
+            "--supplier".to_owned(),
+            "digikey".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert_eq!(output.status.code(), Some(1));
+    assert!(text(&output.stderr).contains("not configured: digikey"));
+    let requests = state.requests.lock().expect("record lock");
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].uri, "/v1/providers/status");
+    task.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn not_found_is_success_and_rows_sort_by_stock_then_identity() {
+    let providers = providers_payload(&["notfound", "low", "equal-b", "equal-a", "high"]);
+    let (base, _, task) = spawn_server_with_providers(&providers).await;
+    let not_found = invoke(
+        vec![
+            "--url".to_owned(),
+            base.clone(),
+            "search".to_owned(),
+            "X".to_owned(),
+            "--supplier".to_owned(),
+            "notfound".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert!(not_found.status.success());
+    assert!(text(&not_found.stdout).contains("notfound: not_found"));
+
+    let sorted = invoke(
+        vec![
+            "--url".to_owned(),
+            base,
+            "search".to_owned(),
+            "X".to_owned(),
+            "--supplier".to_owned(),
+            "low".to_owned(),
+            "--supplier".to_owned(),
+            "equal-b".to_owned(),
+            "--supplier".to_owned(),
+            "equal-a".to_owned(),
+            "--supplier".to_owned(),
+            "high".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert!(sorted.status.success(), "{}", text(&sorted.stderr));
+    let sorted = text(&sorted.stdout);
+    let high = sorted.find("high").expect("high row");
+    let equal_a = sorted.find("equal-a").expect("equal-a row");
+    let equal_b = sorted.find("equal-b").expect("equal-b row");
+    let low = sorted.find("low").expect("low row");
+    assert!(high < equal_a && equal_a < equal_b && equal_b < low);
     task.abort();
 }
 
