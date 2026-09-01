@@ -7,6 +7,7 @@ concerns = ["release", "deployment", "signoff"]
 objectives = [
     "Ruff, Pyright, and uv lock checks pass",
     "Pinned dev-std and locked Rust workspace gates pass",
+    "Pinned TypeSpec generation and three-platform Rust CI remain enforced",
     "The wheel builds and passes twine metadata checks",
     "Appliku deployment config stays compatible with the managed uv build path",
     "Retired compatibility imports and environment loaders stay removed",

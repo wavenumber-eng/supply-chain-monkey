@@ -66,3 +66,31 @@ def test_pypi_trusted_publisher_workflow_is_configured() -> None:
     assert "pypa/gh-action-pypi-publish@release/v1" in steps_text
     assert "password" not in steps_text
     assert "TWINE_PASSWORD" not in steps_text
+
+
+def test_ci_checks_pinned_contract_and_cross_platform_rust_gates() -> None:
+    workflow_path = ROOT / ".github" / "workflows" / "ci.yml"
+    workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+
+    signoff_steps = "\n".join(str(step) for step in workflow["jobs"]["signoff"]["steps"])
+    assert "actions/setup-node@v6" in signoff_steps
+    assert "node-version-file" in signoff_steps
+    assert "npm install --global npm@11.16.0" in signoff_steps
+    for command in (
+        "npm ci",
+        "npm run check:typespec",
+        "npm run check:contracts",
+        "npm run check:vectors",
+        "npm run check:python-generation",
+        "uv run rack run L99_signoff",
+    ):
+        assert command in signoff_steps
+
+    rust_job = workflow["jobs"]["rust-signoff"]
+    assert rust_job["strategy"]["matrix"]["os"] == [
+        "macos-latest",
+        "windows-latest",
+    ]
+    rust_steps = "\n".join(str(step) for step in rust_job["steps"])
+    assert "rustup toolchain install 1.96.1" in rust_steps
+    assert "cargo test --workspace --all-features --locked" in rust_steps

@@ -19,7 +19,7 @@ depends_on = ["work"]
 [[steps]]
 id = "test-runtime-impact-audit"
 title = "Audit new test runtime impact"
-status = "pending"
+status = "active"
 depends_on = ["work"]
 
 [[steps]]
