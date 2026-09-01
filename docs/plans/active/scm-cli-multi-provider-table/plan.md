@@ -7,24 +7,24 @@ created = "2026-08-31"
 [[steps]]
 id = "work"
 title = "Execute plan work"
-status = "active"
+status = "done"
 
 [[steps]]
 id = "design-doc-intent-audit"
 title = "Audit design docs, ADRs, and requirements against implementation"
-status = "pending"
+status = "done"
 depends_on = ["work"]
 
 [[steps]]
 id = "test-runtime-impact-audit"
 title = "Audit new test runtime impact"
-status = "pending"
+status = "done"
 depends_on = ["work"]
 
 [[steps]]
 id = "external-review"
 title = "Obtain independent external review"
-status = "pending"
+status = "active"
 depends_on = ["work", "design-doc-intent-audit", "test-runtime-impact-audit"]
 
 [[exit_criteria]]
