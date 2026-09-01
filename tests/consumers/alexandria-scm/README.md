@@ -15,7 +15,14 @@ tests with a fresh Cargo target. The proof covers missing configuration,
 unreachable SCM, mixed provider outcomes, cancellation, successful concurrent
 search, and authorization-header-only credential transport.
 
-A normal committed Alexandria workspace dependency remains blocked until the
-accepted SCM source is reachable by an immutable Git revision or the crates
-are published. That release-resolution step must not be replaced by a sibling
-checkout path.
+Before crates.io publication, a normal Alexandria workspace can use the
+reviewed immutable Git dependency documented in the Rust client README:
+
+```toml
+scm-client = { package = "supply-chain-monkey-client", git = "https://github.com/wavenumber-eng/supply-chain-monkey.git", rev = "ce2c126066fbda260947fdac3bee8db40ad4e61b" }
+```
+
+The release proof must resolve that revision from the remote repository in a
+clean temporary project with no sibling checkout or machine path. Alexandria
+should commit its resulting `Cargo.lock`. A branch or moving tag is not an
+acceptable substitute for `rev`.

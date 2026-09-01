@@ -21,6 +21,21 @@ and the `typespec-v1-contract` step passes.
 The application root `GET /` redirects to `/v1/` and is excluded from the
 public client contract.
 
+## Human exploration
+
+The running FastAPI service exposes its runtime projection at `/openapi.json`,
+Swagger at `/docs`, and ReDoc at `/redoc`. It also packages the canonical
+TypeSpec-generated document at `/openapi-typespec.json` and renders that
+document at `/docs/typespec`. Runtime/canonical tests require matching paths,
+version, summaries, descriptions, deprecation, response roots, and security
+intent. Component names may differ because FastAPI projects generated Pydantic
+models into its own OpenAPI namespace.
+
+See the [API exploration guide](../../guides/API_EXPLORATION.md) for local
+PowerShell/POSIX startup, safe bearer authorization, and non-provider smoke
+requests. The legacy stream is deprecated in both documents; never enter a real
+token into its query field or allow that value into logs or shared URLs.
+
 ## Current validation and status behavior
 
 - Non-stream supplier query values are trimmed and matched case-insensitively;

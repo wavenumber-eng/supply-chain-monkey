@@ -21,6 +21,10 @@
 Internal service for querying electronic component suppliers. It provides a
 unified HTTP API that centralizes vendor credentials and provider routing.
 
+Use the [documentation map](docs/README.md) for service operation, API
+exploration, Python and Rust consumption, contract authoring, and release
+material.
+
 ## Status
 
 `2026.8.12` - explicit provider failure diagnostics in the API and status page,
@@ -31,12 +35,16 @@ The PyPI distribution is `supply-chain-monkey`. The Python import package is
 
 ## Architecture
 
-The repo contains three layers:
+The repository contains four owned layers:
 
-- `scm.models`: shared contract with Pydantic models, enums, and supplier
-  constants.
+- `src/tsp/scm/v1`: authored TypeSpec HTTP and JSON structural authority.
+- `scm.models`: supported Python contract surface backed by generated Pydantic
+  models.
 - `scm.client`: HTTP client library for consumers.
 - `scm.server`: FastAPI server with provider adapters and the status page.
+
+The Rust workspace contains generated contracts, a secure async client, and the
+`scm` proof CLI. It consumes the service and has no Appliku deployment role.
 
 ## Providers
 
@@ -62,11 +70,24 @@ GET  /v1/search/stream?mpn=X&token=Y
 ```
 
 The streaming endpoint pushes results per provider as they complete via
-Server-Sent Events. It supports `max_results` and per-provider `timeout`.
+Server-Sent Events. It supports `max_results` and per-provider `timeout`, but is
+a deprecated query-token compatibility surface. Never put a real service token
+in its Swagger operation, logs, browser history, or a shared URL. New clients
+use header-authenticated non-stream operations.
 
 The root URL serves a status page with an interactive test panel.
 
-## Client Library
+Local and deployed servers expose:
+
+- `/docs` and `/redoc` for FastAPI's runtime OpenAPI document;
+- `/docs/typespec` for the canonical TypeSpec-generated OpenAPI document; and
+- `/openapi.json` and `/openapi-typespec.json` for their OpenAPI 3.1 JSON.
+
+See [API exploration](docs/guides/API_EXPLORATION.md) for PowerShell and POSIX
+startup, authorization, safe smoke requests, and the distinction between the
+two documents.
+
+## Python client
 
 Install the consumer client from PyPI:
 
@@ -86,6 +107,22 @@ detail = client.detail("jlcpcb", "C2870085")
 print(SUPPLIERS)
 ```
 
+## Rust client
+
+Before separately authorized crates.io publication, pin the reviewed immutable
+repository revision:
+
+```toml
+[dependencies]
+scm-client = { package = "supply-chain-monkey-client", git = "https://github.com/wavenumber-eng/supply-chain-monkey.git", rev = "ce2c126066fbda260947fdac3bee8db40ad4e61b" }
+tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }
+```
+
+The [Rust client guide](rust/src/scm-client/README.md) provides compiling
+single-provider and concurrent-search examples, error classification, secure
+builder options, and generated-contract access. The
+[CLI guide](rust/src/scm-cli/README.md) covers interactive tables and JSON.
+
 ## Local Development
 
 ```bash
@@ -96,11 +133,16 @@ uv sync --group dev
 PYTHONPATH=src/py uv run uvicorn scm.server.main:app --reload --env-file .env
 ```
 
+Windows users can use the PowerShell commands in the
+[API exploration guide](docs/guides/API_EXPLORATION.md#start-locally-on-powershell).
+
 ## Testing
 
 ```bash
 uv run pytest -q
 uv run rack run L99_signoff
+npm run check:contracts
+npm run check:python-generation
 uv run python tests/scripts/scm_test_cli.py --token YOUR_TOKEN
 uv run python tests/scripts/scm_test_cli.py --url https://your-scm.example.com --token YOUR_TOKEN
 ```
@@ -108,7 +150,8 @@ uv run python tests/scripts/scm_test_cli.py --url https://your-scm.example.com -
 ## Deployment
 
 The included `appliku.yml` uses Appliku's managed `python-3.13-uv` build image.
-Pushing `production` can trigger deployment.
+Only pushing `production` triggers the configured Appliku deployment; `dev` is
+integration-only.
 
 ```bash
 git checkout dev
