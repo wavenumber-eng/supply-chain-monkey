@@ -4,4 +4,6 @@ build_settings:
 
 services:
   web:
-    command: bash -c 'PYTHONPATH=/code/src/py uvicorn scm.server.main:app --host 0.0.0.0 --port 8000'
+    # The legacy v1 SSE route carries its token in the query string. Disable
+    # Uvicorn access logs so that compatibility token can never be recorded.
+    command: bash -c 'PYTHONPATH=/code/src/py uvicorn scm.server.main:app --host 0.0.0.0 --port 8000 --no-access-log'

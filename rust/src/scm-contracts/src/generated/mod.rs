@@ -190,6 +190,10 @@ pub(crate) const GENERATED_SCHEMAS: &[(&str, &str)] = &[
         ),
     ),
     (
+        "urn:supply-chain-monkey:schema:v1.declaration.QueryInteger",
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/schema/QueryInteger.json")),
+    ),
+    (
         "urn:supply-chain-monkey:schema:v1.declaration.RateLimitSnapshot",
         include_str!(
             concat!(env!("CARGO_MANIFEST_DIR"), "/schema/RateLimitSnapshot.json")

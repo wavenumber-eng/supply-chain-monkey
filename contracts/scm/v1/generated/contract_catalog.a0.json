@@ -181,6 +181,9 @@
         ],
         "401": [
           "HttpErrorDetail"
+        ],
+        "422": [
+          "ValidationErrorDetail"
         ]
       },
       "event_roots": [
@@ -245,11 +248,11 @@
   "artifacts": {
     "openapi": {
       "path": "contracts/scm/v1/generated/openapi.json",
-      "sha256": "f042ff9700d8d64acda86b8c32f73167c847ea4a875610404bdf413595cf1ccd"
+      "sha256": "83fb80d254cb7b4da0af1ffd074fc736f38cdb5b3381846bc75ce0ae05ee8006"
     },
     "python_projection": {
       "path": "contracts/scm/v1/generated/projection/python-models.json",
-      "sha256": "ea0b0e2449f45a58e46ddb5d056398ba2028918e1d140ba01c944f13fc3927ca",
+      "sha256": "a2a484244b99a767d40fa7300b7b412716e4286c98cde31aff0ce74cbd4db249",
       "authority": false,
       "purpose": "datamodel-code-generator input with local $defs references"
     },
@@ -347,6 +350,12 @@
         "schema_id": "urn:supply-chain-monkey:schema:v1.provider-status-response",
         "path": "contracts/scm/v1/generated/schema/ProviderStatusResponse.json",
         "sha256": "6613279068b35feef6992cd5f03afe22279bebe5a98644ab916b5eff54891df4"
+      },
+      {
+        "name": "QueryInteger",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.QueryInteger",
+        "path": "contracts/scm/v1/generated/schema/QueryInteger.json",
+        "sha256": "f88e8ed2dac4886e133192a6b86d10e194da178b4fd57b09a486132e28d2b406"
       },
       {
         "name": "RateLimitSnapshot",

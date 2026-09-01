@@ -13,6 +13,9 @@ namespace Wavenumber.SupplyChainMonkey.V1;
 @maxValue(9007199254740991)
 scalar JsonInteger extends safeint;
 
+/** Deployed unbounded integer accepted in HTTP query parsing. */
+scalar QueryInteger extends integer;
+
 /** Stream MPN after the deployed handler's trim normalization. */
 @minLength(3)
 @extension("x-scm-normalization", "trim before minimum-length validation")
@@ -282,7 +285,7 @@ interface AuthenticatedOperations {
     @query supplier: string,
     @query mpn: string,
     @query include_raw?: boolean = false,
-    @query max_results?: JsonInteger = 10,
+    @query max_results?: QueryInteger = 10,
   ):
     | SearchEnvelope
     | UnauthorizedResponse
@@ -331,9 +334,13 @@ interface LegacyStreamingOperations {
   @route("/search/stream")
   searchStream(
     @query mpn: StreamMpn,
-    @query max_results?: JsonInteger = 10,
+    @query max_results?: QueryInteger = 10,
     @query timeout?: float64 = 15.0,
     @query include_raw?: boolean = false,
     @query suppliers?: string = "",
-  ): EventStreamResponse | BadRequestResponse | UnauthorizedResponse;
+  ):
+    | EventStreamResponse
+    | BadRequestResponse
+    | UnauthorizedResponse
+    | ValidationErrorResponse;
 }

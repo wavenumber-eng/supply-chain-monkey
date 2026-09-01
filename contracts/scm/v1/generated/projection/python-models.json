@@ -425,6 +425,11 @@
         "not": {}
       }
     },
+    "QueryInteger": {
+      "title": "QueryInteger",
+      "type": "integer",
+      "description": "Deployed unbounded integer accepted in HTTP query parsing."
+    },
     "RateLimitSnapshot": {
       "title": "RateLimitSnapshot",
       "type": "object",

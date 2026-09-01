@@ -68,6 +68,16 @@ class PriceBreak(BaseModel):
     currency: str
 
 
+class QueryInteger(RootModel[int]):
+    root: Annotated[
+        int,
+        Field(
+            description="Deployed unbounded integer accepted in HTTP query parsing.",
+            title="QueryInteger",
+        ),
+    ]
+
+
 class Rfc3339Timestamp(RootModel[str]):
     root: Annotated[
         str,

@@ -59,7 +59,16 @@ def test_appliku_managed_build_contract() -> None:
     assert "uvicorn scm.server.main:app" in command
     assert "--host 0.0.0.0" in command
     assert "--port 8000" in command
+    assert "--no-access-log" in command
     assert "--reload" not in command
+
+
+def test_legacy_query_token_cannot_reach_production_access_logs() -> None:
+    marker = "SCM_ACCESS_LOG_SECRET_MARKER"
+    command = load_appliku()["services"]["web"]["command"]
+
+    assert marker not in command
+    assert "--no-access-log" in command
 
 
 def test_dockerfile_is_inactive_unless_appliku_selects_it() -> None:

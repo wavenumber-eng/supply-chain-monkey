@@ -82,6 +82,72 @@ def test_served_auth_and_error_metadata_matches_typespec_catalog():
             assert schema["$ref"].endswith(f"/{roots[0]}")
 
 
+def test_served_stream_openapi_matches_legacy_typespec_authority():
+    served_openapi = app.openapi()
+    operation = served_openapi["paths"]["/v1/search/stream"]["get"]
+    catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
+    authority = next(
+        endpoint for endpoint in catalog["endpoints"] if endpoint["path"] == "/v1/search/stream"
+    )
+
+    assert operation["security"] == authority["security"] == [{"ApiKeyAuth": []}]
+    security = served_openapi["components"]["securitySchemes"]["ApiKeyAuth"]
+    assert security == {
+        "type": "apiKey",
+        "description": "Deprecated v1 query-token compatibility surface",
+        "in": "query",
+        "name": "token",
+    }
+    assert operation["x-scm-event-roots"] == authority["event_roots"] == [
+        "StreamSearchEvent"
+    ]
+    assert set(operation["responses"]) == set(authority["responses"])
+    assert set(operation["responses"]["200"]["content"]) == {"text/event-stream"}
+    for status in ("400", "401", "422"):
+        content = operation["responses"][status]["content"]
+        assert set(content) == {"application/json"}
+        assert content["application/json"]["schema"]["title"] == authority["responses"][status][0]
+
+    max_results = next(
+        parameter for parameter in operation["parameters"] if parameter["name"] == "max_results"
+    )["schema"]
+    assert "minimum" not in max_results
+    assert "maximum" not in max_results
+
+
+def test_deployed_query_integers_remain_unbounded():
+    above_i_json_max = 9_007_199_254_740_992
+    with (
+        patch("scm.server.auth.settings") as auth_settings,
+        patch("scm.server.settings.settings") as service_settings,
+    ):
+        auth_settings.service_token = "contract-test-token"
+        service_settings.service_token = "contract-test-token"
+        client = TestClient(app)
+        response = client.get(
+            "/v1/search",
+            params={
+                "supplier": "unknown",
+                "mpn": "X",
+                "max_results": above_i_json_max,
+            },
+            headers={"Authorization": "Bearer contract-test-token"},
+        )
+        assert response.status_code == 200
+
+        stream_response = client.get(
+            "/v1/search/stream",
+            params={
+                "mpn": "ABC",
+                "token": "contract-test-token",
+                "max_results": above_i_json_max,
+                "suppliers": "unknown",
+            },
+        )
+        assert stream_response.status_code == 400
+        assert stream_response.headers["content-type"].startswith("application/json")
+
+
 def test_spn_batch_optional_boolean_is_non_nullable():
     assert SpnBatchRequest(supplier="LCSC", spns=["C123"]).include_raw is False
     with pytest.raises(ValidationError):

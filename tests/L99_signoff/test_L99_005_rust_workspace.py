@@ -52,6 +52,21 @@ def test_pinned_rust_dev_std_policy_passes() -> None:
     )
 
 
+def test_pinned_rust_dependency_policy_passes() -> None:
+    run_checked(
+        [
+            "cargo",
+            "deny",
+            "--locked",
+            "--all-features",
+            "check",
+            "advisories",
+            "licenses",
+            "sources",
+        ]
+    )
+
+
 @pytest.mark.parametrize(
     "command",
     [
