@@ -21,23 +21,26 @@ publish = false
 scm-client = {{ package = "supply-chain-monkey-client", git = "{GIT_URL}", rev = "{GIT_REVISION}" }}
 """
 SOURCE = """\
-use scm_client::{ProviderOutcome, ScmClient};
+#[cfg(test)]
+mod tests {
+    use scm_client::{ProviderOutcome, ScmClient};
 
-fn compile_supported_operations(client: &ScmClient) {
-    let search = client.search("lcsc", "RT685");
-    let concurrent = client.search_all("RT685", ["jlcpcb", "lcsc"]);
-    let _: Option<ProviderOutcome<scm_client::contracts::SearchEnvelope>> = None;
-    drop((search, concurrent));
-}
+    fn compile_supported_operations(client: &ScmClient) {
+        let search = client.search("lcsc", "RT685");
+        let concurrent = client.search_all("RT685", ["jlcpcb", "lcsc"]);
+        let _: Option<ProviderOutcome<scm_client::contracts::SearchEnvelope>> = None;
+        drop((search, concurrent));
+    }
 
-#[test]
-fn constructs_a_loopback_client_without_exposing_the_token() {
-    let client = ScmClient::new("http://127.0.0.1:8000", "isolated-proof-token")
-        .expect("loopback development URL should be accepted");
-    let debug = format!("{client:?}");
-    assert!(debug.contains("has_bearer_token: true"));
-    assert!(!debug.contains("isolated-proof-token"));
-    compile_supported_operations(&client);
+    #[test]
+    fn constructs_a_loopback_client_without_exposing_the_token() {
+        let client = ScmClient::new("http://127.0.0.1:8000", "isolated-proof-token")
+            .expect("loopback development URL should be accepted");
+        let debug = format!("{client:?}");
+        assert!(debug.contains("has_bearer_token: true"));
+        assert!(!debug.contains("isolated-proof-token"));
+        compile_supported_operations(&client);
+    }
 }
 """
 
@@ -51,12 +54,13 @@ def main() -> None:
         (source_root / "lib.rs").write_text(SOURCE, encoding="utf-8")
         environment = os.environ.copy()
         environment["CARGO_TARGET_DIR"] = str(project / "target")
-        run(["cargo", "generate-lockfile"], project, environment)
+        environment["RUSTFLAGS"] = "-D warnings"
+        run(["cargo", "+1.96.1", "generate-lockfile"], project, environment)
         lock = (project / "Cargo.lock").read_text(encoding="utf-8")
         expected = f"git+{GIT_URL}?rev={GIT_REVISION}#{GIT_REVISION}"
         if expected not in lock:
             raise RuntimeError("Cargo.lock did not resolve the documented immutable revision")
-        run(["cargo", "test", "--locked"], project, environment)
+        run(["cargo", "+1.96.1", "test", "--locked"], project, environment)
     print(f"Isolated Rust Git consumer passed at {GIT_REVISION}.")
 
 
