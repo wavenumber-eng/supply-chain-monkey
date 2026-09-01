@@ -2,7 +2,7 @@
 
 mod output;
 
-use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::env;
 use std::fs::File;
 use std::io::Read;
@@ -61,7 +61,7 @@ enum Command {
     Search {
         mpn: String,
         /// Restrict search to one supplier. Repeat to select several suppliers.
-        #[arg(long = "supplier")]
+        #[arg(long = "supplier", value_name = "NAME", value_parser = parse_supplier)]
         suppliers: Vec<String>,
         #[arg(long)]
         include_raw: bool,
@@ -112,6 +112,8 @@ enum CliError {
     CaBundleTooLarge,
     #[error("SCM reports no configured search providers")]
     NoConfiguredProviders,
+    #[error("requested supplier is not configured: {0}")]
+    UnconfiguredSuppliers(String),
     #[error(transparent)]
     Config(#[from] ConfigError),
     #[error(transparent)]
@@ -241,32 +243,34 @@ async fn resolve_search_suppliers(
     client: &ScmClient,
     requested: Vec<String>,
 ) -> Result<Vec<String>, CliError> {
-    let normalized = normalize_suppliers(requested);
-    if !normalized.is_empty() {
-        return Ok(normalized);
-    }
     let status = client.providers_status().await?;
     let configured = status
         .providers
         .iter()
         .filter(|(_, provider)| provider.configured)
         .map(|(supplier, _)| supplier.to_ascii_lowercase())
-        .collect::<Vec<_>>();
-    let configured = normalize_suppliers(configured);
+        .collect::<BTreeSet<_>>();
     if configured.is_empty() {
         return Err(CliError::NoConfiguredProviders);
     }
-    Ok(configured)
+    let requested = requested.into_iter().collect::<BTreeSet<_>>();
+    if requested.is_empty() {
+        return Ok(configured.into_iter().collect());
+    }
+    let unavailable = requested
+        .difference(&configured)
+        .cloned()
+        .collect::<Vec<_>>();
+    if !unavailable.is_empty() {
+        return Err(CliError::UnconfiguredSuppliers(unavailable.join(", ")));
+    }
+    Ok(requested.into_iter().collect())
 }
 
-fn normalize_suppliers(suppliers: Vec<String>) -> Vec<String> {
-    suppliers
-        .into_iter()
-        .filter_map(|supplier| {
-            let supplier = supplier.trim().to_ascii_lowercase();
-            (!supplier.is_empty()).then_some((supplier.clone(), supplier))
-        })
-        .collect::<BTreeMap<_, _>>()
-        .into_values()
-        .collect()
+fn parse_supplier(value: &str) -> Result<String, String> {
+    let supplier = value.trim().to_ascii_lowercase();
+    if supplier.is_empty() {
+        return Err("supplier name must not be empty".to_owned());
+    }
+    Ok(supplier)
 }

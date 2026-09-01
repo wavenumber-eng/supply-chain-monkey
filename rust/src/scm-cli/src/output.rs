@@ -277,7 +277,31 @@ fn print_cells(cells: [String; 7]) {
 }
 
 fn normalize(value: &str) -> String {
-    value.split_whitespace().collect::<Vec<_>>().join(" ")
+    let mut output = String::new();
+    let mut pending_space = false;
+    for character in value.chars() {
+        if character.is_ascii_graphic() {
+            if pending_space && !output.is_empty() {
+                output.push(' ');
+            }
+            output.push(character);
+            pending_space = false;
+        } else if character.is_ascii_whitespace() {
+            pending_space = true;
+        } else {
+            if pending_space && !output.is_empty() {
+                output.push(' ');
+            }
+            let escaped = if character.is_ascii() {
+                format!("\\x{:02X}", character as u32)
+            } else {
+                format!("\\u{{{:X}}}", character as u32)
+            };
+            output.push_str(&escaped);
+            pending_space = false;
+        }
+    }
+    output
 }
 
 fn fit(value: &str, width: usize) -> String {
@@ -286,4 +310,28 @@ fn fit(value: &str, width: usize) -> String {
         return normalized;
     }
     normalized.chars().take(width - 3).collect::<String>() + "..."
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{fit, format_price, format_stock, normalize};
+
+    #[test]
+    fn human_fields_are_printable_ascii_and_width_bounded() {
+        let normalized = normalize("  A\n\t\u{1b}\u{7}Ω  B  ");
+        assert_eq!(normalized, "A \\x1B\\x07\\u{3A9} B");
+        assert!(normalized.is_ascii());
+        assert_eq!(fit(&normalized, 12), "A \\x1B\\x0...");
+    }
+
+    #[test]
+    fn prices_and_stock_cover_small_large_and_negative_values() {
+        assert_eq!(format_price("USD", 0.0001, 1), "USD 0.0001 @ 1");
+        assert_eq!(
+            format_price("EUR", 123_456_789.25, 10_000),
+            "EUR 123456789.25 @ 10000"
+        );
+        assert_eq!(format_stock(1_234_567), "1,234,567");
+        assert_eq!(format_stock(-12_345), "-12,345");
+    }
 }
