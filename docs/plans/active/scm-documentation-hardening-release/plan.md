@@ -30,13 +30,13 @@ depends_on = ["work"]
 [[steps]]
 id = "external-review"
 title = "Obtain independent external review"
-status = "active"
+status = "done"
 depends_on = ["documentation-verification", "design-doc-intent-audit", "test-runtime-impact-audit"]
 
 [[steps]]
 id = "release-signoff"
 title = "Version and sign off the exact 2026.9.1 release candidate"
-status = "pending"
+status = "active"
 depends_on = ["external-review"]
 
 [[steps]]
