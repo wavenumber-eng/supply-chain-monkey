@@ -65,6 +65,7 @@ def test_pypi_trusted_publisher_workflow_is_configured() -> None:
     steps_text = "\n".join(str(step) for step in publish_job["steps"])
     assert "pypa/gh-action-pypi-publish@release/v1" in steps_text
     assert "npm install --global npm@11.16.0" in steps_text
+    assert "cargo +1.96.1 install --locked cargo-deny --version 0.20.2" in steps_text
     for command in (
         "npm ci",
         "npm run check:typespec",
