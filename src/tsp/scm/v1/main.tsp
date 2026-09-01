@@ -12,7 +12,7 @@ using TypeSpec.JsonSchema;
  * Except for health and the HTML status page, operations require a bearer token.
  */
 @service(#{ title: "supply-chain-monkey" })
-@TypeSpec.OpenAPI.info(#{ version: "2026.8.12" })
+@TypeSpec.OpenAPI.info(#{ version: "2026.9.1" })
 namespace Wavenumber.SupplyChainMonkey.V1;
 
 /** I-JSON interoperable integer range used by SCM JSON payloads. */
