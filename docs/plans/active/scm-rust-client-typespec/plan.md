@@ -13,7 +13,7 @@ depends_on = ["alexandria-consumer-proof", "release-distribution-design"]
 [[steps]]
 id = "design-doc-intent-audit"
 title = "Audit design docs, ADRs, and requirements against implementation"
-status = "pending"
+status = "done"
 depends_on = ["work"]
 
 [[steps]]
