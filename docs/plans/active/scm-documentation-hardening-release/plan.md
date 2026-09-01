@@ -7,18 +7,18 @@ created = "2026-09-01"
 [[steps]]
 id = "work"
 title = "Harden Rust, TypeSpec, OpenAPI, and navigation documentation"
-status = "active"
+status = "done"
 
 [[steps]]
 id = "documentation-verification"
 title = "Prove examples, rustdoc, generated artifacts, and OpenAPI explorers"
-status = "pending"
+status = "done"
 depends_on = ["work"]
 
 [[steps]]
 id = "design-doc-intent-audit"
 title = "Audit design docs, ADRs, and requirements against implementation"
-status = "pending"
+status = "active"
 depends_on = ["work"]
 
 [[steps]]
