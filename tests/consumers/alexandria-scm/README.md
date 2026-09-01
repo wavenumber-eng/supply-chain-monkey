@@ -19,7 +19,7 @@ Before crates.io publication, a normal Alexandria workspace can use the
 reviewed immutable Git dependency documented in the Rust client README:
 
 ```toml
-scm-client = { package = "supply-chain-monkey-client", git = "https://github.com/wavenumber-eng/supply-chain-monkey.git", rev = "ce2c126066fbda260947fdac3bee8db40ad4e61b" }
+scm-client = { package = "supply-chain-monkey-client", git = "https://github.com/wavenumber-eng/supply-chain-monkey.git", rev = "e7bc0587e7a4b6435b993ce982505fb604861d20" }
 ```
 
 The release proof must resolve that revision from the remote repository in a
