@@ -7,7 +7,8 @@
             "type": "array",
             "items": {
                 "$ref": "urn:supply-chain-monkey:schema:v1.declaration.ValidationErrorItem"
-            }
+            },
+            "description": "Individual validation failures."
         }
     },
     "required": [
@@ -15,5 +16,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "FastAPI-compatible collection of request validation failures."
 }

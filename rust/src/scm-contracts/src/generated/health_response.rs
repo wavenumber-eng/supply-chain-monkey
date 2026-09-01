@@ -31,7 +31,7 @@ pub mod error {
         }
     }
 }
-///`HealthResponse`
+///Public service health response.
 ///
 /// <details><summary>JSON schema</summary>
 ///
@@ -39,12 +39,14 @@ pub mod error {
 ///{
 ///  "$id": "urn:supply-chain-monkey:schema:v1.health-response",
 ///  "title": "HealthResponse",
+///  "description": "Public service health response.",
 ///  "type": "object",
 ///  "required": [
 ///    "status"
 ///  ],
 ///  "properties": {
 ///    "status": {
+///      "description": "Constant healthy-state marker.",
 ///      "type": "string",
 ///      "enum": [
 ///        "ok"
@@ -57,14 +59,16 @@ pub mod error {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct HealthResponse {
+    ///Constant healthy-state marker.
     pub status: HealthResponseStatus,
 }
-///`HealthResponseStatus`
+///Constant healthy-state marker.
 ///
 /// <details><summary>JSON schema</summary>
 ///
 /// ```json
 ///{
+///  "description": "Constant healthy-state marker.",
 ///  "type": "string",
 ///  "enum": [
 ///    "ok"

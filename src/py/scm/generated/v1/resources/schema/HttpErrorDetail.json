@@ -4,7 +4,8 @@
     "type": "object",
     "properties": {
         "detail": {
-            "type": "string"
+            "type": "string",
+            "description": "Human-readable request or server error."
         }
     },
     "required": [
@@ -12,5 +13,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "FastAPI-compatible HTTP error body."
 }

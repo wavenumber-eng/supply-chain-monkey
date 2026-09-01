@@ -184,7 +184,12 @@ def _do_spn_batch(request: SpnBatchRequest) -> ServiceEnvelope:
     )
 
 
-@router.get("/spn", response_model=SpnEnvelope)
+@router.get(
+    "/spn",
+    response_model=SpnEnvelope,
+    summary="Look up an exact supplier part number",
+    description="Resolve one exact supplier part number.",
+)
 async def spn(
     supplier: str = Query(..., description="Supplier name (jlcpcb, lcsc, digikey, mouser)"),
     spn: str = Query(..., description="Exact supplier part number"),
@@ -205,7 +210,12 @@ async def spn(
     return contract_response("SpnEnvelope", SpnEnvelope, result)
 
 
-@router.post("/spn/batch", response_model=SpnBatchEnvelope)
+@router.post(
+    "/spn/batch",
+    response_model=SpnBatchEnvelope,
+    summary="Look up a batch of supplier part numbers",
+    description="Resolve multiple exact part numbers from one supplier.",
+)
 async def spn_batch(request: SpnBatchRequest):
     supplier_key = request.supplier.strip().lower()
     if supplier_key not in SUPPLIER_LOOKUP:

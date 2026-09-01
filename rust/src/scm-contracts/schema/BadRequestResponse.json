@@ -5,10 +5,12 @@
     "properties": {
         "status_code": {
             "type": "number",
-            "const": 400
+            "const": 400,
+            "description": "HTTP bad-request status."
         },
         "body": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.HttpErrorDetail"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.HttpErrorDetail",
+            "description": "Sanitized request failure."
         }
     },
     "required": [
@@ -17,5 +19,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Response returned for a malformed legacy stream request."
 }

@@ -5,7 +5,8 @@
     "properties": {
         "done": {
             "type": "boolean",
-            "const": true
+            "const": true,
+            "description": "Constant marker identifying the terminal stream event."
         }
     },
     "required": [
@@ -13,5 +14,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Terminal event emitted after all legacy stream providers complete."
 }

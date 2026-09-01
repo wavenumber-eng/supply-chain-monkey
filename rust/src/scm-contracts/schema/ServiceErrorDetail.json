@@ -4,10 +4,12 @@
     "type": "object",
     "properties": {
         "code": {
-            "type": "string"
+            "type": "string",
+            "description": "Stable SCM error category."
         },
         "retryable": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Whether retrying later may succeed."
         },
         "upstream_status_code": {
             "anyOf": [
@@ -19,7 +21,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Sanitized upstream HTTP status, when available."
         },
         "upstream_request_id": {
             "anyOf": [
@@ -29,7 +32,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Sanitized upstream request identifier, when available."
         }
     },
     "required": [
@@ -40,5 +44,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Sanitized machine-readable context for a provider failure."
 }

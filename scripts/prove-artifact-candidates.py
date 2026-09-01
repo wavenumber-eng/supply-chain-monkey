@@ -24,6 +24,7 @@ PUBLIC_CRATES = (
 )
 CATALOG_PATH = ROOT / "contracts/scm/v1/generated/contract_catalog.a0.json"
 ROOTS_PATH = ROOT / "contracts/scm/v1/generated/contract_roots.a0.json"
+OPENAPI_PATH = ROOT / "contracts/scm/v1/generated/openapi.json"
 STAGING_ROOT = ROOT / "temp/artifact-candidates"
 
 
@@ -79,6 +80,7 @@ def verify_resource_inventory(
     expected = {
         f"{prefix}contract_catalog.a0.json": sha256(CATALOG_PATH),
         f"{prefix}contract_roots.a0.json": sha256(ROOTS_PATH),
+        f"{prefix}openapi.json": sha256(OPENAPI_PATH),
         **{
             f"{prefix}schema/{name}": digest
             for name, digest in expected_schemas.items()
@@ -172,6 +174,7 @@ assert scm.__file__ is not None
 assert Path(scm.__file__).resolve().is_relative_to(prefix)
 assert Path(str(root)).resolve().is_relative_to(prefix)
 assert root.joinpath("contract_catalog.a0.json").is_file()
+assert root.joinpath("openapi.json").is_file()
 assert root.joinpath("schema/HealthResponse.json").is_file()
 assert SpnBatchRequest(supplier="LCSC", spns=["C123"]).include_raw is False
 assert HealthResponse and SearchEnvelope and SCMClient

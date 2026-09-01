@@ -4,13 +4,16 @@
     "type": "object",
     "properties": {
         "qty": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger",
+            "description": "Minimum order quantity for this unit price."
         },
         "unit_price": {
-            "type": "number"
+            "type": "number",
+            "description": "Price per component at the associated quantity."
         },
         "currency": {
-            "type": "string"
+            "type": "string",
+            "description": "Supplier-reported ISO-style currency code."
         }
     },
     "required": [
@@ -20,5 +23,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "One quantity-based unit-price offer normalized from a supplier."
 }

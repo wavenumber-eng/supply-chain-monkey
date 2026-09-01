@@ -3,10 +3,13 @@
     "$id": "urn:supply-chain-monkey:schema:v1.stream-search-event",
     "anyOf": [
         {
-            "$ref": "urn:supply-chain-monkey:schema:v1.search-envelope"
+            "$ref": "urn:supply-chain-monkey:schema:v1.search-envelope",
+            "description": "Search result from one provider."
         },
         {
-            "$ref": "urn:supply-chain-monkey:schema:v1.stream-done-event"
+            "$ref": "urn:supply-chain-monkey:schema:v1.stream-done-event",
+            "description": "Terminal marker after all providers complete."
         }
-    ]
+    ],
+    "description": "One result or terminal event from the legacy search stream."
 }

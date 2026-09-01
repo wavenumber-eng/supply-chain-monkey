@@ -11,7 +11,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Total request quota, when reported."
         },
         "requests_remaining": {
             "anyOf": [
@@ -21,7 +22,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Requests remaining in the current quota window, when reported."
         },
         "burst_limit": {
             "anyOf": [
@@ -31,7 +33,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Burst quota, when reported."
         },
         "burst_remaining": {
             "anyOf": [
@@ -41,7 +44,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Burst requests remaining, when reported."
         },
         "reset_seconds": {
             "anyOf": [
@@ -51,7 +55,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Seconds until the quota resets, when reported."
         },
         "reset_time": {
             "anyOf": [
@@ -61,7 +66,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Provider-formatted quota reset time, when reported."
         },
         "retry_after_seconds": {
             "anyOf": [
@@ -71,10 +77,12 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Provider-requested retry delay in seconds, when reported."
         },
         "observed_at": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp",
+            "description": "Time at which SCM observed this rate-limit state."
         }
     },
     "required": [
@@ -89,5 +97,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Rate-limit information observed on the provider response."
 }

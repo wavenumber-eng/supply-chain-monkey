@@ -14,7 +14,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Matching normalized parts, or null when the provider did not return data."
         }
     },
     "required": [
@@ -27,5 +28,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Result envelope for manufacturer-part-number search."
 }

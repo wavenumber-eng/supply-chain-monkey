@@ -7,5 +7,6 @@
         "LCSC",
         "Digikey",
         "Mouser"
-    ]
+    ],
+    "description": "Canonical supplier identifiers emitted by SCM v1."
 }

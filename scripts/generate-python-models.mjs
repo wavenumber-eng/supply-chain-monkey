@@ -38,6 +38,10 @@ try {
     resolve(CONTRACT_ROOT, "contract_roots.a0.json"),
     resolve(temporaryRoot, "resources/contract_roots.a0.json"),
   );
+  await cp(
+    resolve(CONTRACT_ROOT, "openapi.json"),
+    resolve(temporaryRoot, "resources/openapi.json"),
+  );
 
   const generated = await snapshot(temporaryRoot);
   const current = await snapshot(TARGET_ROOT, true);
@@ -84,15 +88,23 @@ function runGenerator(output) {
 
 async function applyNativeModelProjections(path) {
   const source = await readFile(path, "utf8");
-  const optionalDefaultBoolean = "    include_raw: bool | None = False";
-  const schemaAccurateBoolean = "    include_raw: bool = False";
-  const matches = source.split(optionalDefaultBoolean).length - 1;
-  if (matches !== 1) {
+  const classMarker = "class SpnBatchRequest(BaseModel):";
+  const classStart = source.indexOf(classMarker);
+  const classEnd = source.indexOf("\nclass ", classStart + classMarker.length);
+  if (classStart < 0 || classEnd < 0) {
+    throw new Error("Expected generated SpnBatchRequest model.");
+  }
+  const modelSource = source.slice(classStart, classEnd);
+  const optionalBoolean = /(?<=\binclude_raw:[\s\S]*?)\bbool \| None\b/g;
+  const matches = [...modelSource.matchAll(optionalBoolean)];
+  if (matches.length !== 1) {
     throw new Error(
-      `Expected one datamodel-code-generator optional-default boolean projection; found ${matches}.`,
+      `Expected one SpnBatchRequest.include_raw optional boolean projection; found ${matches.length}.`,
     );
   }
-  await writeFile(path, source.replace(optionalDefaultBoolean, schemaAccurateBoolean), "utf8");
+  const projectedModel = modelSource.replace(optionalBoolean, "bool");
+  const projected = source.slice(0, classStart) + projectedModel + source.slice(classEnd);
+  await writeFile(path, projected, "utf8");
 }
 
 async function snapshot(root, missingAllowed = false) {

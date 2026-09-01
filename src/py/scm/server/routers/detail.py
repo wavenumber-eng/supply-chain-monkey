@@ -76,7 +76,12 @@ def _do_detail(supplier_key: str, part: str, include_raw: bool) -> ServiceEnvelo
     )
 
 
-@router.get("/detail", response_model=DetailEnvelope)
+@router.get(
+    "/detail",
+    response_model=DetailEnvelope,
+    summary="Get supplier part detail",
+    description="Resolve supplier detail for a supplier-owned catalog number.",
+)
 async def detail(
     supplier: str = Query(..., description="Supplier name (jlcpcb, lcsc, digikey, mouser)"),
     part: str = Query(..., description="Supplier part number (e.g., C2870085, 296-xxx-ND)"),

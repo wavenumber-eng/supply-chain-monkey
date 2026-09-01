@@ -5,10 +5,12 @@
     "properties": {
         "status_code": {
             "type": "number",
-            "const": 401
+            "const": 401,
+            "description": "HTTP unauthorized status."
         },
         "body": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.HttpErrorDetail"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.HttpErrorDetail",
+            "description": "Sanitized authentication failure."
         }
     },
     "required": [
@@ -17,5 +19,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Response returned when bearer authentication fails."
 }

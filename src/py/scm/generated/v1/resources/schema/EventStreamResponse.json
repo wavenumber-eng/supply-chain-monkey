@@ -5,22 +5,27 @@
     "properties": {
         "status_code": {
             "type": "number",
-            "const": 200
+            "const": 200,
+            "description": "HTTP success status."
         },
         "content_type": {
             "type": "string",
-            "const": "text/event-stream"
+            "const": "text/event-stream",
+            "description": "Server-sent-event media type."
         },
         "cache_control": {
             "type": "string",
-            "const": "no-cache"
+            "const": "no-cache",
+            "description": "Directive preventing response caching."
         },
         "accelerator_buffering": {
             "type": "string",
-            "const": "no"
+            "const": "no",
+            "description": "Directive disabling reverse-proxy buffering."
         },
         "body": {
-            "type": "string"
+            "type": "string",
+            "description": "Serialized server-sent-event byte stream."
         }
     },
     "required": [
@@ -32,5 +37,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "HTTP server-sent-event response used by the legacy stream."
 }

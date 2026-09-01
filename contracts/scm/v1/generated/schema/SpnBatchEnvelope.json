@@ -14,7 +14,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Per-item results, or null when the provider could not process the batch."
         }
     },
     "required": [
@@ -27,5 +28,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Result envelope for a batch supplier-part-number lookup."
 }

@@ -4,16 +4,20 @@
     "type": "object",
     "properties": {
         "status": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeStatus"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.EnvelopeStatus",
+            "description": "High-level provider outcome."
         },
         "supplier": {
-            "type": "string"
+            "type": "string",
+            "description": "Canonical or requested supplier name associated with the outcome."
         },
         "parameter_field_name": {
-            "type": "string"
+            "type": "string",
+            "description": "Query parameter name used to identify the requested part."
         },
         "provider_latency_ms": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger",
+            "description": "Provider execution time measured by SCM in milliseconds."
         },
         "provider_capabilities": {
             "anyOf": [
@@ -23,7 +27,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Provider features known at request time."
         },
         "rate_limit": {
             "anyOf": [
@@ -33,13 +38,16 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Provider rate-limit state observed for this request."
         },
         "service_timestamp": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp",
+            "description": "Time at which SCM produced the response."
         },
         "cached": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Whether SCM returned a cached provider result."
         },
         "error": {
             "anyOf": [
@@ -49,7 +57,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Sanitized human-readable error, or null for normal outcomes."
         },
         "error_detail": {
             "anyOf": [
@@ -59,7 +68,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "description": "Sanitized structured error details, when available."
         }
     },
     "required": [
@@ -73,5 +83,6 @@
         "cached",
         "error",
         "error_detail"
-    ]
+    ],
+    "description": "Metadata shared by typed SCM operation envelopes."
 }

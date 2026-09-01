@@ -4,7 +4,8 @@
     "type": "object",
     "properties": {
         "providers": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.RecordProviderStatusEntry"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.RecordProviderStatusEntry",
+            "description": "Provider status keyed by canonical provider name."
         }
     },
     "required": [
@@ -12,5 +13,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Map of provider names to current configuration and capabilities."
 }

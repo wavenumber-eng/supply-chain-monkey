@@ -5,7 +5,8 @@
     "properties": {
         "status": {
             "type": "string",
-            "const": "ok"
+            "const": "ok",
+            "description": "Constant healthy-state marker."
         }
     },
     "required": [
@@ -13,5 +14,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "Public service health response."
 }

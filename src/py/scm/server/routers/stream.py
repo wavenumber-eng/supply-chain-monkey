@@ -39,8 +39,11 @@ DEFAULT_TIMEOUT = 15.0
 
 _legacy_query_token = APIKeyQuery(
     name="token",
-    scheme_name="ApiKeyAuth",
-    description="Deprecated v1 query-token compatibility surface",
+    scheme_name="LegacyQueryTokenAuth",
+    description=(
+        "Deprecated v1 query-token compatibility surface. Never place a real service token in "
+        "this query, Swagger operation, logs, or shared URLs."
+    ),
     auto_error=False,
 )
 
@@ -144,6 +147,13 @@ def _verify_token(token: str | None) -> bool:
 @router.get(
     "/search/stream",
     response_class=ServerSentEventResponse,
+    summary="Stream legacy multi-provider search results",
+    description=(
+        "Stream per-provider searches using the deprecated query-token contract. "
+        "Never place a real service token in this query, Swagger operation, logs, or shared "
+        "URLs. New clients must use header-authenticated non-stream operations."
+    ),
+    deprecated=True,
     responses={
         400: {
             "description": "Invalid stream request",

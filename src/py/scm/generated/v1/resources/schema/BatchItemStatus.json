@@ -6,5 +6,6 @@
         "ok",
         "not_found",
         "provider_error"
-    ]
+    ],
+    "description": "Outcome of one supplier-part-number item in a batch response."
 }

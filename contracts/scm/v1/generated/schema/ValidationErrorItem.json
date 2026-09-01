@@ -14,19 +14,24 @@
                         "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
                     }
                 ]
-            }
+            },
+            "description": "Request location of the invalid value."
         },
         "msg": {
-            "type": "string"
+            "type": "string",
+            "description": "Human-readable validation message."
         },
         "type": {
-            "type": "string"
+            "type": "string",
+            "description": "Stable validation error type."
         },
         "input": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonValue"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonValue",
+            "description": "Rejected input value, when included by FastAPI."
         },
         "ctx": {
-            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.RecordJsonValue"
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.RecordJsonValue",
+            "description": "Additional validation context, when included by FastAPI."
         }
     },
     "required": [
@@ -36,5 +41,6 @@
     ],
     "unevaluatedProperties": {
         "not": {}
-    }
+    },
+    "description": "One FastAPI-compatible validation failure."
 }
