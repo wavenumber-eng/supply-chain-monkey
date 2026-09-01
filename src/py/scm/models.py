@@ -21,6 +21,7 @@ from .generated.v1.models import (
     SpnBatchRequest as SpnBatchRequest,
     SpnEnvelope as SpnEnvelope,
     StreamDoneEvent as StreamDoneEvent,
+    StreamSearchEvent as StreamSearchEvent,
     ValidationErrorDetail as ValidationErrorDetail,
 )
 

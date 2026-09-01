@@ -30,6 +30,10 @@ id = "rust-contract-generation"
 command = "cargo run -p scm-codegen --locked -- --check"
 
 [[signoff_commands]]
+id = "rust-dependency-policy"
+command = "cargo deny --locked --all-features check advisories licenses sources"
+
+[[signoff_commands]]
 id = "rust-check"
 command = "cargo check --workspace --all-targets --all-features --locked"
 

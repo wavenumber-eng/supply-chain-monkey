@@ -225,7 +225,7 @@
             "in": "query",
             "required": false,
             "schema": {
-              "$ref": "#/components/schemas/JsonInteger",
+              "$ref": "#/components/schemas/QueryInteger",
               "default": 10
             },
             "explode": false
@@ -298,7 +298,7 @@
             "in": "query",
             "required": false,
             "schema": {
-              "$ref": "#/components/schemas/JsonInteger",
+              "$ref": "#/components/schemas/QueryInteger",
               "default": 10
             },
             "explode": false
@@ -382,6 +382,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorDetail"
                 }
               }
             }
@@ -874,6 +884,10 @@
         "unevaluatedProperties": {
           "not": {}
         }
+      },
+      "QueryInteger": {
+        "type": "integer",
+        "description": "Deployed unbounded integer accepted in HTTP query parsing."
       },
       "RateLimitSnapshot": {
         "type": "object",

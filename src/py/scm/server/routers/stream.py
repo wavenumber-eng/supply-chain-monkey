@@ -4,9 +4,11 @@ import asyncio
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
+from typing import Annotated
 
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, HTTPException, Query, Security
 from fastapi.responses import StreamingResponse
+from fastapi.security import APIKeyQuery
 
 from scm.models import (
     PARAMETER_FIELD_NAMES,
@@ -16,6 +18,8 @@ from scm.models import (
     ServiceEnvelope,
     ServiceErrorDetail,
     StreamDoneEvent,
+    ValidationErrorDetail,
+    HttpErrorDetail,
 )
 from ..contract_response import contract_json, contract_response
 from ..models import part_response_from_info
@@ -32,6 +36,25 @@ _executor = ThreadPoolExecutor(max_workers=8)
 MIN_MPN_LENGTH = 3
 DEFAULT_MAX_RESULTS = 10
 DEFAULT_TIMEOUT = 15.0
+
+_legacy_query_token = APIKeyQuery(
+    name="token",
+    scheme_name="ApiKeyAuth",
+    description="Deprecated v1 query-token compatibility surface",
+    auto_error=False,
+)
+
+
+class ServerSentEventResponse(StreamingResponse):
+    """OpenAPI-aware streaming response for the legacy SSE route."""
+
+    media_type = "text/event-stream"
+
+
+def _json_error_content(model: type[HttpErrorDetail] | type[ValidationErrorDetail]) -> dict:
+    """Describe pre-stream JSON errors without inheriting the SSE media type."""
+
+    return {"application/json": {"schema": model.model_json_schema()}}
 
 
 def _search_event_json(envelope: ServiceEnvelope) -> str:
@@ -111,17 +134,35 @@ def _search_provider_sync(supplier_key: str, mpn: str, max_results: int, include
     )
 
 
-def _verify_token(token: str) -> bool:
+def _verify_token(token: str | None) -> bool:
     """Check bearer token."""
     from ..settings import settings
 
     return bool(settings.service_token and token == settings.service_token)
 
 
-@router.get("/search/stream")
+@router.get(
+    "/search/stream",
+    response_class=ServerSentEventResponse,
+    responses={
+        400: {
+            "description": "Invalid stream request",
+            "content": _json_error_content(HttpErrorDetail),
+        },
+        401: {
+            "description": "Invalid or missing token",
+            "content": _json_error_content(HttpErrorDetail),
+        },
+        422: {
+            "description": "Query validation failed",
+            "content": _json_error_content(ValidationErrorDetail),
+        },
+    },
+    openapi_extra={"x-scm-event-roots": ["StreamSearchEvent"]},
+)
 async def search_stream(
     mpn: str = Query(..., description="Manufacturer part number"),
-    token: str = Query("", description="Bearer token"),
+    token: Annotated[str | None, Security(_legacy_query_token)] = None,
     max_results: int = Query(DEFAULT_MAX_RESULTS, description="Max results per provider"),
     timeout: float = Query(DEFAULT_TIMEOUT, description="Per-provider timeout in seconds"),
     include_raw: bool = Query(False, description="Include extra_data"),
@@ -213,7 +254,7 @@ async def search_stream(
         done_json = contract_json("StreamDoneEvent", StreamDoneEvent(done=True))
         yield f"data: {done_json}\n\n"
 
-    return StreamingResponse(
+    return ServerSentEventResponse(
         generate(),
         media_type="text/event-stream",
         headers={
