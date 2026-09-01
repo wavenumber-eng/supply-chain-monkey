@@ -1,6 +1,8 @@
 # Supply Chain Monkey Plans
 
-No active implementation plan is tracked here.
+Active implementation plan:
+
+- [SCM documentation hardening and 2026.9.1 release](active/scm-documentation-hardening-release/plan.md)
 
 Completed planning notes:
 
