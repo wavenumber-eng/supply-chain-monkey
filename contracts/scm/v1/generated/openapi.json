@@ -16,20 +16,8 @@
         "responses": {
           "200": {
             "description": "The request has succeeded.",
-            "headers": {
-              "content_type": {
-                "required": true,
-                "description": "HTML response media type.",
-                "schema": {
-                  "type": "string",
-                  "enum": [
-                    "text/html"
-                  ]
-                }
-              }
-            },
             "content": {
-              "text/plain": {
+              "text/html": {
                 "schema": {
                   "type": "string"
                 }

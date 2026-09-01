@@ -413,7 +413,7 @@ interface PublicOperations {
     /** HTTP success status. */
     @statusCode status_code: 200;
     /** HTML response media type. */
-    @header content_type: "text/html";
+    @header("Content-Type") content_type: "text/html";
     /** Rendered HTML status page. */
     @body body: string;
   };

@@ -144,6 +144,11 @@ def test_openapi_explorers_and_documentation_match_typespec_authority():
     assert served["info"]["version"] == canonical["info"]["version"] == __version__
     assert set(served["paths"]) == set(canonical["paths"])
 
+    for document in (served, canonical):
+        status_response = document["paths"]["/v1/"]["get"]["responses"]["200"]
+        assert set(status_response["content"]) == {"text/html"}
+        assert "content_type" not in status_response.get("headers", {})
+
     for path, canonical_path in canonical["paths"].items():
         for method in {"get", "post", "put", "patch", "delete"} & set(canonical_path):
             canonical_operation = canonical_path[method]

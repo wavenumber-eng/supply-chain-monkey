@@ -43,6 +43,7 @@ for (const [kind, declarations] of [
             `operation parameter ${name}.${memberName}.${parameterName}`,
           );
         }
+        requireAnonymousProperties(member.returnType, `${name}.${memberName} response`);
       }
     }
   }
@@ -59,6 +60,44 @@ for (const [path, pathItem] of Object.entries(openapi.paths ?? {})) {
     if (!operation) continue;
     requireText(operation.summary, `OpenAPI summary ${method.toUpperCase()} ${path}`);
     requireText(operation.description, `OpenAPI description ${method.toUpperCase()} ${path}`);
+    for (const parameter of operation.parameters ?? []) {
+      requireText(
+        parameter.description,
+        `OpenAPI parameter ${method.toUpperCase()} ${path} ${parameter.name}`,
+      );
+      requireSchemaPropertyDocs(
+        parameter.schema,
+        `OpenAPI parameter schema ${method.toUpperCase()} ${path} ${parameter.name}`,
+      );
+    }
+    if (operation.requestBody) {
+      requireText(operation.requestBody.description, `OpenAPI request body ${method.toUpperCase()} ${path}`);
+      for (const [mediaType, media] of Object.entries(operation.requestBody.content ?? {})) {
+        requireSchemaPropertyDocs(
+          media.schema,
+          `OpenAPI request schema ${method.toUpperCase()} ${path} ${mediaType}`,
+        );
+      }
+    }
+    for (const [status, response] of Object.entries(operation.responses ?? {})) {
+      requireText(response.description, `OpenAPI response ${method.toUpperCase()} ${path} ${status}`);
+      for (const [headerName, header] of Object.entries(response.headers ?? {})) {
+        requireText(
+          header.description,
+          `OpenAPI response header ${method.toUpperCase()} ${path} ${status} ${headerName}`,
+        );
+        requireSchemaPropertyDocs(
+          header.schema,
+          `OpenAPI response header schema ${method.toUpperCase()} ${path} ${status} ${headerName}`,
+        );
+      }
+      for (const [mediaType, media] of Object.entries(response.content ?? {})) {
+        requireSchemaPropertyDocs(
+          media.schema,
+          `OpenAPI response schema ${method.toUpperCase()} ${path} ${status} ${mediaType}`,
+        );
+      }
+    }
   }
 }
 
@@ -67,6 +106,7 @@ for (const [name, schema] of Object.entries(openapi.components?.schemas ?? {})) 
   for (const [propertyName, property] of Object.entries(schema.properties ?? {})) {
     requireText(property.description, `OpenAPI property ${name}.${propertyName}`);
   }
+  requireSchemaPropertyDocs(schema, `OpenAPI schema ${name}`);
 }
 
 const legacy = openapi.paths?.["/v1/search/stream"]?.get;
@@ -85,4 +125,34 @@ console.log("TypeSpec and generated OpenAPI documentation coverage is complete."
 
 function requireText(value, label) {
   if (typeof value !== "string" || value.trim().length === 0) missing.push(label);
+}
+
+function requireAnonymousProperties(type, label, visited = new Set()) {
+  if (!type || visited.has(type)) return;
+  visited.add(type);
+  if (type.kind === "Model" && !type.name) {
+    for (const [name, property] of type.properties) {
+      requireText(getDoc(program, property), `anonymous property ${label}.${name}`);
+      requireAnonymousProperties(property.type, `${label}.${name}`, visited);
+    }
+  } else if (type.kind === "Union") {
+    for (const [name, variant] of type.variants) {
+      requireAnonymousProperties(variant.type, `${label}.${String(name)}`, visited);
+    }
+  }
+}
+
+function requireSchemaPropertyDocs(schema, label, visited = new Set()) {
+  if (!schema || typeof schema !== "object" || visited.has(schema)) return;
+  visited.add(schema);
+  for (const [name, property] of Object.entries(schema.properties ?? {})) {
+    requireText(property.description, `${label}.${name}`);
+    requireSchemaPropertyDocs(property, `${label}.${name}`, visited);
+  }
+  requireSchemaPropertyDocs(schema.items, `${label}[]`, visited);
+  for (const keyword of ["allOf", "anyOf", "oneOf"]) {
+    for (const [index, child] of (schema[keyword] ?? []).entries()) {
+      requireSchemaPropertyDocs(child, `${label}.${keyword}[${index}]`, visited);
+    }
+  }
 }

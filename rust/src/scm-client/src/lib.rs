@@ -26,8 +26,8 @@
 //!             let part_count = envelope.data.as_ref().map_or(0, Vec::len);
 //!             println!("status={} parts={part_count}", envelope.status);
 //!         }
-//!         ProviderOutcome::ProviderError(envelope) => {
-//!             eprintln!("provider failed: {}", envelope.error.unwrap_or_default());
+//!         ProviderOutcome::ProviderError(_) => {
+//!             eprintln!("provider reported a failure");
 //!         }
 //!     }
 //!     Ok(())
@@ -37,6 +37,9 @@
 //! Use [`ScmClient::builder`] for explicit timeouts, response-size limits,
 //! bounded concurrency, proxies, or private certificate authorities. Generated
 //! response models and the strict codec are re-exported through [`contracts`].
+//! Treat every free-form string in a server envelope as untrusted. Escape or
+//! normalize those values before writing them to terminals, logs, HTML, or
+//! other presentation surfaces; the `scm` CLI provides a hardened example.
 
 mod client;
 mod config;
