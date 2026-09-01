@@ -17,4 +17,3 @@ A normal committed Alexandria workspace dependency remains blocked until the
 accepted SCM source is reachable by an immutable Git revision or the crates
 are published. That release-resolution step must not be replaced by a sibling
 checkout path.
-
