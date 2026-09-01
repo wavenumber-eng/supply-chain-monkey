@@ -58,7 +58,7 @@ def test_rust_consumer_documentation_pins_one_immutable_revision():
         match = GIT_REVISION.search(source)
         assert match, relative
         revisions.add(match.group(1))
-    assert revisions == {"ce2c126066fbda260947fdac3bee8db40ad4e61b"}
+    assert revisions == {"e7bc0587e7a4b6435b993ce982505fb604861d20"}
 
 
 def test_api_exploration_guide_covers_both_documents_and_token_safety():

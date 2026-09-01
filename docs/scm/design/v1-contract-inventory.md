@@ -1,9 +1,10 @@
 # SCM `/v1` contract inventory
 
-This inventory records the deployed Python service boundary before TypeSpec
-authoring. It is implementation evidence for `scm-adr-0013`; generated catalog
-output becomes the machine-readable authority only after that ADR is accepted
-and the `typespec-v1-contract` step passes.
+This inventory began as a record of the deployed Python boundary before
+TypeSpec authoring and now describes the accepted v1 cutover. `scm-adr-0013` is
+accepted; the generated catalog, schemas, and OpenAPI are the machine-readable
+structural authority, with executable vectors and runtime parity tests retaining
+the characterized service behavior.
 
 ## HTTP operations
 
@@ -159,12 +160,13 @@ The cutover retains:
 The new Rust client does not imply that the supported Python client becomes
 async or moves import paths.
 
-## Pre-authoring checks
+## Executable parity checks
 
-Before TypeSpec output can claim parity, vectors must cover health, status,
-successful/list and nullable-part envelopes, not-found, mixed SPN batch,
-provider error, unknown supplier, bearer failures, request validation,
-`include_raw`, stream completion, stream timeout, and maximum-plus-one batch
-validation. The served OpenAPI is expected to improve only after handlers gain
-generated request/response annotations; current empty 200 schemas are evidence,
-not generation input.
+Shared vectors cover health, status, successful/list and nullable-part
+envelopes, not-found, mixed SPN batch, provider error, unknown supplier, bearer
+failures, request validation, `include_raw`, stream completion, stream timeout,
+and maximum-plus-one batch validation. FastAPI handlers declare the generated
+request/response roots. Tests require runtime OpenAPI response schemas,
+authentication, error metadata, summaries, descriptions, deprecation, service
+version, and the HTML status response to match the TypeSpec catalog/OpenAPI
+intent.

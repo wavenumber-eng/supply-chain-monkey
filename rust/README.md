@@ -22,11 +22,11 @@ the reviewed source commit. The package alias preserves the ergonomic
 
 ```toml
 [dependencies]
-scm-client = { package = "supply-chain-monkey-client", git = "https://github.com/wavenumber-eng/supply-chain-monkey.git", rev = "ce2c126066fbda260947fdac3bee8db40ad4e61b" }
+scm-client = { package = "supply-chain-monkey-client", git = "https://github.com/wavenumber-eng/supply-chain-monkey.git", rev = "e7bc0587e7a4b6435b993ce982505fb604861d20" }
 tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }
 ```
 
-Commit `ce2c126066fbda260947fdac3bee8db40ad4e61b` is immutable and contains both
+Commit `e7bc0587e7a4b6435b993ce982505fb604861d20` is immutable and contains both
 the client and its path-resolved contracts dependency. Do not replace `rev`
 with a branch, a sibling checkout, or a moving tag. Commit `Cargo.lock` in the
 consumer. The crates retain SemVer `0.1.0`; the SCM service uses an independent

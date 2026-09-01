@@ -9,7 +9,7 @@ the package alias:
 
 ```toml
 [dependencies]
-scm-client = { package = "supply-chain-monkey-client", git = "https://github.com/wavenumber-eng/supply-chain-monkey.git", rev = "ce2c126066fbda260947fdac3bee8db40ad4e61b" }
+scm-client = { package = "supply-chain-monkey-client", git = "https://github.com/wavenumber-eng/supply-chain-monkey.git", rev = "e7bc0587e7a4b6435b993ce982505fb604861d20" }
 tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }
 ```
 
@@ -29,17 +29,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match client.search("lcsc", "RT685").await? {
         ProviderOutcome::Response(envelope) => {
-            for part in envelope.data.unwrap_or_default() {
-                println!(
-                    "{} {} stock={}",
-                    part.manufacturer,
-                    part.manufacturer_part_number,
-                    part.stock_quantity,
-                );
-            }
+            let count = envelope.data.as_ref().map_or(0, Vec::len);
+            println!("received {count} validated parts");
         }
-        ProviderOutcome::ProviderError(envelope) => {
-            eprintln!("provider error: {}", envelope.error.unwrap_or_default());
+        ProviderOutcome::ProviderError(_) => {
+            eprintln!("provider reported a failure");
         }
     }
     Ok(())
@@ -59,16 +53,16 @@ let results = client
     .search_all("RT685", ["jlcpcb", "lcsc", "digikey", "mouser"])
     .await;
 
-for (supplier, result) in results {
+for result in results.into_values() {
     match result {
         Ok(ProviderOutcome::Response(envelope)) => {
             let count = envelope.data.as_ref().map_or(0, Vec::len);
-            println!("{supplier}: {count} parts");
+            println!("provider response: {count} parts");
         }
-        Ok(ProviderOutcome::ProviderError(envelope)) => {
-            eprintln!("{supplier}: {}", envelope.error.unwrap_or_default());
+        Ok(ProviderOutcome::ProviderError(_)) => {
+            eprintln!("provider reported a failure");
         }
-        Err(error) => eprintln!("{supplier}: client failure: {error}"),
+        Err(error) => eprintln!("client failure: {error}"),
     }
 }
 # }
@@ -103,6 +97,11 @@ uses rustls with platform certificate verification, disables redirects, bounds
 response bodies, and marks bearer headers sensitive. Authenticated remote URLs
 must use HTTPS; plain HTTP is accepted only for explicit loopback development.
 Tokens never belong in URLs, command arguments, logs, errors, or `Debug` output.
+
+Free-form strings in otherwise valid provider envelopes are untrusted. Escape
+or normalize manufacturer, part, description, supplier, and error strings
+before writing them to terminals, logs, HTML, or another presentation surface.
+The `scm` CLI's printable-ASCII table renderer is the hardened reference.
 
 Generated response types and the strict codec are re-exported through
 `scm_client::contracts`, so consumers do not need a second direct dependency to
