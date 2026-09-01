@@ -13,6 +13,9 @@ scm-client = { package = "supply-chain-monkey-client", git = "https://github.com
 tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }
 ```
 
+Use Rust 1.96 or newer; SCM release proofs use the pinned Rust 1.96.1
+toolchain. Commit the resolved `Cargo.lock` in the consuming application.
+
 ## Search one provider
 
 ```rust,no_run

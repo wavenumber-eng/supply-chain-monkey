@@ -32,6 +32,9 @@ with a branch, a sibling checkout, or a moving tag. Commit `Cargo.lock` in the
 consumer. The crates retain SemVer `0.1.0`; the SCM service uses an independent
 date version.
 
+Consumers need Rust 1.96 or newer. SCM development and release proofs select
+the repository-pinned Rust 1.96.1 toolchain.
+
 After that revision is reachable from the remote repository, prove the exact
 dependency from a clean temporary project by running this from the repository
 root:
