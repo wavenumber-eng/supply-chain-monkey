@@ -27,8 +27,9 @@ material.
 
 ## Status
 
-`2026.8.12` - explicit provider failure diagnostics in the API and status page,
-including retryability and sanitized upstream context.
+`2026.9.1` - TypeSpec-backed contracts, generated Python and Rust models, a
+secure Rust client and test CLI, generic multi-provider search, and repaired
+JLCPCB/LCSC search fallbacks.
 
 The PyPI distribution is `supply-chain-monkey`. The Python import package is
 `scm`.
@@ -92,7 +93,7 @@ two documents.
 Install the consumer client from PyPI:
 
 ```bash
-python -m pip install "supply-chain-monkey[client]==2026.8.12"
+python -m pip install "supply-chain-monkey[client]==2026.9.1"
 ```
 
 ```python

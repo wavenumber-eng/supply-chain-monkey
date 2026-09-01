@@ -1,6 +1,6 @@
 [project]
 name = "supply-chain-monkey"
-version = "2026.8.12"
+version = "2026.9.1"
 description = "Supply Chain Monkey contract, client, and server"
 readme = "README.md"
 requires-python = ">=3.12,<3.14"

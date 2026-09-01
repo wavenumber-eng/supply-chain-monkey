@@ -1,5 +1,33 @@
 # Changelog
 
+## [2026.9.1] - 2026-09-01
+
+### Added
+
+- Establish TypeSpec as the structural contract authority and generate the
+  OpenAPI, JSON Schema, Python-model, contract-catalog, and Rust-model
+  projections from it.
+- Add a secure asynchronous Rust client and the `scm` test CLI with generic
+  multi-provider search, JSON output, and a concise human-readable results
+  table.
+- Serve the canonical TypeSpec OpenAPI document and its Swagger explorer next
+  to FastAPI's runtime OpenAPI, Swagger, and ReDoc views.
+- Add executable contract-documentation coverage, generated-artifact checks,
+  Rust doctests, and an isolated immutable-Git consumer proof.
+
+### Fixed
+
+- Restore JLCPCB and LCSC generic searches, including the LCSC C-number
+  resolution path used by JLCPCB results.
+- Preserve requested supplier identity and result bounds through provider
+  fallback pipelines.
+- Sanitize untrusted provider text in CLI table and error output.
+
+### Changed
+
+- Harden the documentation map, API exploration guide, Python/Rust consumption
+  instructions, and generated-code ownership boundaries.
+
 ## [2026.8.12] - 2026-08-12
 
 ### Fixed

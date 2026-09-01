@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "supply-chain-monkey",
-    "version": "2026.8.12",
+    "version": "2026.9.1",
     "description": "Public HTTP and JSON contract for Supply Chain Monkey v1.\n\nSCM normalizes electronic-component data from configured supplier backends.\nExcept for health and the HTML status page, operations require a bearer token."
   },
   "tags": [],
