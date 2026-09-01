@@ -1,8 +1,8 @@
 """
 JLCPCB Supplier Implementation
 
-Search remains scraper-backed because a public keyword/MPN search API is still
-not confirmed. Detail lookup now uses a hybrid model:
+Search uses the public JLCPCB endpoint, LCSC shared C-code resolution, and a
+legacy scraper fallback. Detail lookup uses a hybrid model:
 
 - default: official OpenAPI detail lookup with scraper enrichment/fallback
 - legacy option: force the old scraper-only detail path
@@ -24,6 +24,7 @@ from .jlc_openapi import (
 )
 from .base import SupplierInterface, SupplierPartInfo, SupplierType, resolve_stock
 from .jlc_scraper import JLCPartInfo, get_jlcpcb_part_details, search_jlcpcb_by_mpn
+from .lcsc_api import LCSCProduct, search_lcsc
 
 log = logging.getLogger(__name__)
 
@@ -69,6 +70,12 @@ def _matches_expected_mpn(actual_mpn: str, expected_mpn: str) -> bool:
     if not actual_mpn:
         return False
     return _normalize_token(actual_mpn) == _normalize_token(expected_mpn)
+
+
+def _matches_search_keyword(actual_mpn: str, keyword: str) -> bool:
+    actual = _normalize_token(actual_mpn)
+    expected = _normalize_token(keyword)
+    return bool(actual and expected and (actual == expected or expected in actual))
 
 
 def _price_breaks_from_api(detail: dict[str, Any]) -> list[dict[str, Any]]:
@@ -138,7 +145,7 @@ class JLCPCBSupplier(SupplierInterface):
             max_spn_batch_size=JLC_COMPONENT_DETAIL_BATCH_LIMIT if api_batch_available else 1,
             usage_unit="requests",
             notes=[
-                "MPN search uses the public JLCPCB component-search endpoint with scraper fallback.",
+                "MPN search uses JLCPCB public search, LCSC shared C-code resolution, then scraper fallback.",
                 "Native SPN batch uses JLC OpenAPI getComponentDetailByCode.",
             ],
         )
@@ -147,12 +154,13 @@ class JLCPCBSupplier(SupplierInterface):
         """
         Search JLCPCB for parts matching an MPN.
 
-        Public website search is tried first. The legacy scraper remains a
-        fallback because JLCPCB changes this surface independently from the
-        official OpenAPI detail endpoint.
+        Public website search is tried first. LCSC resolves shared C-codes
+        when that surface is empty or unavailable, followed by the legacy
+        scraper as a final fallback.
         """
         verify = kwargs.get("verify_parts", True)
         max_results = kwargs.get("max_results", 0)
+        public_results: list[SupplierPartInfo] | None = None
         try:
             public_results = self._search_public_component_api(
                 manufacturer_part_number,
@@ -160,7 +168,7 @@ class JLCPCBSupplier(SupplierInterface):
                 max_results=max_results,
                 presale_type=kwargs.get("presale_type", "stock"),
             )
-            if public_results is not None:
+            if public_results:
                 return public_results
         except Exception as exc:
             log.info(
@@ -169,12 +177,72 @@ class JLCPCBSupplier(SupplierInterface):
                 exc,
             )
 
+        lcsc_results = self._search_via_lcsc_component_codes(
+            manufacturer_part_number,
+            verify_parts=verify,
+            max_results=max_results,
+        )
+        if lcsc_results:
+            return lcsc_results
+        if public_results == []:
+            return []
+
         try:
-            jlc_results = search_jlcpcb_by_mpn(manufacturer_part_number, verify_parts=verify, max_results=max_results)
+            jlc_results = search_jlcpcb_by_mpn(
+                manufacturer_part_number, verify_parts=verify, max_results=max_results
+            )
             return [self._convert_scraper_part(jlc_part) for jlc_part in jlc_results]
         except Exception as exc:
             log.info(f"Error searching JLCPCB for {manufacturer_part_number}: {exc}")
             return []
+
+    def _search_via_lcsc_component_codes(
+        self,
+        keyword: str,
+        *,
+        verify_parts: bool,
+        max_results: int,
+    ) -> list[SupplierPartInfo]:
+        page_size = max_results if max_results > 0 else 25
+        try:
+            products = search_lcsc(keyword, page_size=page_size)
+        except Exception as exc:
+            log.info("LCSC C-code resolution failed for JLCPCB search %s: %s", keyword, exc)
+            return []
+
+        results = []
+        for product in products:
+            if verify_parts and not _matches_search_keyword(product.product_model, keyword):
+                continue
+            results.append(self._convert_lcsc_search_part(product))
+            if max_results > 0 and len(results) >= max_results:
+                break
+        return results
+
+    @staticmethod
+    def _convert_lcsc_search_part(product: LCSCProduct) -> SupplierPartInfo:
+        stock_qty, stock_status = resolve_stock(product.stock, product.lifecycle)
+        return SupplierPartInfo(
+            supplier=SupplierType.JLCPCB,
+            source_provider="jlcpcb",
+            supplier_part_number=product.product_code,
+            manufacturer=product.brand,
+            manufacturer_part_number=product.product_model,
+            description=product.description,
+            datasheet_url=product.datasheet_url,
+            product_url=detail_url_for_code(product.product_code),
+            stock_quantity=stock_qty,
+            stock_status=stock_status,
+            price_breaks=product.price_breaks,
+            lifecycle_status=product.lifecycle,
+            extra_data={
+                "search_backend": "lcsc_c_code_resolution",
+                "lcsc_search_backend": product.search_backend,
+                "lcsc_product_url": product.product_url,
+                "package": product.package,
+                "packaging": product.packaging,
+            },
+        )
 
     def get_part_details(self, supplier_part_number: str, **kwargs) -> SupplierPartInfo | None:
         """
@@ -187,9 +255,14 @@ class JLCPCBSupplier(SupplierInterface):
         """
         expected_mpn = kwargs.get("expected_mpn", "")
         detail_backend = self._resolve_detail_backend(kwargs)
-        enrich_with_scraper = kwargs.get("enrich_with_scraper", detail_backend == DETAIL_BACKEND_HYBRID)
+        enrich_with_scraper = kwargs.get(
+            "enrich_with_scraper", detail_backend == DETAIL_BACKEND_HYBRID
+        )
 
-        if detail_backend in {DETAIL_BACKEND_HYBRID, DETAIL_BACKEND_API} and self.api_client.is_configured():
+        if (
+            detail_backend in {DETAIL_BACKEND_HYBRID, DETAIL_BACKEND_API}
+            and self.api_client.is_configured()
+        ):
             try:
                 api_detail = self.api_client.get_component_detail_by_code(supplier_part_number)
                 if api_detail:
@@ -240,10 +313,13 @@ class JLCPCBSupplier(SupplierInterface):
             return results
 
         detail_backend = self._resolve_detail_backend(kwargs)
-        if detail_backend in {DETAIL_BACKEND_HYBRID, DETAIL_BACKEND_API} and self.api_client.is_configured():
+        if (
+            detail_backend in {DETAIL_BACKEND_HYBRID, DETAIL_BACKEND_API}
+            and self.api_client.is_configured()
+        ):
             try:
                 for start in range(0, len(cleaned_codes), JLC_COMPONENT_DETAIL_BATCH_LIMIT):
-                    chunk = cleaned_codes[start:start + JLC_COMPONENT_DETAIL_BATCH_LIMIT]
+                    chunk = cleaned_codes[start : start + JLC_COMPONENT_DETAIL_BATCH_LIMIT]
                     for api_detail in self.api_client.get_component_detail_by_codes(chunk):
                         part = self._convert_api_detail(
                             api_detail,
@@ -366,7 +442,9 @@ class JLCPCBSupplier(SupplierInterface):
         parts = []
         for item in page_info.get("list") or []:
             part = self._convert_public_search_part(item)
-            if verify_parts and not _matches_expected_mpn(str(part.manufacturer_part_number or ""), keyword):
+            if verify_parts and not _matches_expected_mpn(
+                str(part.manufacturer_part_number or ""), keyword
+            ):
                 continue
             parts.append(part)
             if max_results and len(parts) >= max_results:
@@ -443,10 +521,11 @@ class JLCPCBSupplier(SupplierInterface):
         component_code = str(detail.get("componentCode") or "")
         manufacturer_part_number = str(detail.get("componentModel") or "")
         manufacturer = (
-            (scraper_part.manufacturer if scraper_part else "")
-            or self._extract_manufacturer_from_parameters(detail)
+            scraper_part.manufacturer if scraper_part else ""
+        ) or self._extract_manufacturer_from_parameters(detail)
+        description = str(
+            detail.get("description") or (scraper_part.description if scraper_part else "")
         )
-        description = str(detail.get("description") or (scraper_part.description if scraper_part else ""))
         datasheet_url = str(detail.get("datasheetUrl") or detail.get("dataManualUrl") or "")
         stock_qty, stock_status = resolve_stock(detail.get("stockCount"))
         product_url = detail_url_for_code(component_code)
@@ -483,7 +562,9 @@ class JLCPCBSupplier(SupplierInterface):
         return ""
 
 
-def search_jlcpcb(manufacturer_part_number: str, verify_parts: bool = True) -> list[SupplierPartInfo]:
+def search_jlcpcb(
+    manufacturer_part_number: str, verify_parts: bool = True
+) -> list[SupplierPartInfo]:
     jlc = JLCPCBSupplier()
     return jlc.search_by_mpn(manufacturer_part_number, verify_parts=verify_parts)
 

@@ -16,6 +16,7 @@ from scm.server.providers import digikey as digikey_module
 from scm.server.providers.digikey import DigikeyProviderError, DigikeySupplier
 from scm.server.providers.jlc import JLCPCBSupplier
 from scm.server.providers.jlc_openapi import JLCOpenAPIClient
+from scm.server.providers.lcsc_api import LCSCProduct
 from scm.models import SupplierType
 
 
@@ -340,10 +341,49 @@ class TestJLCPublicSearchParsing:
             raise AssertionError("scraper fallback should not run after a valid empty response")
 
         monkeypatch.setattr(jlc_module.requests, "post", fake_post)
+        monkeypatch.setattr(jlc_module, "search_lcsc", lambda *args, **kwargs: [])
         monkeypatch.setattr(jlc_module, "search_jlcpcb_by_mpn", fail_scraper)
 
         supplier = JLCPCBSupplier()
         assert supplier.search_by_mpn("NONEXISTENT_PART_12345_XYZ", verify_parts=False) == []
+
+    def test_failed_public_search_resolves_shared_c_codes_through_lcsc(self, monkeypatch):
+        from scm.server.providers import jlc as jlc_module
+
+        def fake_post(*args, **kwargs) -> _JsonResponse:
+            return _JsonResponse({"code": 500, "msg": "upstream search unavailable"})
+
+        def fail_scraper(*args, **kwargs):
+            raise AssertionError("scraper should not run after LCSC resolves a C-code")
+
+        lcsc_product = LCSCProduct(
+            product_code="C3216634",
+            product_model="MIMXRT685SFVKB",
+            brand="NXP",
+            description="i.MX RT crossover MCU",
+            stock=110_500,
+            datasheet_url="https://example.test/rt685.pdf",
+            price_breaks=[{"qty": 999, "unit_price": 168.1166, "currency": "USD"}],
+            lifecycle="Active",
+            package="BGA",
+            packaging="Tray",
+            product_url="https://www.lcsc.com/product-detail/C3216634.html",
+            search_backend="lcsc_third_party",
+        )
+        monkeypatch.setattr(jlc_module.requests, "post", fake_post)
+        monkeypatch.setattr(jlc_module, "search_lcsc", lambda *args, **kwargs: [lcsc_product])
+        monkeypatch.setattr(jlc_module, "search_jlcpcb_by_mpn", fail_scraper)
+
+        parts = JLCPCBSupplier().search_by_mpn("RT685", max_results=1)
+
+        assert len(parts) == 1
+        part = parts[0]
+        assert part.supplier == SupplierType.JLCPCB
+        assert part.supplier_part_number == "C3216634"
+        assert part.manufacturer_part_number == "MIMXRT685SFVKB"
+        assert part.stock_quantity == 110_500
+        assert part.extra_data["search_backend"] == "lcsc_c_code_resolution"
+        assert part.extra_data["lcsc_search_backend"] == "lcsc_third_party"
 
 
 class TestLCSCSearchParsing:
@@ -393,6 +433,68 @@ class TestLCSCSearchParsing:
         assert product.brand == "TI"
         assert product.stock == 654
         assert product.price_breaks == [{"qty": 1, "unit_price": 3.115, "currency": "USD"}]
+
+    def test_generic_search_falls_back_to_website_third_party_results(self, monkeypatch):
+        from scm.server.providers import lcsc_api
+
+        paths = []
+
+        def fake_post(
+            url: str,
+            json: dict[str, Any],
+            headers: dict[str, str],
+            timeout: int,
+        ) -> _JsonResponse:
+            paths.append(url)
+            assert json["keyword"] == "RT685"
+            if url.endswith("/ftps/wm/search/v3/global"):
+                return _JsonResponse(
+                    {
+                        "code": 200,
+                        "result": {
+                            "scene": "FULL_MATCH",
+                            "totalCount": 9,
+                            "productSearchResultVO": None,
+                            "exactMatchResult": None,
+                        },
+                    }
+                )
+            assert url.endswith("/ftps/wm/search/third")
+            return _JsonResponse(
+                {
+                    "code": 200,
+                    "result": {
+                        "totalCount": 1,
+                        "productList": [
+                            {
+                                "productCode": "C3216634",
+                                "productModel": "MIMXRT685SFVKB NXP 25+",
+                                "productCodeManufacturer": "MIMXRT685SFVKB",
+                                "brandNameEn": "NXP",
+                                "productIntroEn": None,
+                                "stockNumber": 110500,
+                                "encapStandard": "BGA",
+                                "pdfUrl": "https://example.test/rt685.pdf",
+                                "productPriceList": [{"ladder": 999, "currencyPrice": 168.1166}],
+                            }
+                        ],
+                    },
+                }
+            )
+
+        monkeypatch.setattr(lcsc_api.requests, "post", fake_post)
+
+        products = lcsc_api.search_lcsc("RT685", page_size=10)
+
+        assert len(paths) == 2
+        assert len(products) == 1
+        product = products[0]
+        assert product.product_code == "C3216634"
+        assert product.product_model == "MIMXRT685SFVKB"
+        assert product.description == "MIMXRT685SFVKB"
+        assert product.stock == 110500
+        assert product.price_breaks == [{"qty": 999, "unit_price": 168.1166, "currency": "USD"}]
+        assert product.search_backend == "lcsc_third_party"
 
 
 class TestDigikeyParsing:

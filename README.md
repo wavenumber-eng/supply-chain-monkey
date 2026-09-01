@@ -42,8 +42,8 @@ The repo contains three layers:
 
 | Supplier | Backend | Credentials Required |
 |---|---|---|
-| JLCPCB | Hybrid official API plus scraper | Optional; scraper works without credentials |
-| LCSC | Internal JSON API | None |
+| JLCPCB | Public search, LCSC shared C-code resolution, plus hybrid detail | Optional; fallback works without credentials |
+| LCSC | Primary and third-party website JSON APIs | None |
 | Digikey | Official REST API v4 OAuth2 | Yes |
 | Mouser | Official REST API v1 | Yes |
 

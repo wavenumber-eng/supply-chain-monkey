@@ -50,8 +50,9 @@ class LCSCSupplier(SupplierInterface):
 
             expected_mpn = kwargs.get("expected_mpn", "")
             if expected_mpn and product.product_model:
-                if (expected_mpn.upper().replace("-", "").replace(" ", "")
-                        != product.product_model.upper().replace("-", "").replace(" ", "")):
+                if expected_mpn.upper().replace("-", "").replace(
+                    " ", ""
+                ) != product.product_model.upper().replace("-", "").replace(" ", ""):
                     return None
 
             return self._convert(product)
@@ -82,5 +83,9 @@ class LCSCSupplier(SupplierInterface):
             datasheet_url=product.datasheet_url,
             price_breaks=product.price_breaks,
             lifecycle_status=product.lifecycle,
-            extra_data={"package": product.package, "packaging": product.packaging},
+            extra_data={
+                "package": product.package,
+                "packaging": product.packaging,
+                "search_backend": product.search_backend,
+            },
         )
