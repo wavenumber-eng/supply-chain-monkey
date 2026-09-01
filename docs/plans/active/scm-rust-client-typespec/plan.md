@@ -110,13 +110,13 @@ depends_on = ["python-contract-cutover", "rust-client-library"]
 [[steps]]
 id = "artifact-candidate-proof"
 title = "Prove packaged Python and Rust release candidates in isolation"
-status = "active"
+status = "done"
 depends_on = ["python-contract-cutover", "rust-client-library"]
 
 [[steps]]
 id = "alexandria-consumer-proof"
 title = "Prove Alexandria can consume the released Rust client boundary"
-status = "pending"
+status = "done"
 depends_on = ["cross-language-conformance", "artifact-candidate-proof"]
 
 [[steps]]
