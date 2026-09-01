@@ -1,5 +1,5 @@
 [package]
-name = "scm-contracts"
+name = "supply-chain-monkey-contracts"
 description = "Generated Supply Chain Monkey v1 wire contracts and strict codec"
 version.workspace = true
 edition.workspace = true
@@ -8,6 +8,9 @@ license.workspace = true
 repository.workspace = true
 readme = "README.md"
 include = ["src/**/*.rs", "schema/**/*.json", "LICENSE", "README.md"]
+
+[lib]
+name = "scm_contracts"
 
 [dependencies]
 jsonschema.workspace = true

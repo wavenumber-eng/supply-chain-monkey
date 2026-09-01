@@ -17,7 +17,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RUST_ROOT = ROOT / "rust"
-PUBLIC_CRATES = ("scm-contracts", "scm-client", "scm-cli")
+PUBLIC_CRATES = (
+    "supply-chain-monkey-contracts",
+    "supply-chain-monkey-client",
+    "supply-chain-monkey-cli",
+)
 CATALOG_PATH = ROOT / "contracts/scm/v1/generated/contract_catalog.a0.json"
 ROOTS_PATH = ROOT / "contracts/scm/v1/generated/contract_roots.a0.json"
 STAGING_ROOT = ROOT / "temp/artifact-candidates"
@@ -204,11 +208,11 @@ def build_rust_candidates(root: Path) -> list[Path]:
             "cargo",
             "package",
             "-p",
-            "scm-contracts",
+            "supply-chain-monkey-contracts",
             "-p",
-            "scm-client",
+            "supply-chain-monkey-client",
             "-p",
-            "scm-cli",
+            "supply-chain-monkey-cli",
             "--locked",
         ],
         cwd=RUST_ROOT,
@@ -243,8 +247,8 @@ def build_rust_candidates(root: Path) -> list[Path]:
     )
     manifest = f"""
 [patch.crates-io]
-scm-contracts = {{ path = {json.dumps(contracts.as_posix())} }}
-scm-client = {{ path = {json.dumps(client.as_posix())} }}
+supply-chain-monkey-contracts = {{ path = {json.dumps(contracts.as_posix())} }}
+supply-chain-monkey-client = {{ path = {json.dumps(client.as_posix())} }}
 """
     with consumer.joinpath("Cargo.toml").open("a", encoding="utf-8") as stream:
         stream.write(manifest)

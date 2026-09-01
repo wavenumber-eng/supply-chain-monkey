@@ -1,5 +1,5 @@
 [package]
-name = "scm-client"
+name = "supply-chain-monkey-client"
 description = "Async client for the Supply Chain Monkey API"
 version.workspace = true
 edition.workspace = true
@@ -9,10 +9,13 @@ repository.workspace = true
 readme = "README.md"
 include = ["src/**/*.rs", "LICENSE", "README.md"]
 
+[lib]
+name = "scm_client"
+
 [dependencies]
 futures-util.workspace = true
 reqwest.workspace = true
-scm-contracts = { path = "../scm-contracts", version = "0.1.0" }
+scm-contracts = { package = "supply-chain-monkey-contracts", path = "../scm-contracts", version = "=0.1.0" }
 serde.workspace = true
 thiserror.workspace = true
 

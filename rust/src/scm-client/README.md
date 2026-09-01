@@ -1,4 +1,4 @@
-# scm-client
+# supply-chain-monkey-client
 
 Async, typed client for the Supply Chain Monkey v1 API.
 
