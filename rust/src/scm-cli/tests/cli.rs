@@ -16,6 +16,7 @@ const PROVIDER_ERROR: &[u8] =
 const NOT_FOUND: &[u8] =
     include_bytes!("../../../../contracts/scm/v1/vectors/valid/search-not-found.json");
 const EMPTY_PROVIDERS: &[u8] = br#"{"providers":{}}"#;
+const MALICIOUS_PROVIDER: &str = "bad\u{1b}\u{7}Ω";
 const DETAIL: &[u8] = include_bytes!("../../../../contracts/scm/v1/vectors/valid/detail-ok.json");
 const SPN: &[u8] = include_bytes!("../../../../contracts/scm/v1/vectors/valid/spn-ok.json");
 const BATCH: &[u8] =
@@ -85,6 +86,9 @@ fn requested_supplier(uri: &str) -> Option<&str> {
 
 fn search_payload(uri: &str) -> Vec<u8> {
     let supplier = requested_supplier(uri).unwrap_or_default();
+    if uri.contains("%1B") || uri.contains("%1b") {
+        return NOT_FOUND.to_vec();
+    }
     if supplier == "broken" {
         return PROVIDER_ERROR.to_vec();
     }
@@ -127,6 +131,13 @@ fn providers_payload(names: &[&str]) -> Vec<u8> {
         })
         .collect::<serde_json::Map<_, _>>();
     serde_json::to_vec(&serde_json::json!({"providers": providers})).expect("providers fixture")
+}
+
+fn malicious_providers_payload() -> Vec<u8> {
+    let payload = providers_payload(&[MALICIOUS_PROVIDER]);
+    let mut value: serde_json::Value = serde_json::from_slice(&payload).expect("providers fixture");
+    value["providers"][MALICIOUS_PROVIDER]["backend"] = serde_json::json!("api\u{1b}\u{7}Ω");
+    serde_json::to_vec(&value).expect("malicious providers fixture")
 }
 
 fn response(status: StatusCode, payload: &[u8]) -> Response<Body> {
@@ -365,6 +376,39 @@ async fn human_output_is_stable_and_provider_errors_have_exit_three() {
     assert!(text(&error.stdout).contains("broken: provider_error"));
     assert!(!text(&error.stderr).contains("CLI_SENSITIVE_MARKER"));
     error_task.abort();
+    task.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn human_output_escapes_provider_metadata_and_status_labels() {
+    let providers = malicious_providers_payload();
+    let (base, _, task) = spawn_server_with_providers(&providers).await;
+
+    let status = invoke(
+        vec!["--url".to_owned(), base.clone(), "providers".to_owned()],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert!(status.status.success(), "{}", text(&status.stderr));
+    let status = text(&status.stdout);
+    assert!(status.contains(r"bad\x1B\x07\u{3A9}"));
+    assert!(status.contains(r"backend=api\x1B\x07\u{3A9}"));
+    assert!(status.is_ascii());
+
+    let search = invoke(
+        vec![
+            "--url".to_owned(),
+            base,
+            "search".to_owned(),
+            "X".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert!(search.status.success(), "{}", text(&search.stderr));
+    let search = text(&search.stdout);
+    assert!(search.contains(r"bad\x1B\x07\u{3A9}: not_found"));
+    assert!(search.is_ascii());
     task.abort();
 }
 

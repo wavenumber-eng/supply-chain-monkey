@@ -139,7 +139,11 @@ fn render_value(value: &Value) {
         for name in names {
             let configured = providers[name]["configured"].as_bool().unwrap_or(false);
             let backend = providers[name]["backend"].as_str().unwrap_or("-");
-            println!("{name}\tconfigured={configured}\tbackend={backend}");
+            println!(
+                "{}\tconfigured={configured}\tbackend={}",
+                normalize(name),
+                normalize(backend)
+            );
         }
         return;
     }
@@ -151,7 +155,7 @@ fn render_value(value: &Value) {
     let item_count = value.get("data").and_then(Value::as_array).map(Vec::len);
     print!("status={status}");
     if let Some(supplier) = supplier {
-        print!(" supplier={supplier}");
+        print!(" supplier={}", normalize(supplier));
     }
     if let Some(item_count) = item_count {
         print!(" items={item_count}");
@@ -167,15 +171,21 @@ fn render_search(document: &SearchResultDocument) {
             SearchProviderDocument::Response { envelope } => {
                 add_rows(&mut rows, requested_supplier, envelope);
                 if envelope.status.to_string() != "ok" {
-                    notes.push(format!("{requested_supplier}: {}", envelope.status));
+                    notes.push(format!(
+                        "{}: {}",
+                        normalize(requested_supplier),
+                        envelope.status
+                    ));
                 }
             }
             SearchProviderDocument::ProviderError { envelope } => notes.push(format!(
-                "{requested_supplier}: provider_error: {}",
+                "{}: provider_error: {}",
+                normalize(requested_supplier),
                 normalize(envelope.error.as_deref().unwrap_or("provider failure"))
             )),
             SearchProviderDocument::ClientError { error } => notes.push(format!(
-                "{requested_supplier}: client_error: {}",
+                "{}: client_error: {}",
+                normalize(requested_supplier),
                 normalize(error)
             )),
         }
