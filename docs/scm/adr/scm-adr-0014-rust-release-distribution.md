@@ -1,4 +1,22 @@
-# SCM ADR 0014: Rust release identities and distribution channels
++++
+type = "adr"
+id = "scm-adr-0014"
+domain = "scm"
+status = "accepted"
+title = "Rust release identities and distribution channels"
+created = "2026-08-31"
+plan_refs = ["scm-rust-client-typespec"]
+adr_refs = ["scm-adr-0013", "ADR-012"]
+implementation_refs = [
+  { kind = "local_file", target = "rust/Cargo.toml" },
+  { kind = "local_file", target = "rust/src/scm-contracts/Cargo.toml" },
+  { kind = "local_file", target = "rust/src/scm-client/Cargo.toml" },
+  { kind = "local_file", target = "rust/src/scm-cli/Cargo.toml" },
+  { kind = "local_file", target = ".github/workflows/release.yml" },
+]
++++
+
+# Rust release identities and distribution channels
 
 ## Status
 
@@ -86,7 +104,10 @@ Before first publication or any later Rust release:
   locked Rust gate, and the three-OS client CI matrix;
 - build, retain, inventory, hash, and independently review exact crate and CLI
   candidates from a clean tag commit;
-- run `cargo publish --dry-run --locked` against crates.io in dependency order;
+- before the first upload, pass combined package verification for all three
+  crates and `cargo publish --dry-run --locked` for contracts; then publish
+  contracts, wait until the exact version resolves from crates.io, dry-run and
+  publish client, wait again, and dry-run and publish CLI;
 - install and execute each native archive on its target without a source
   checkout, Python, Node, or Rust toolchain;
 - prove credential, URL, diagnostic, archive-path, TLS, redirect, private-root,

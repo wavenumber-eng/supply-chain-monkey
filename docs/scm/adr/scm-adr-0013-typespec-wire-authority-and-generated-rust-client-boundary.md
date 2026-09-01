@@ -154,7 +154,8 @@ The public crates are released contracts-first. Until the exact
 `scm-contracts` version is available in the selected registry, Cargo can build
 and test `scm-client` through its reviewed workspace path. Packaging the client
 alone cannot resolve that not-yet-published sibling, but a single multi-package
-`cargo package -p scm-contracts -p scm-client` invocation stages the exact
+`cargo package -p supply-chain-monkey-contracts -p supply-chain-monkey-client`
+invocation stages the exact
 contracts candidate in Cargo's temporary registry and verifies both normalized
 packages in dependency order. Artifact-candidate proof uses that path and binds
 both archive hashes; actual publication retains the same contracts-first order.

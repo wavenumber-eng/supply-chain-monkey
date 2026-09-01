@@ -37,3 +37,11 @@ name = "Generated Contract Codec"
 description = "Validate digest-bound SCM vectors through strict JSON, schema, and generated models"
 concerns = ["contracts"]
 test_case_type = "contract"
+
+[[subtests]]
+id = "L0_004"
+file = "test_L0_004_contract_cutover.py"
+name = "Generated Contract Cutover"
+description = "Validate FastAPI and Python client behavior against generated SCM v1 models"
+concerns = ["contracts"]
+test_case_type = "contract"
