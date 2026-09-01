@@ -122,7 +122,7 @@ depends_on = ["cross-language-conformance", "artifact-candidate-proof"]
 [[steps]]
 id = "release-distribution-design"
 title = "Decide crate, binary, Winget, Homebrew, and Linux release channels"
-status = "active"
+status = "done"
 depends_on = ["scm-cli-proof", "cross-language-conformance"]
 +++
 
