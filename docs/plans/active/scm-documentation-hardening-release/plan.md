@@ -36,25 +36,25 @@ depends_on = ["documentation-verification", "design-doc-intent-audit", "test-run
 [[steps]]
 id = "release-signoff"
 title = "Version and sign off the exact 2026.9.1 release candidate"
-status = "active"
+status = "done"
 depends_on = ["external-review"]
 
 [[steps]]
 id = "integrate-dev"
 title = "Integrate the signed release candidate into dev"
-status = "pending"
+status = "done"
 depends_on = ["release-signoff"]
 
 [[steps]]
 id = "release-production"
 title = "Merge the exact signed dev release into production"
-status = "pending"
+status = "done"
 depends_on = ["integrate-dev"]
 
 [[steps]]
 id = "deployment-verification"
 title = "Verify the production-triggered Appliku deployment"
-status = "pending"
+status = "done"
 depends_on = ["release-production"]
 
 [[steps]]
