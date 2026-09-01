@@ -12,6 +12,7 @@ Use this map to choose the documentation surface that matches your task.
 | Author or regenerate contracts | [TypeSpec authority ADR](scm/adr/scm-adr-0013-typespec-wire-authority-and-generated-rust-client-boundary.md) |
 | Understand Rust distribution | [Rust release ADR](scm/adr/scm-adr-0014-rust-release-distribution.md) |
 | Contribute and run signoff | [Contributing guide](../CONTRIBUTING.md) |
+| Review releases | [Release index](releases/README.md) and [current release](releases/2026-09-01.md) |
 | Review current work | [Plans](plans/README.md) |
 
 Authored contract source lives in `src/tsp/scm/v1/main.tsp`. Generated files

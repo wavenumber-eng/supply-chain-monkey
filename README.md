@@ -58,7 +58,9 @@ The Rust workspace contains generated contracts, a secure async client, and the
 
 ## API
 
-All endpoints except health require a bearer token.
+The health endpoint and root status page are public. Normal API operations
+require a bearer token; the deprecated streaming compatibility endpoint is the
+only query-token exception.
 
 ```text
 GET  /v1/health
