@@ -16,6 +16,15 @@ tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }
 Use Rust 1.96 or newer; SCM release proofs use the pinned Rust 1.96.1
 toolchain. Commit the resolved `Cargo.lock` in the consuming application.
 
+If your dependency graph enables `serde_json/arbitrary_precision`, also enable
+`features = ["serde-json-arbitrary-precision"]` on the pinned `scm-client`
+dependency. This forwards the explicit compatibility feature to `scm-contracts`;
+it changes no HTTP endpoints, TLS policy or wire schemas. The feature retains
+finite binary64 float semantics and exact safe integer-token checks. It also
+reserves the internal `$serde_json::private::Number` object key against spoofing;
+see the contracts crate's feature documentation for that boundary and the
+unchanged default codec's oversized-integer limitation.
+
 ## Search one provider
 
 ```rust,no_run
