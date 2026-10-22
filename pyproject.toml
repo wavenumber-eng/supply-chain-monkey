@@ -5,6 +5,8 @@ description = "Supply Chain Monkey contract, client, and server"
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
 dependencies = [
+    # emSign CA incident: keep Requests/HTTPX trust bundles on the fixed release.
+    "certifi>=2026.10.19",
     "pydantic>=2.0",
     "requests>=2.32.0",
     "fastapi>=0.115.0",
@@ -64,6 +66,7 @@ exclude = [
 ]
 
 [tool.uv]
+required-version = ">=0.13.4"
 # Copy instead of hardlink: venv may live on a different volume than the uv
 # cache, where hardlinking fails (os error 396).
 link-mode = "copy"

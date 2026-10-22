@@ -162,7 +162,7 @@ both archive hashes; actual publication retains the same contracts-first order.
 
 ## Toolchain and audit boundaries
 
-The TypeSpec development boundary pins Node 24.12.0, npm 11.16.0, TypeSpec
+The TypeSpec development boundary pins Node 24.22.1, npm 11.16.0, TypeSpec
 compiler/emitters 1.14.0, a private `package.json`, and `package-lock.json`.
 Generation and freshness commands are committed and deterministic.
 

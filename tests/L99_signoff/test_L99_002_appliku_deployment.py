@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import os
 import shutil
+import ssl
 import subprocess
 import sys
 import tomllib
 from pathlib import Path
 
+import certifi
 import yaml
+from packaging.version import Version
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -113,3 +116,21 @@ def test_appliku_runtime_imports_with_pythonpath() -> None:
         ],
         env=env,
     )
+
+
+def test_runtime_ca_bundle_distrusts_compromised_emsign_root() -> None:
+    # Requests uses Certifi for supplier TLS; do not add OS roots to this check.
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.load_verify_locations(cafile=certifi.where())
+    roots = context.get_ca_certs()
+    common_names = {
+        value
+        for root in roots
+        for rdn in root["subject"]
+        for key, value in rdn
+        if key == "commonName"
+    }
+
+    assert Version(certifi.__version__) >= Version("2026.10.19")
+    assert roots, "Requests must have a usable trust bundle"
+    assert not {"emSign ECC Root CA - G3", "AAA Certificate Services"} & common_names
