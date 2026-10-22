@@ -190,16 +190,14 @@ branch. Enable "Push to deploy."
 
 ### Deploy cycle
 
-Develop on `main`, merge to `production` when ready:
+Develop on `dev`, run the full L99 signoff, and open a PR into `production`.
+A merge to `production` triggers an automatic build and deploy.
 
-```bash
-git checkout production
-git merge main
-git push
-git checkout main
-```
-
-A push to `production` triggers an automatic build and deploy.
+For the October 2026 emSign incident, follow the
+[security rollout instructions](../../SECURITY.md#appliku-rollout): refresh the
+managed image's uv, pip, and OS certificates, then rebuild without Docker layer
+caching. The project's uv version requirement prevents builds with an affected
+installer; it does not upgrade Appliku's managed image.
 
 ### Verifying a deploy
 
@@ -244,10 +242,14 @@ If you must use a custom Dockerfile:
 - The two-stage install pattern with `--no-install-project` is needed:
 
 ```dockerfile
-FROM ghcr.io/astral-sh/uv:latest AS uv
+FROM ghcr.io/astral-sh/uv:0.13.4 AS uv
 FROM python:3.13-slim
 
 COPY --from=uv /uv /usr/local/bin/
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+RUN uv pip install --system --upgrade "pip>=26.2.2"
 WORKDIR /code
 
 COPY pyproject.toml uv.lock /code/

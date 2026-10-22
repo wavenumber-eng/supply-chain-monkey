@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Security
+
+- Require fixed Certifi and uv versions for the emSign CA compromise, update
+  Rust TLS verification and trust bundles, and pin Node's fixed CA release.
+- Refresh certificates and pip in the optional Dockerfile, use uv for isolated
+  package builds, and document the cache-free Appliku image rebuild required
+  to complete remediation.
+
 ## [2026.9.1] - 2026-09-01
 
 ### Added

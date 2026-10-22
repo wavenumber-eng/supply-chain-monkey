@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from email.parser import Parser
 from pathlib import Path
+from zipfile import ZipFile
+
+from packaging.requirements import Requirement
+from packaging.version import Version
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -31,9 +36,20 @@ def test_uv_lock_is_current() -> None:
 
 def test_wheel_builds_and_checks(tmp_path: Path) -> None:
     wheelhouse = tmp_path / "wheelhouse"
-    run_checked([sys.executable, "-m", "build", "--sdist", "--wheel", "--outdir", str(wheelhouse)])
+    run_checked(
+        [sys.executable, "-m", "build", "--installer", "uv", "--sdist", "--wheel", "--outdir", str(wheelhouse)]
+    )
     wheels = sorted(wheelhouse.glob("*.whl"))
     sdists = sorted(wheelhouse.glob("*.tar.gz"))
     assert wheels, "wheel build did not produce a wheel"
     assert sdists, "sdist build did not produce a source distribution"
     run_checked(["twine", "check", *[str(path) for path in [*sdists, *wheels]]])
+    # Consumers installing a wheel must inherit the security floor as well.
+    with ZipFile(wheels[0]) as wheel:
+        metadata_path = next(name for name in wheel.namelist() if name.endswith(".dist-info/METADATA"))
+        metadata = Parser().parsestr(wheel.read(metadata_path).decode("utf-8"))
+    requirements = [Requirement(value) for value in metadata.get_all("Requires-Dist", [])]
+    certifi_requirement = next(requirement for requirement in requirements if requirement.name == "certifi")
+    assert certifi_requirement.marker is None
+    assert Version("2026.5.20") not in certifi_requirement.specifier
+    assert Version("2026.10.19") in certifi_requirement.specifier
