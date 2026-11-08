@@ -1,0 +1,64 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.AccountInventoryRecord",
+    "type": "object",
+    "properties": {
+        "supplier_part_number": {
+            "type": "string",
+            "description": "JLC C-code used to identify the component."
+        },
+        "manufacturer_part_number": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "description": "JLC component model, when supplied; it may be shared by multiple C-codes."
+        },
+        "manufacturer": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "description": "Brand reported for this JLC component, when supplied."
+        },
+        "description": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "description": "JLC component specification, when supplied."
+        },
+        "observed_at": {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp",
+            "description": "Time SCM fetched this page, not a supplier snapshot time."
+        },
+        "balances": {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.AccountStockBalances",
+            "description": "Four separate JLC source counts; never a combined build quantity."
+        }
+    },
+    "required": [
+        "supplier_part_number",
+        "manufacturer_part_number",
+        "manufacturer",
+        "description",
+        "observed_at",
+        "balances"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    },
+    "description": "One component in the customer's JLC My Parts Lib."
+}

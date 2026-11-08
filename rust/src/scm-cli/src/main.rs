@@ -10,9 +10,9 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::time::Duration;
 
-use clap::{Parser, Subcommand};
+use clap::{ArgGroup, Parser, Subcommand};
 use scm_client::{
-    ClientError, ConfigError, LookupOptions, ProviderOutcome, ScmClient, SearchOptions,
+    AccountPart, ClientError, ConfigError, LookupOptions, ProviderOutcome, ScmClient, SearchOptions,
 };
 use serde::Serialize;
 use thiserror::Error;
@@ -26,7 +26,7 @@ const MAX_CA_BUNDLE_BYTES: usize = 1024 * 1024;
     name = "scm",
     version,
     about = "Typed Supply Chain Monkey API client",
-    after_help = "Authenticated commands read the bearer token only from SCM_TOKEN."
+    after_help = "Authenticated commands read SCM_TOKEN."
 )]
 struct Cli {
     /// SCM service base URL. May also be set with SCM_URL.
@@ -57,6 +57,11 @@ enum Command {
     Health,
     /// List configured providers and capabilities.
     Providers,
+    /// Read purchased JLC account inventory.
+    Account {
+        #[command(subcommand)]
+        command: AccountCommand,
+    },
     /// Search configured suppliers by manufacturer part number.
     Search {
         mpn: String,
@@ -89,6 +94,22 @@ enum Command {
         spns: Vec<String>,
         #[arg(long)]
         include_raw: bool,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum AccountCommand {
+    /// Report account inventory availability.
+    Capabilities,
+    /// Read the complete bounded JLC account-library scan.
+    Inventory,
+    /// Find an exact purchased C-code or manufacturer part number.
+    #[command(group(ArgGroup::new("part_number").required(true).multiple(false)))]
+    InventoryLookup {
+        #[arg(long, group = "part_number")]
+        spn: Option<String>,
+        #[arg(long, group = "part_number")]
+        mpn: Option<String>,
     },
 }
 
@@ -182,6 +203,7 @@ async fn execute(client: &ScmClient, command: Command) -> Result<CommandOutput, 
     match command {
         Command::Health => plain_output(client.health().await?),
         Command::Providers => plain_output(client.providers_status().await?),
+        Command::Account { command } => execute_account(client, command).await,
         Command::Search {
             mpn,
             suppliers,
@@ -228,6 +250,26 @@ async fn execute(client: &ScmClient, command: Command) -> Result<CommandOutput, 
                 .spn_batch_with_options(&supplier, spns, LookupOptions { include_raw })
                 .await?,
         ),
+    }
+}
+
+async fn execute_account(
+    client: &ScmClient,
+    command: AccountCommand,
+) -> Result<CommandOutput, CliError> {
+    match command {
+        AccountCommand::Capabilities => {
+            CommandOutput::account(client.account_capabilities().await?)
+        }
+        AccountCommand::Inventory => CommandOutput::account(client.account_inventory().await?),
+        AccountCommand::InventoryLookup { spn, mpn } => {
+            let part = match (spn.as_deref(), mpn.as_deref()) {
+                (Some(spn), None) => AccountPart::Spn(spn),
+                (None, Some(mpn)) => AccountPart::Mpn(mpn),
+                _ => unreachable!("clap requires exactly one account part identifier"),
+            };
+            CommandOutput::account(client.account_inventory_lookup(part).await?)
+        }
     }
 }
 

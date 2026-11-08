@@ -4,6 +4,18 @@
   "namespace": "Wavenumber.SupplyChainMonkey.V1",
   "roots": [
     {
+      "name": "Wavenumber.SupplyChainMonkey.V1.AccountCapabilitiesResponse",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.account-capabilities-response"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.AccountInventoryLookupResponse",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.account-inventory-lookup-response"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.AccountInventoryResponse",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.account-inventory-response"
+    },
+    {
       "name": "Wavenumber.SupplyChainMonkey.V1.DetailEnvelope",
       "schema_id": "urn:supply-chain-monkey:schema:v1.detail-envelope"
     },

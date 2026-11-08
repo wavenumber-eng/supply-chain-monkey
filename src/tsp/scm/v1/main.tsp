@@ -302,6 +302,64 @@ model HealthResponse {
   status: "ok";
 }
 
+/** Four separate JLC source counts, with null distinct from zero. */
+model AccountStockBalances {
+  /** JLC `jlcpcbParts` count. */
+  jlcpcb_parts: JsonInteger | null;
+  /** JLC `globalSourcingParts` count. */
+  global_sourcing_parts: JsonInteger | null;
+  /** JLC `consignedParts` count. */
+  consigned_parts: JsonInteger | null;
+  /** JLC `idleStock` count. */
+  idle_stock: JsonInteger | null;
+}
+
+/** One component in the customer's JLC My Parts Lib. */
+model AccountInventoryRecord {
+  /** JLC C-code used to identify the component. */
+  supplier_part_number: string;
+  /** JLC component model, when supplied; it may be shared by multiple C-codes. */
+  manufacturer_part_number: string | null;
+  /** Brand reported for this JLC component, when supplied. */
+  manufacturer: string | null;
+  /** JLC component specification, when supplied. */
+  description: string | null;
+  /** Time SCM fetched this page, not a supplier snapshot time. */
+  observed_at: Rfc3339Timestamp;
+  /** Four separate JLC source counts; never a combined build quantity. */
+  balances: AccountStockBalances;
+}
+
+/** Account-data features currently exposed by SCM. */
+@jsonSchema
+@id("urn:supply-chain-monkey:schema:v1.account-capabilities-response")
+model AccountCapabilitiesResponse {
+  /** Whether JLC private-library credentials are configured. */
+  configured: boolean;
+}
+
+/** One bounded live scan of the JLC account library. */
+@jsonSchema
+@id("urn:supply-chain-monkey:schema:v1.account-inventory-response")
+model AccountInventoryResponse {
+  /** Account-library records observed in the complete bounded scan. */
+  items: AccountInventoryRecord[];
+  /** Time SCM completed the scan. */
+  observed_at: Rfc3339Timestamp;
+}
+
+/** Evidence from a bounded exact lookup of JLC account-library records. */
+@jsonSchema
+@id("urn:supply-chain-monkey:schema:v1.account-inventory-lookup-response")
+model AccountInventoryLookupResponse {
+  /** Observed matches or no match seen in a live scan. */
+  status: "observed" | "not_observed";
+  /** Exact C-code or model matches; multiple C-codes may share a model. */
+  items: AccountInventoryRecord[];
+  /** Time SCM completed the scan. */
+  observed_at: Rfc3339Timestamp;
+}
+
 /** FastAPI-compatible HTTP error body. */
 model HttpErrorDetail {
   /** Human-readable request or server error. */
@@ -361,6 +419,24 @@ model ServerConfigurationErrorResponse {
   /** HTTP internal-server-error status. */
   @statusCode status_code: 500;
   /** Sanitized server configuration failure. */
+  @body body: HttpErrorDetail;
+}
+
+/** The live supplier read failed or could not complete within bounds. */
+@error
+model AccountUpstreamErrorResponse {
+  /** HTTP bad-gateway status. */
+  @statusCode status_code: 502;
+  /** Sanitized upstream or incomplete scan error. */
+  @body body: HttpErrorDetail;
+}
+
+/** JLC private-library credentials are not configured. */
+@error
+model AccountUnavailableResponse {
+  /** HTTP service-unavailable status. */
+  @statusCode status_code: 503;
+  /** Sanitized missing configuration error. */
   @body body: HttpErrorDetail;
 }
 
@@ -498,6 +574,51 @@ interface AuthenticatedOperations {
     | UnauthorizedResponse
     | ValidationErrorResponse
     | ServerConfigurationErrorResponse;
+}
+
+/** JLC account-library reads use the SCM service bearer token. */
+@useAuth(BearerAuth)
+@route("/v1/account")
+interface AccountOperations {
+  /** Report whether the JLC account inventory read path is configured. */
+  @summary("Get account inventory capability")
+  @get
+  @route("/capabilities")
+  capabilities():
+    | AccountCapabilitiesResponse
+    | UnauthorizedResponse
+    | ValidationErrorResponse
+    | ServerConfigurationErrorResponse;
+
+  /** Scan the JLC account's My Parts Lib within fixed bounds. */
+  @summary("List JLC account inventory")
+  @get
+  @route("/inventory")
+  inventory():
+    | AccountInventoryResponse
+    | UnauthorizedResponse
+    | ValidationErrorResponse
+    | ServerConfigurationErrorResponse
+    | AccountUpstreamErrorResponse
+    | AccountUnavailableResponse;
+
+  /** Find exact C-code or MPN matches in a bounded live JLC library scan. */
+  @summary("Look up JLC account inventory")
+  @get
+  @route("/inventory/lookup")
+  inventoryLookup(
+    /** Exact JLC C-code; provide this or mpn, not both. */
+    @query spn?: string,
+    /** Exact JLC model or MPN; provide this or spn, not both. */
+    @query mpn?: string,
+  ):
+    | AccountInventoryLookupResponse
+    | BadRequestResponse
+    | UnauthorizedResponse
+    | ValidationErrorResponse
+    | ServerConfigurationErrorResponse
+    | AccountUpstreamErrorResponse
+    | AccountUnavailableResponse;
 }
 
 /**

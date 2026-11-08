@@ -29,6 +29,9 @@ import requests
 
 from .contract_codec import DEFAULT_MAX_BYTES, PayloadTooLargeError, decode, encode
 from .models import (
+    AccountCapabilitiesResponse,
+    AccountInventoryLookupResponse,
+    AccountInventoryResponse,
     SUPPLIERS,
     DetailEnvelope,
     HealthResponse,
@@ -63,6 +66,45 @@ class SCMClient:
 
     def _headers(self) -> dict:
         return {"Authorization": f"Bearer {self.token}"}
+
+    def account_capabilities(self) -> AccountCapabilitiesResponse:
+        """Report private account inventory availability."""
+        result = self._request_model(
+            "GET",
+            "/v1/account/capabilities",
+            "AccountCapabilitiesResponse",
+            headers=self._headers(),
+        )
+        assert isinstance(result, AccountCapabilitiesResponse)
+        return result
+
+    def account_inventory(self) -> AccountInventoryResponse:
+        """Read the complete bounded JLC account-library scan."""
+        result = self._request_model(
+            "GET",
+            "/v1/account/inventory",
+            "AccountInventoryResponse",
+            headers=self._headers(),
+        )
+        assert isinstance(result, AccountInventoryResponse)
+        return result
+
+    def account_inventory_lookup(
+        self, *, spn: str | None = None, mpn: str | None = None
+    ) -> AccountInventoryLookupResponse:
+        """Find an exact C-code or MPN in the live account library."""
+        if (spn is None) == (mpn is None):
+            raise ValueError("provide exactly one of spn or mpn")
+        params = {"spn": spn} if spn is not None else {"mpn": mpn}
+        result = self._request_model(
+            "GET",
+            "/v1/account/inventory/lookup",
+            "AccountInventoryLookupResponse",
+            params=params,
+            headers=self._headers(),
+        )
+        assert isinstance(result, AccountInventoryLookupResponse)
+        return result
 
     def _get(self, url: str, **kwargs):
         return requests.get(url, **kwargs)

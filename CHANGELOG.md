@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- Expose bounded, read-only JLC My Parts Lib inventory and exact lookup through
+  SCM's existing bearer-token API, Python and Rust clients, and the `scm` CLI.
+- Add the opt-in Rust serde JSON arbitrary-precision bridge needed by ALX.
+
 ### Security
 
 - Require fixed Certifi and uv versions for the emSign CA compromise, update

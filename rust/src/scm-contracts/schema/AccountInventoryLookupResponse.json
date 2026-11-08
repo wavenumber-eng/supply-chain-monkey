@@ -1,0 +1,40 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.account-inventory-lookup-response",
+    "type": "object",
+    "properties": {
+        "status": {
+            "anyOf": [
+                {
+                    "type": "string",
+                    "const": "observed"
+                },
+                {
+                    "type": "string",
+                    "const": "not_observed"
+                }
+            ],
+            "description": "Observed matches or no match seen in a live scan."
+        },
+        "items": {
+            "type": "array",
+            "items": {
+                "$ref": "urn:supply-chain-monkey:schema:v1.declaration.AccountInventoryRecord"
+            },
+            "description": "Exact C-code or model matches; multiple C-codes may share a model."
+        },
+        "observed_at": {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp",
+            "description": "Time SCM completed the scan."
+        }
+    },
+    "required": [
+        "status",
+        "items",
+        "observed_at"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    },
+    "description": "Evidence from a bounded exact lookup of JLC account-library records."
+}

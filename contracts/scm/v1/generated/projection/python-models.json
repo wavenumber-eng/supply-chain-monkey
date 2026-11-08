@@ -4,6 +4,15 @@
   "$comment": "Generation projection only. Runtime validation uses unmodified root schemas.",
   "anyOf": [
     {
+      "$ref": "#/$defs/AccountCapabilitiesResponse"
+    },
+    {
+      "$ref": "#/$defs/AccountInventoryLookupResponse"
+    },
+    {
+      "$ref": "#/$defs/AccountInventoryResponse"
+    },
+    {
       "$ref": "#/$defs/DetailEnvelope"
     },
     {
@@ -32,6 +41,256 @@
     }
   ],
   "$defs": {
+    "AccountCapabilitiesResponse": {
+      "title": "AccountCapabilitiesResponse",
+      "type": "object",
+      "properties": {
+        "configured": {
+          "type": "boolean",
+          "description": "Whether JLC private-library credentials are configured."
+        }
+      },
+      "required": [
+        "configured"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "description": "Account-data features currently exposed by SCM."
+    },
+    "AccountInventoryLookupResponse": {
+      "title": "AccountInventoryLookupResponse",
+      "type": "object",
+      "properties": {
+        "status": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "observed"
+            },
+            {
+              "type": "string",
+              "const": "not_observed"
+            }
+          ],
+          "description": "Observed matches or no match seen in a live scan."
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AccountInventoryRecord"
+          },
+          "description": "Exact C-code or model matches; multiple C-codes may share a model."
+        },
+        "observed_at": {
+          "$ref": "#/$defs/Rfc3339Timestamp",
+          "description": "Time SCM completed the scan."
+        }
+      },
+      "required": [
+        "status",
+        "items",
+        "observed_at"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "description": "Evidence from a bounded exact lookup of JLC account-library records."
+    },
+    "AccountInventoryRecord": {
+      "title": "AccountInventoryRecord",
+      "type": "object",
+      "properties": {
+        "supplier_part_number": {
+          "type": "string",
+          "description": "JLC C-code used to identify the component."
+        },
+        "manufacturer_part_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "JLC component model, when supplied; it may be shared by multiple C-codes."
+        },
+        "manufacturer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Brand reported for this JLC component, when supplied."
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "JLC component specification, when supplied."
+        },
+        "observed_at": {
+          "$ref": "#/$defs/Rfc3339Timestamp",
+          "description": "Time SCM fetched this page, not a supplier snapshot time."
+        },
+        "balances": {
+          "$ref": "#/$defs/AccountStockBalances",
+          "description": "Four separate JLC source counts; never a combined build quantity."
+        }
+      },
+      "required": [
+        "supplier_part_number",
+        "manufacturer_part_number",
+        "manufacturer",
+        "description",
+        "observed_at",
+        "balances"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "description": "One component in the customer's JLC My Parts Lib."
+    },
+    "AccountInventoryResponse": {
+      "title": "AccountInventoryResponse",
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AccountInventoryRecord"
+          },
+          "description": "Account-library records observed in the complete bounded scan."
+        },
+        "observed_at": {
+          "$ref": "#/$defs/Rfc3339Timestamp",
+          "description": "Time SCM completed the scan."
+        }
+      },
+      "required": [
+        "items",
+        "observed_at"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "description": "One bounded live scan of the JLC account library."
+    },
+    "AccountStockBalances": {
+      "title": "AccountStockBalances",
+      "type": "object",
+      "properties": {
+        "jlcpcb_parts": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonInteger"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "JLC `jlcpcbParts` count."
+        },
+        "global_sourcing_parts": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonInteger"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "JLC `globalSourcingParts` count."
+        },
+        "consigned_parts": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonInteger"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "JLC `consignedParts` count."
+        },
+        "idle_stock": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsonInteger"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "JLC `idleStock` count."
+        }
+      },
+      "required": [
+        "jlcpcb_parts",
+        "global_sourcing_parts",
+        "consigned_parts",
+        "idle_stock"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "description": "Four separate JLC source counts, with null distinct from zero."
+    },
+    "AccountUnavailableResponse": {
+      "title": "AccountUnavailableResponse",
+      "type": "object",
+      "properties": {
+        "status_code": {
+          "type": "number",
+          "const": 503,
+          "description": "HTTP service-unavailable status."
+        },
+        "body": {
+          "$ref": "#/$defs/HttpErrorDetail",
+          "description": "Sanitized missing configuration error."
+        }
+      },
+      "required": [
+        "status_code",
+        "body"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "description": "JLC private-library credentials are not configured."
+    },
+    "AccountUpstreamErrorResponse": {
+      "title": "AccountUpstreamErrorResponse",
+      "type": "object",
+      "properties": {
+        "status_code": {
+          "type": "number",
+          "const": 502,
+          "description": "HTTP bad-gateway status."
+        },
+        "body": {
+          "$ref": "#/$defs/HttpErrorDetail",
+          "description": "Sanitized upstream or incomplete scan error."
+        }
+      },
+      "required": [
+        "status_code",
+        "body"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "description": "The live supplier read failed or could not complete within bounds."
+    },
     "BadRequestResponse": {
       "title": "BadRequestResponse",
       "type": "object",

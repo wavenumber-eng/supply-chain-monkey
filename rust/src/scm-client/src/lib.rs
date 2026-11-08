@@ -49,7 +49,8 @@ mod error;
 pub use scm_contracts as contracts;
 
 pub use client::{
-    DEFAULT_SUPPLIERS, LookupOptions, MultiSearchResults, ProviderOutcome, ScmClient, SearchOptions,
+    AccountPart, DEFAULT_SUPPLIERS, LookupOptions, MultiSearchResults, ProviderOutcome, ScmClient,
+    SearchOptions,
 };
 pub use config::{ClientBuilder, DEFAULT_CONNECT_TIMEOUT, DEFAULT_REQUEST_TIMEOUT};
 pub use error::{ClientError, ConfigError, ContractFailure};

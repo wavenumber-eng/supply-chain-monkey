@@ -112,8 +112,18 @@ class JLCOpenAPIClient:
             payload["lastKey"] = last_key
         return self._post("/overseas/openapi/component/getComponentInfos", payload)
 
-    def get_private_component_library(self) -> list[dict[str, Any]]:
-        response = self._post("/overseas/openapi/component/getPrivateComponentLibrary", {})
+    def get_private_component_library(
+        self, *, page: int = 1, page_size: int = 30, timeout_seconds: float | None = None
+    ) -> list[dict[str, Any]]:
+        """Return one bounded page of the account's My Parts Lib."""
+        if page < 1 or page_size < 1 or page_size > 30:
+            raise ValueError("JLC private-library page and size are out of range.")
+        response = self._post(
+            "/overseas/openapi/component/getPrivateComponentLibrary",
+            {"currentPage": page, "pageSize": page_size},
+            timeout_seconds=timeout_seconds,
+            max_response_bytes=2_000_000,
+        )
         data = response.get("data")
         if isinstance(data, list):
             return data
@@ -183,7 +193,14 @@ class JLCOpenAPIClient:
                 return detail_list
         raise JLCOpenAPIRequestError("JLC component detail response was not recognized.")
 
-    def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def _post(
+        self,
+        path: str,
+        payload: dict[str, Any],
+        *,
+        timeout_seconds: float | None = None,
+        max_response_bytes: int | None = None,
+    ) -> dict[str, Any]:
         self._require_configured()
 
         body_text = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
@@ -203,7 +220,8 @@ class JLCOpenAPIClient:
                 url,
                 data=body_text.encode("utf-8"),
                 headers=headers,
-                timeout=self.timeout_seconds,
+                timeout=timeout_seconds if timeout_seconds is not None else self.timeout_seconds,
+                stream=max_response_bytes is not None,
             )
         except requests.RequestException as exc:
             raise JLCOpenAPIRequestError(
@@ -211,11 +229,25 @@ class JLCOpenAPIClient:
             ) from exc
 
         try:
-            payload_obj = response.json()
+            if max_response_bytes is None:
+                payload_obj = response.json()
+            else:
+                body = bytearray()
+                for chunk in response.iter_content(chunk_size=64 * 1024):
+                    body.extend(chunk)
+                    if len(body) > max_response_bytes:
+                        raise JLCOpenAPIRequestError(
+                            "JLC private-library response exceeded the size limit."
+                        )
+                payload_obj = json.loads(body)
         except ValueError as exc:
             raise JLCOpenAPIRequestError(
                 f"JLC OpenAPI response for {path} was not valid JSON (status {response.status_code})."
             ) from exc
+        except requests.RequestException as exc:
+            raise JLCOpenAPIRequestError("JLC OpenAPI response could not be read.") from exc
+        finally:
+            response.close()
 
         if response.status_code != 200:
             message = payload_obj.get("message") if isinstance(payload_obj, dict) else None

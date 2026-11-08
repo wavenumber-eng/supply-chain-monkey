@@ -1,0 +1,61 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.declaration.AccountStockBalances",
+    "type": "object",
+    "properties": {
+        "jlcpcb_parts": {
+            "anyOf": [
+                {
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "description": "JLC `jlcpcbParts` count."
+        },
+        "global_sourcing_parts": {
+            "anyOf": [
+                {
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "description": "JLC `globalSourcingParts` count."
+        },
+        "consigned_parts": {
+            "anyOf": [
+                {
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "description": "JLC `consignedParts` count."
+        },
+        "idle_stock": {
+            "anyOf": [
+                {
+                    "$ref": "urn:supply-chain-monkey:schema:v1.declaration.JsonInteger"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "description": "JLC `idleStock` count."
+        }
+    },
+    "required": [
+        "jlcpcb_parts",
+        "global_sourcing_parts",
+        "consigned_parts",
+        "idle_stock"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    },
+    "description": "Four separate JLC source counts, with null distinct from zero."
+}

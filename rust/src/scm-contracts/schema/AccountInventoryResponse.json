@@ -1,0 +1,26 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:supply-chain-monkey:schema:v1.account-inventory-response",
+    "type": "object",
+    "properties": {
+        "items": {
+            "type": "array",
+            "items": {
+                "$ref": "urn:supply-chain-monkey:schema:v1.declaration.AccountInventoryRecord"
+            },
+            "description": "Account-library records observed in the complete bounded scan."
+        },
+        "observed_at": {
+            "$ref": "urn:supply-chain-monkey:schema:v1.declaration.Rfc3339Timestamp",
+            "description": "Time SCM completed the scan."
+        }
+    },
+    "required": [
+        "items",
+        "observed_at"
+    ],
+    "unevaluatedProperties": {
+        "not": {}
+    },
+    "description": "One bounded live scan of the JLC account library."
+}

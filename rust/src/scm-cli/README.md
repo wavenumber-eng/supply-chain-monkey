@@ -45,7 +45,17 @@ scm providers
 scm detail LCSC C2040
 scm spn LCSC C2040
 scm batch LCSC C2040 C2870085
+scm account capabilities
+scm --json account inventory
+scm --json account inventory-lookup --spn C2040
 ```
+
+Account inventory reads JLC My Parts Lib, including purchased or preordered
+parts. It prints JLC's four source balances separately; null means JLC did not
+report that balance. The server scans at most 100 JLC pages within 25 seconds
+and rejects incomplete or duplicate results. Lookup uses the same scan and
+reports `not_observed` when it finishes without a match. Results are live
+observations, not a snapshot.
 
 Use `SCM_CA_BUNDLE` or `--ca-bundle` only for a reviewed private PEM root. The
 CLI inherits the Rust client's HTTPS, redirect, timeout, response-size, proxy,

@@ -3,6 +3,27 @@
   "version": "a0",
   "cases": [
     {
+      "id": "account-capabilities",
+      "path": "valid/account-capabilities.json",
+      "schema": "AccountCapabilitiesResponse",
+      "valid": true,
+      "sha256": "96aa8ecfed8b3c2bce9aa038c2098a4e6085236fdbbef8cc44efdd96f0aa08a2"
+    },
+    {
+      "id": "account-inventory",
+      "path": "valid/account-inventory.json",
+      "schema": "AccountInventoryResponse",
+      "valid": true,
+      "sha256": "6e1d5353690db96bf492856bdc9f86509d9dcbc88133838901b2cde35860b0d4"
+    },
+    {
+      "id": "account-inventory-lookup",
+      "path": "valid/account-inventory-lookup.json",
+      "schema": "AccountInventoryLookupResponse",
+      "valid": true,
+      "sha256": "e5bf0859eaf15f127d501fe8c9a667dacb397fbebdae5f15c4a074a5c4a19966"
+    },
+    {
       "id": "health",
       "path": "valid/health.json",
       "schema": "HealthResponse",
