@@ -27,9 +27,10 @@ material.
 
 ## Status
 
-`2026.9.1` - TypeSpec-backed contracts, generated Python and Rust models, a
-secure Rust client and test CLI, generic multi-provider search, and repaired
-JLCPCB/LCSC search fallbacks.
+`2026.11.8` candidate - adds read-only JLC account inventory and lookup to the
+existing TypeSpec-backed service, Python and Rust clients, and `scm` CLI.
+The latest published PyPI package remains `2026.9.1` until this candidate is
+released.
 
 The PyPI distribution is `supply-chain-monkey`. The Python import package is
 `scm`.

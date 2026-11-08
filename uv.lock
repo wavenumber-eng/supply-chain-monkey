@@ -1089,7 +1089,7 @@ wheels = [
 
 [[package]]
 name = "supply-chain-monkey"
-version = "2026.9.1"
+version = "2026.11.8"
 source = { virtual = "." }
 default-groups = []
 dependencies = [

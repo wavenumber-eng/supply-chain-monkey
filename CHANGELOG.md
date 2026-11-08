@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Candidate Python version: `2026.11.8`.
+
 ### Added
 
 - Expose bounded, read-only JLC My Parts Lib inventory and exact lookup through
