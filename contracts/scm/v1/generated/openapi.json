@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "supply-chain-monkey",
-    "version": "2026.9.1",
+    "version": "2026.11.8",
     "description": "Public HTTP and JSON contract for Supply Chain Monkey v1.\n\nSCM normalizes electronic-component data from configured supplier backends.\nExcept for health and the HTML status page, operations require a bearer token."
   },
   "tags": [],
@@ -25,6 +25,242 @@
             }
           }
         }
+      }
+    },
+    "/v1/account/capabilities": {
+      "get": {
+        "operationId": "AccountOperations_capabilities",
+        "summary": "Get account inventory capability",
+        "description": "Report whether the JLC account inventory read path is configured.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountCapabilitiesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Response returned when bearer authentication fails.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Response returned when request validation fails.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Response returned when SCM authentication is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/account/inventory": {
+      "get": {
+        "operationId": "AccountOperations_inventory",
+        "summary": "List JLC account inventory",
+        "description": "Scan the JLC account's My Parts Lib within fixed bounds.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountInventoryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Response returned when bearer authentication fails.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Response returned when request validation fails.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Response returned when SCM authentication is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The live supplier read failed or could not complete within bounds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "JLC private-library credentials are not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/account/inventory/lookup": {
+      "get": {
+        "operationId": "AccountOperations_inventoryLookup",
+        "summary": "Look up JLC account inventory",
+        "description": "Find exact C-code or MPN matches in a bounded live JLC library scan.",
+        "parameters": [
+          {
+            "name": "spn",
+            "in": "query",
+            "required": false,
+            "description": "Exact JLC C-code; provide this or mpn, not both.",
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "mpn",
+            "in": "query",
+            "required": false,
+            "description": "Exact JLC model or MPN; provide this or spn, not both.",
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountInventoryLookupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Response returned for a malformed legacy stream request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Response returned when bearer authentication fails.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Response returned when request validation fails.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorDetail"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Response returned when SCM authentication is not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The live supplier read failed or could not complete within bounds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "JLC private-library credentials are not configured.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpErrorDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
       }
     },
     "/v1/detail": {
@@ -580,6 +816,200 @@
   },
   "components": {
     "schemas": {
+      "AccountCapabilitiesResponse": {
+        "type": "object",
+        "required": [
+          "configured"
+        ],
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "description": "Whether JLC private-library credentials are configured."
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        },
+        "description": "Account-data features currently exposed by SCM."
+      },
+      "AccountInventoryLookupResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "items",
+          "observed_at"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "observed",
+              "not_observed"
+            ],
+            "description": "Observed matches or no match seen in a live scan."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountInventoryRecord"
+            },
+            "description": "Exact C-code or model matches; multiple C-codes may share a model."
+          },
+          "observed_at": {
+            "$ref": "#/components/schemas/Rfc3339Timestamp",
+            "description": "Time SCM completed the scan."
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        },
+        "description": "Evidence from a bounded exact lookup of JLC account-library records."
+      },
+      "AccountInventoryRecord": {
+        "type": "object",
+        "required": [
+          "supplier_part_number",
+          "manufacturer_part_number",
+          "manufacturer",
+          "description",
+          "observed_at",
+          "balances"
+        ],
+        "properties": {
+          "supplier_part_number": {
+            "type": "string",
+            "description": "JLC C-code used to identify the component."
+          },
+          "manufacturer_part_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JLC component model, when supplied; it may be shared by multiple C-codes."
+          },
+          "manufacturer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Brand reported for this JLC component, when supplied."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JLC component specification, when supplied."
+          },
+          "observed_at": {
+            "$ref": "#/components/schemas/Rfc3339Timestamp",
+            "description": "Time SCM fetched this page, not a supplier snapshot time."
+          },
+          "balances": {
+            "$ref": "#/components/schemas/AccountStockBalances",
+            "description": "Four separate JLC source counts; never a combined build quantity."
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        },
+        "description": "One component in the customer's JLC My Parts Lib."
+      },
+      "AccountInventoryResponse": {
+        "type": "object",
+        "required": [
+          "items",
+          "observed_at"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountInventoryRecord"
+            },
+            "description": "Account-library records observed in the complete bounded scan."
+          },
+          "observed_at": {
+            "$ref": "#/components/schemas/Rfc3339Timestamp",
+            "description": "Time SCM completed the scan."
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        },
+        "description": "One bounded live scan of the JLC account library."
+      },
+      "AccountStockBalances": {
+        "type": "object",
+        "required": [
+          "jlcpcb_parts",
+          "global_sourcing_parts",
+          "consigned_parts",
+          "idle_stock"
+        ],
+        "properties": {
+          "jlcpcb_parts": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JsonInteger"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JLC `jlcpcbParts` count."
+          },
+          "global_sourcing_parts": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JsonInteger"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JLC `globalSourcingParts` count."
+          },
+          "consigned_parts": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JsonInteger"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JLC `consignedParts` count."
+          },
+          "idle_stock": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JsonInteger"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JLC `idleStock` count."
+          }
+        },
+        "unevaluatedProperties": {
+          "not": {}
+        },
+        "description": "Four separate JLC source counts, with null distinct from zero."
+      },
       "BatchItemStatus": {
         "type": "string",
         "enum": [

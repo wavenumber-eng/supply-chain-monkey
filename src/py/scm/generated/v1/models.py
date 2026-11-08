@@ -9,6 +9,21 @@ from typing import Annotated, Literal, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 
+class AccountCapabilitiesResponse(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    configured: Annotated[
+        bool,
+        Field(description="Whether JLC private-library credentials are configured."),
+    ]
+
+
+class Status(StrEnum):
+    observed = "observed"
+    not_observed = "not_observed"
+
+
 class BatchItemStatus(StrEnum):
     ok = "ok"
     not_found = "not_found"
@@ -265,6 +280,47 @@ class UnauthorizedResponse(BaseModel):
     ]
 
 
+class AccountStockBalances(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    jlcpcb_parts: Annotated[
+        JsonInteger | None, Field(description="JLC `jlcpcbParts` count.")
+    ]
+    global_sourcing_parts: Annotated[
+        JsonInteger | None, Field(description="JLC `globalSourcingParts` count.")
+    ]
+    consigned_parts: Annotated[
+        JsonInteger | None, Field(description="JLC `consignedParts` count.")
+    ]
+    idle_stock: Annotated[
+        JsonInteger | None, Field(description="JLC `idleStock` count.")
+    ]
+
+
+class AccountUnavailableResponse(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    status_code: Annotated[
+        Literal[503], Field(description="HTTP service-unavailable status.")
+    ]
+    body: Annotated[
+        HttpErrorDetail, Field(description="Sanitized missing configuration error.")
+    ]
+
+
+class AccountUpstreamErrorResponse(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    status_code: Annotated[Literal[502], Field(description="HTTP bad-gateway status.")]
+    body: Annotated[
+        HttpErrorDetail,
+        Field(description="Sanitized upstream or incomplete scan error."),
+    ]
+
+
 class BadRequestResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -332,6 +388,53 @@ class RecordProviderStatusEntry(RootModel[dict[str, ProviderStatusEntry]]):
     root: dict[str, ProviderStatusEntry]
 
 
+class AccountInventoryRecord(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    supplier_part_number: Annotated[
+        str, Field(description="JLC C-code used to identify the component.")
+    ]
+    manufacturer_part_number: Annotated[
+        str | None,
+        Field(
+            description="JLC component model, when supplied; it may be shared by multiple C-codes."
+        ),
+    ]
+    manufacturer: Annotated[
+        str | None,
+        Field(description="Brand reported for this JLC component, when supplied."),
+    ]
+    description: Annotated[
+        str | None, Field(description="JLC component specification, when supplied.")
+    ]
+    observed_at: Annotated[
+        Rfc3339Timestamp,
+        Field(description="Time SCM fetched this page, not a supplier snapshot time."),
+    ]
+    balances: Annotated[
+        AccountStockBalances,
+        Field(
+            description="Four separate JLC source counts; never a combined build quantity."
+        ),
+    ]
+
+
+class AccountInventoryResponse(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    items: Annotated[
+        list[AccountInventoryRecord],
+        Field(
+            description="Account-library records observed in the complete bounded scan."
+        ),
+    ]
+    observed_at: Annotated[
+        Rfc3339Timestamp, Field(description="Time SCM completed the scan.")
+    ]
+
+
 class EnvelopeMetadata(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -384,6 +487,24 @@ class ProviderStatusResponse(BaseModel):
     providers: Annotated[
         RecordProviderStatusEntry,
         Field(description="Provider status keyed by canonical provider name."),
+    ]
+
+
+class AccountInventoryLookupResponse(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    status: Annotated[
+        Status, Field(description="Observed matches or no match seen in a live scan.")
+    ]
+    items: Annotated[
+        list[AccountInventoryRecord],
+        Field(
+            description="Exact C-code or model matches; multiple C-codes may share a model."
+        ),
+    ]
+    observed_at: Annotated[
+        Rfc3339Timestamp, Field(description="Time SCM completed the scan.")
     ]
 
 
@@ -560,7 +681,10 @@ class StreamSearchEvent(RootModel[SearchEnvelope | StreamDoneEvent]):
 
 class Model(
     RootModel[
-        DetailEnvelope
+        AccountCapabilitiesResponse
+        | AccountInventoryLookupResponse
+        | AccountInventoryResponse
+        | DetailEnvelope
         | HealthResponse
         | ProviderStatusResponse
         | SearchEnvelope
@@ -571,7 +695,7 @@ class Model(
         | StreamSearchEvent
     ]
 ):
-    root: DetailEnvelope | HealthResponse | ProviderStatusResponse | SearchEnvelope | SpnBatchEnvelope | SpnBatchRequest | SpnEnvelope | StreamDoneEvent | StreamSearchEvent
+    root: AccountCapabilitiesResponse | AccountInventoryLookupResponse | AccountInventoryResponse | DetailEnvelope | HealthResponse | ProviderStatusResponse | SearchEnvelope | SpnBatchEnvelope | SpnBatchRequest | SpnEnvelope | StreamDoneEvent | StreamSearchEvent
 
 
 class ProviderRawData(RootModel[dict[str, Optional["JsonValue"]]]):

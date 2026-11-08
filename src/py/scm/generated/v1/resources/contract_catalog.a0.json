@@ -5,6 +5,24 @@
   "namespace": "Wavenumber.SupplyChainMonkey.V1",
   "roots": [
     {
+      "name": "Wavenumber.SupplyChainMonkey.V1.AccountCapabilitiesResponse",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.account-capabilities-response",
+      "artifact": "contracts/scm/v1/generated/schema/AccountCapabilitiesResponse.json",
+      "sha256": "a80d2487219163feb8ffc1fb60c725834c3204be616a5f7daf28af53393ffe06"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.AccountInventoryLookupResponse",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.account-inventory-lookup-response",
+      "artifact": "contracts/scm/v1/generated/schema/AccountInventoryLookupResponse.json",
+      "sha256": "6ac09544b3cc01b4c8e8c6f53a0f50b1e3b761cb6f865a4ea56b0d6f16b74248"
+    },
+    {
+      "name": "Wavenumber.SupplyChainMonkey.V1.AccountInventoryResponse",
+      "schema_id": "urn:supply-chain-monkey:schema:v1.account-inventory-response",
+      "artifact": "contracts/scm/v1/generated/schema/AccountInventoryResponse.json",
+      "sha256": "c257c5d57727fbf49dc81c1a2f499c2aea8965faa33040bf56f2bb5c5e5c7e0e"
+    },
+    {
       "name": "Wavenumber.SupplyChainMonkey.V1.DetailEnvelope",
       "schema_id": "urn:supply-chain-monkey:schema:v1.detail-envelope",
       "artifact": "contracts/scm/v1/generated/schema/DetailEnvelope.json",
@@ -68,6 +86,99 @@
       "request_roots": [],
       "responses": {
         "200": []
+      },
+      "event_roots": []
+    },
+    {
+      "operation_id": "AccountOperations_capabilities",
+      "method": "GET",
+      "path": "/v1/account/capabilities",
+      "security": [
+        {
+          "BearerAuth": []
+        }
+      ],
+      "request_roots": [],
+      "responses": {
+        "200": [
+          "AccountCapabilitiesResponse"
+        ],
+        "401": [
+          "HttpErrorDetail"
+        ],
+        "422": [
+          "ValidationErrorDetail"
+        ],
+        "500": [
+          "HttpErrorDetail"
+        ]
+      },
+      "event_roots": []
+    },
+    {
+      "operation_id": "AccountOperations_inventory",
+      "method": "GET",
+      "path": "/v1/account/inventory",
+      "security": [
+        {
+          "BearerAuth": []
+        }
+      ],
+      "request_roots": [],
+      "responses": {
+        "200": [
+          "AccountInventoryResponse"
+        ],
+        "401": [
+          "HttpErrorDetail"
+        ],
+        "422": [
+          "ValidationErrorDetail"
+        ],
+        "500": [
+          "HttpErrorDetail"
+        ],
+        "502": [
+          "HttpErrorDetail"
+        ],
+        "503": [
+          "HttpErrorDetail"
+        ]
+      },
+      "event_roots": []
+    },
+    {
+      "operation_id": "AccountOperations_inventoryLookup",
+      "method": "GET",
+      "path": "/v1/account/inventory/lookup",
+      "security": [
+        {
+          "BearerAuth": []
+        }
+      ],
+      "request_roots": [],
+      "responses": {
+        "200": [
+          "AccountInventoryLookupResponse"
+        ],
+        "400": [
+          "HttpErrorDetail"
+        ],
+        "401": [
+          "HttpErrorDetail"
+        ],
+        "422": [
+          "ValidationErrorDetail"
+        ],
+        "500": [
+          "HttpErrorDetail"
+        ],
+        "502": [
+          "HttpErrorDetail"
+        ],
+        "503": [
+          "HttpErrorDetail"
+        ]
       },
       "event_roots": []
     },
@@ -248,19 +359,61 @@
   "artifacts": {
     "openapi": {
       "path": "contracts/scm/v1/generated/openapi.json",
-      "sha256": "54a7232075c9cbfd3e88aafd8fc57f8bd57815d1ea0d4401076824965cbb1606"
+      "sha256": "3915c40845dbe821150e0b61448a8c9c643bfb7dae545adc412df917e6595ebf"
     },
     "python_projection": {
       "path": "contracts/scm/v1/generated/projection/python-models.json",
-      "sha256": "d902f17d5cb20e97184f397887ae6bd77a5b5c7427053129bcd3ba0191c8acab",
+      "sha256": "5262b98872fccb834b55033677350b0110bb15a736234760d76e7055025a78b0",
       "authority": false,
       "purpose": "datamodel-code-generator input with local $defs references"
     },
     "vectors": {
       "path": "contracts/scm/v1/vectors/manifest.a0.json",
-      "sha256": "e001c2ba39bf6699aaf22c5be65179b86c15dc7a737ca0c8f62960c165aa6ae5"
+      "sha256": "c900b67a6c4fb608dcbb7a3c830ecd3936a17eb4bc73bdefbab9ea8e02afd654"
     },
     "schemas": [
+      {
+        "name": "AccountCapabilitiesResponse",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.account-capabilities-response",
+        "path": "contracts/scm/v1/generated/schema/AccountCapabilitiesResponse.json",
+        "sha256": "a80d2487219163feb8ffc1fb60c725834c3204be616a5f7daf28af53393ffe06"
+      },
+      {
+        "name": "AccountInventoryLookupResponse",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.account-inventory-lookup-response",
+        "path": "contracts/scm/v1/generated/schema/AccountInventoryLookupResponse.json",
+        "sha256": "6ac09544b3cc01b4c8e8c6f53a0f50b1e3b761cb6f865a4ea56b0d6f16b74248"
+      },
+      {
+        "name": "AccountInventoryRecord",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.AccountInventoryRecord",
+        "path": "contracts/scm/v1/generated/schema/AccountInventoryRecord.json",
+        "sha256": "3a4ad05bd2e1c030680da3fbd49908a98a1789715ef2a5347e518ddaa60c0b5c"
+      },
+      {
+        "name": "AccountInventoryResponse",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.account-inventory-response",
+        "path": "contracts/scm/v1/generated/schema/AccountInventoryResponse.json",
+        "sha256": "c257c5d57727fbf49dc81c1a2f499c2aea8965faa33040bf56f2bb5c5e5c7e0e"
+      },
+      {
+        "name": "AccountStockBalances",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.AccountStockBalances",
+        "path": "contracts/scm/v1/generated/schema/AccountStockBalances.json",
+        "sha256": "59ff0f8a5ab5321b1b99c044773a7a1169fdd6938d98782dd41e30aece39af28"
+      },
+      {
+        "name": "AccountUnavailableResponse",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.AccountUnavailableResponse",
+        "path": "contracts/scm/v1/generated/schema/AccountUnavailableResponse.json",
+        "sha256": "f4a0a69d81c479ae549d18c6c6049088aebd3daef2616a44735ca2d1644cef20"
+      },
+      {
+        "name": "AccountUpstreamErrorResponse",
+        "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.AccountUpstreamErrorResponse",
+        "path": "contracts/scm/v1/generated/schema/AccountUpstreamErrorResponse.json",
+        "sha256": "89e49d00b24e37d44af3c2ae6d9767fdfc83d119471d261e0da2e507bf0d0f3b"
+      },
       {
         "name": "BadRequestResponse",
         "schema_id": "urn:supply-chain-monkey:schema:v1.declaration.BadRequestResponse",

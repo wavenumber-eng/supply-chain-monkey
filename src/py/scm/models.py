@@ -12,6 +12,9 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from .generated.v1.models import (
+    AccountCapabilitiesResponse as AccountCapabilitiesResponse,
+    AccountInventoryLookupResponse as AccountInventoryLookupResponse,
+    AccountInventoryResponse as AccountInventoryResponse,
     DetailEnvelope as DetailEnvelope,
     HealthResponse as HealthResponse,
     HttpErrorDetail as HttpErrorDetail,

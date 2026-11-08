@@ -21,6 +21,7 @@ const DETAIL: &[u8] = include_bytes!("../../../../contracts/scm/v1/vectors/valid
 const SPN: &[u8] = include_bytes!("../../../../contracts/scm/v1/vectors/valid/spn-ok.json");
 const BATCH: &[u8] =
     include_bytes!("../../../../contracts/scm/v1/vectors/valid/spn-batch-partial.json");
+const ACCOUNT_INVENTORY: &[u8] = br#"{"items":[{"supplier_part_number":"C123","manufacturer_part_number":"Part-1","manufacturer":null,"description":null,"observed_at":"2026-11-07T12:00:00Z","balances":{"jlcpcb_parts":0,"global_sourcing_parts":null,"consigned_parts":5,"idle_stock":null}}],"observed_at":"2026-11-07T12:00:01Z"}"#;
 
 #[derive(Clone, Debug)]
 struct RecordedRequest {
@@ -72,6 +73,14 @@ async fn handler(State(state): State<TestState>, request: Request) -> Response<B
         "/v1/detail" => DETAIL.to_vec(),
         "/v1/spn" => SPN.to_vec(),
         "/v1/spn/batch" => BATCH.to_vec(),
+        "/v1/account/capabilities" => br#"{"configured":true}"#.to_vec(),
+        "/v1/account/inventory" => ACCOUNT_INVENTORY.to_vec(),
+        "/v1/account/inventory/lookup" => {
+            let mut value: serde_json::Value =
+                serde_json::from_slice(ACCOUNT_INVENTORY).expect("inventory fixture");
+            value["status"] = serde_json::json!("observed");
+            serde_json::to_vec(&value).expect("lookup fixture")
+        }
         _ => return response(StatusCode::NOT_FOUND, b"not found"),
     };
     response(StatusCode::OK, &payload)
@@ -184,6 +193,68 @@ async fn invoke(arguments: Vec<String>, token: Option<&str>) -> Output {
 
 fn text(bytes: &[u8]) -> String {
     String::from_utf8(bytes.to_vec()).expect("UTF-8 CLI output")
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn account_commands_use_full_scan_and_preserve_zero_vs_unknown() {
+    let (base, state, task) = spawn_server().await;
+    let inventory = invoke(
+        vec![
+            "--url".to_owned(),
+            base.clone(),
+            "account".to_owned(),
+            "inventory".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert!(inventory.status.success(), "{}", text(&inventory.stderr));
+    let output = text(&inventory.stdout);
+    assert!(output.contains("jlcpcb_parts=0"));
+    assert!(output.contains("global_sourcing_parts=?"));
+
+    let lookup = invoke(
+        vec![
+            "--url".to_owned(),
+            base,
+            "--json".to_owned(),
+            "account".to_owned(),
+            "inventory-lookup".to_owned(),
+            "--spn".to_owned(),
+            "C123".to_owned(),
+        ],
+        Some("CLI_SENSITIVE_MARKER"),
+    )
+    .await;
+    assert!(lookup.status.success(), "{}", text(&lookup.stderr));
+    let value: serde_json::Value = serde_json::from_slice(&lookup.stdout).expect("lookup JSON");
+    assert_eq!(value["status"], "observed");
+    assert_eq!(value["items"][0]["balances"]["jlcpcb_parts"], 0);
+    assert!(value["items"][0]["balances"]["global_sourcing_parts"].is_null());
+
+    {
+        let requests = state.requests.lock().expect("record lock");
+        assert_eq!(requests[0].uri, "/v1/account/inventory");
+        assert_eq!(requests[1].uri, "/v1/account/inventory/lookup?spn=C123");
+        assert!(requests.iter().all(|request| {
+            request.authorization.as_deref() == Some("Bearer CLI_SENSITIVE_MARKER")
+        }));
+    }
+    for arguments in [
+        vec!["account", "inventory-lookup"],
+        vec![
+            "account",
+            "inventory-lookup",
+            "--spn",
+            "C123",
+            "--mpn",
+            "Part-1",
+        ],
+    ] {
+        let invalid = invoke(arguments.into_iter().map(str::to_owned).collect(), None).await;
+        assert_eq!(invalid.status.code(), Some(2));
+    }
+    task.abort();
 }
 
 #[tokio::test]

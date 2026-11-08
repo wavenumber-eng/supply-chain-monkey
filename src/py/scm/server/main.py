@@ -11,7 +11,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from scm import __version__
-from .routers import detail, health, search, spn, stream
+from .routers import account, detail, health, search, spn, stream
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,6 +25,7 @@ app.include_router(search.router)
 app.include_router(spn.router)
 app.include_router(detail.router)
 app.include_router(stream.router)
+app.include_router(account.router)
 
 
 @lru_cache(maxsize=1)

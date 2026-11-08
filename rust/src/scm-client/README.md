@@ -10,11 +10,19 @@ the package alias:
 ```toml
 [dependencies]
 scm-client = { package = "supply-chain-monkey-client", git = "https://github.com/wavenumber-eng/supply-chain-monkey.git", rev = "e7bc0587e7a4b6435b993ce982505fb604861d20" }
-tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.53.3", features = ["macros", "rt-multi-thread"] }
 ```
 
-Use Rust 1.96 or newer; SCM release proofs use the pinned Rust 1.96.1
+The pin above is the current released client and does not include the account
+inventory API or the opt-in serde JSON bridge. Use a reviewed release commit
+containing those changes when they are published. Use Rust 1.96 or newer; SCM
+release proofs use the pinned Rust 1.96.1
 toolchain. Commit the resolved `Cargo.lock` in the consuming application.
+
+With a newer revision that contains the bridge, enable
+`features = ["serde-json-arbitrary-precision"]` on `scm-client` whenever the
+dependency graph enables `serde_json/arbitrary_precision`. See the
+[contracts crate](../scm-contracts/README.md) for the codec behavior.
 
 ## Search one provider
 

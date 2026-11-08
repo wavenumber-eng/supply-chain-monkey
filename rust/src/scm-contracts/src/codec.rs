@@ -1,5 +1,8 @@
 //! Strict bounded I-JSON and schema codec.
 
+#[cfg(feature = "serde-json-arbitrary-precision")]
+mod arbitrary_precision;
+
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::sync::OnceLock;
@@ -75,6 +78,8 @@ fn check_size(actual: usize, limit: usize) -> Result<(), CodecError> {
 }
 
 fn strict_value(payload: &[u8]) -> Result<Value, CodecError> {
+    #[cfg(feature = "serde-json-arbitrary-precision")]
+    arbitrary_precision::reject_reserved_keys(payload)?;
     let mut deserializer = serde_json::Deserializer::from_slice(payload);
     let value = deserializer
         .deserialize_any(StrictValueVisitor)
@@ -89,6 +94,9 @@ fn strict_value(payload: &[u8]) -> Result<Value, CodecError> {
 fn check_ijson(value: &Value, path: &str) -> Result<(), CodecError> {
     match value {
         Value::Number(number) => {
+            #[cfg(feature = "serde-json-arbitrary-precision")]
+            let valid = arbitrary_precision::valid_number(number);
+            #[cfg(not(feature = "serde-json-arbitrary-precision"))]
             let valid = if let Some(value) = number.as_i64() {
                 (MIN_IJSON_INTEGER..=MAX_IJSON_INTEGER as i64).contains(&value)
             } else if let Some(value) = number.as_u64() {
@@ -107,6 +115,8 @@ fn check_ijson(value: &Value, path: &str) -> Result<(), CodecError> {
         }
         Value::Object(object) => {
             for (key, item) in object {
+                #[cfg(feature = "serde-json-arbitrary-precision")]
+                arbitrary_precision::check_key(key)?;
                 check_ijson(item, &format!("{path}.{key}"))?;
             }
         }
@@ -252,6 +262,18 @@ impl<'de> Visitor<'de> for StrictValueVisitor {
     {
         let mut keys = HashSet::new();
         let mut values = Map::new();
+        #[cfg(feature = "serde-json-arbitrary-precision")]
+        if let Some(first) = map.next_key_seed(arbitrary_precision::MapKeySeed)? {
+            match first {
+                arbitrary_precision::MapKey::Number => {
+                    return arbitrary_precision::read_number(&mut map);
+                }
+                arbitrary_precision::MapKey::Object(key) => {
+                    keys.insert(key.clone());
+                    values.insert(key, map.next_value_seed(StrictValueSeed)?);
+                }
+            }
+        }
         while let Some(key) = map.next_key::<String>()? {
             if !keys.insert(key.clone()) {
                 return Err(serde::de::Error::custom(format!(

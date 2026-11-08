@@ -8,6 +8,7 @@ use futures_util::stream::{self, StreamExt};
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, HeaderValue};
 use reqwest::{Method, RequestBuilder, Response, Url};
 use scm_contracts::{
+    AccountCapabilitiesResponse, AccountInventoryLookupResponse, AccountInventoryResponse,
     ContractRoot, DetailEnvelope, HealthResponse, ProviderStatusResponse, SearchEnvelope,
     SpnBatchEnvelope, SpnBatchRequest, SpnEnvelope, decode, encode,
 };
@@ -18,6 +19,15 @@ use crate::{ClientBuilder, ClientError, ConfigError, ContractFailure};
 
 /// Suppliers supported by the current deployed SCM v1 service.
 pub const DEFAULT_SUPPLIERS: &[&str] = &["jlcpcb", "lcsc", "digikey", "mouser"];
+
+/// Exact identifier used to search JLC account inventory.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum AccountPart<'a> {
+    /// Exact JLC component code.
+    Spn(&'a str),
+    /// Manufacturer part number, which may match several JLC codes.
+    Mpn(&'a str),
+}
 
 /// Query options shared by detail and exact-SPN lookups.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
@@ -132,6 +142,55 @@ impl ScmClient {
         self.execute(
             "providers_status",
             ContractRoot::ProviderStatusResponse,
+            request,
+        )
+        .await
+    }
+
+    /// Report account inventory availability using the SCM service token.
+    pub async fn account_capabilities(&self) -> Result<AccountCapabilitiesResponse, ClientError> {
+        let request = self.authenticated_request(
+            "account_capabilities",
+            Method::GET,
+            "v1/account/capabilities",
+        )?;
+        self.execute(
+            "account_capabilities",
+            ContractRoot::AccountCapabilitiesResponse,
+            request,
+        )
+        .await
+    }
+
+    /// Read the complete bounded JLC account-library scan.
+    pub async fn account_inventory(&self) -> Result<AccountInventoryResponse, ClientError> {
+        let request =
+            self.authenticated_request("account_inventory", Method::GET, "v1/account/inventory")?;
+        self.execute(
+            "account_inventory",
+            ContractRoot::AccountInventoryResponse,
+            request,
+        )
+        .await
+    }
+
+    /// Scan the account library for an exact supplier or manufacturer part number.
+    pub async fn account_inventory_lookup(
+        &self,
+        part: AccountPart<'_>,
+    ) -> Result<AccountInventoryLookupResponse, ClientError> {
+        let request = self.authenticated_request(
+            "account_inventory_lookup",
+            Method::GET,
+            "v1/account/inventory/lookup",
+        )?;
+        let request = match part {
+            AccountPart::Spn(spn) => request.query(&[("spn", spn)]),
+            AccountPart::Mpn(mpn) => request.query(&[("mpn", mpn)]),
+        };
+        self.execute(
+            "account_inventory_lookup",
+            ContractRoot::AccountInventoryLookupResponse,
             request,
         )
         .await

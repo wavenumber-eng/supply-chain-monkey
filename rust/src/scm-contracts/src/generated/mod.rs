@@ -1,5 +1,17 @@
 #[allow(clippy::derivable_impls, reason = "typify emits explicit defaults")]
 #[rustfmt::skip]
+mod account_capabilities_response;
+pub use account_capabilities_response::AccountCapabilitiesResponse;
+#[allow(clippy::derivable_impls, reason = "typify emits explicit defaults")]
+#[rustfmt::skip]
+mod account_inventory_lookup_response;
+pub use account_inventory_lookup_response::AccountInventoryLookupResponse;
+#[allow(clippy::derivable_impls, reason = "typify emits explicit defaults")]
+#[rustfmt::skip]
+mod account_inventory_response;
+pub use account_inventory_response::AccountInventoryResponse;
+#[allow(clippy::derivable_impls, reason = "typify emits explicit defaults")]
+#[rustfmt::skip]
 mod detail_envelope;
 pub use detail_envelope::DetailEnvelope;
 #[allow(clippy::derivable_impls, reason = "typify emits explicit defaults")]
@@ -36,6 +48,9 @@ mod stream_search_event;
 pub use stream_search_event::StreamSearchEvent;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ContractRoot {
+    AccountCapabilitiesResponse,
+    AccountInventoryLookupResponse,
+    AccountInventoryResponse,
     DetailEnvelope,
     HealthResponse,
     ProviderStatusResponse,
@@ -48,6 +63,9 @@ pub enum ContractRoot {
 }
 impl ContractRoot {
     pub const ALL: &'static [Self] = &[
+        Self::AccountCapabilitiesResponse,
+        Self::AccountInventoryLookupResponse,
+        Self::AccountInventoryResponse,
         Self::DetailEnvelope,
         Self::HealthResponse,
         Self::ProviderStatusResponse,
@@ -60,6 +78,15 @@ impl ContractRoot {
     ];
     pub const fn schema_id(self) -> &'static str {
         match self {
+            Self::AccountCapabilitiesResponse => {
+                "urn:supply-chain-monkey:schema:v1.account-capabilities-response"
+            }
+            Self::AccountInventoryLookupResponse => {
+                "urn:supply-chain-monkey:schema:v1.account-inventory-lookup-response"
+            }
+            Self::AccountInventoryResponse => {
+                "urn:supply-chain-monkey:schema:v1.account-inventory-response"
+            }
             Self::DetailEnvelope => "urn:supply-chain-monkey:schema:v1.detail-envelope",
             Self::HealthResponse => "urn:supply-chain-monkey:schema:v1.health-response",
             Self::ProviderStatusResponse => {
@@ -83,6 +110,24 @@ impl ContractRoot {
     }
     pub const fn schema(self) -> &'static str {
         match self {
+            Self::AccountCapabilitiesResponse => {
+                include_str!(
+                    concat!(env!("CARGO_MANIFEST_DIR"),
+                    "/schema/AccountCapabilitiesResponse.json")
+                )
+            }
+            Self::AccountInventoryLookupResponse => {
+                include_str!(
+                    concat!(env!("CARGO_MANIFEST_DIR"),
+                    "/schema/AccountInventoryLookupResponse.json")
+                )
+            }
+            Self::AccountInventoryResponse => {
+                include_str!(
+                    concat!(env!("CARGO_MANIFEST_DIR"),
+                    "/schema/AccountInventoryResponse.json")
+                )
+            }
             Self::DetailEnvelope => {
                 include_str!(
                     concat!(env!("CARGO_MANIFEST_DIR"), "/schema/DetailEnvelope.json")
@@ -133,6 +178,52 @@ impl ContractRoot {
     }
 }
 pub(crate) const GENERATED_SCHEMAS: &[(&str, &str)] = &[
+    (
+        "urn:supply-chain-monkey:schema:v1.account-capabilities-response",
+        include_str!(
+            concat!(env!("CARGO_MANIFEST_DIR"),
+            "/schema/AccountCapabilitiesResponse.json")
+        ),
+    ),
+    (
+        "urn:supply-chain-monkey:schema:v1.account-inventory-lookup-response",
+        include_str!(
+            concat!(env!("CARGO_MANIFEST_DIR"),
+            "/schema/AccountInventoryLookupResponse.json")
+        ),
+    ),
+    (
+        "urn:supply-chain-monkey:schema:v1.account-inventory-response",
+        include_str!(
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/AccountInventoryResponse.json")
+        ),
+    ),
+    (
+        "urn:supply-chain-monkey:schema:v1.declaration.AccountInventoryRecord",
+        include_str!(
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/AccountInventoryRecord.json")
+        ),
+    ),
+    (
+        "urn:supply-chain-monkey:schema:v1.declaration.AccountStockBalances",
+        include_str!(
+            concat!(env!("CARGO_MANIFEST_DIR"), "/schema/AccountStockBalances.json")
+        ),
+    ),
+    (
+        "urn:supply-chain-monkey:schema:v1.declaration.AccountUnavailableResponse",
+        include_str!(
+            concat!(env!("CARGO_MANIFEST_DIR"),
+            "/schema/AccountUnavailableResponse.json")
+        ),
+    ),
+    (
+        "urn:supply-chain-monkey:schema:v1.declaration.AccountUpstreamErrorResponse",
+        include_str!(
+            concat!(env!("CARGO_MANIFEST_DIR"),
+            "/schema/AccountUpstreamErrorResponse.json")
+        ),
+    ),
     (
         "urn:supply-chain-monkey:schema:v1.declaration.BadRequestResponse",
         include_str!(

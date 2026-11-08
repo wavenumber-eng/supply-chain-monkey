@@ -12,6 +12,9 @@ include = ["src/**/*.rs", "schema/**/*.json", "LICENSE", "README.md"]
 [lib]
 name = "scm_contracts"
 
+[features]
+serde-json-arbitrary-precision = ["serde_json/arbitrary_precision"]
+
 [dependencies]
 jsonschema.workspace = true
 regress.workspace = true

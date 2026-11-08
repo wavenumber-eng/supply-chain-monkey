@@ -12,6 +12,9 @@ include = ["src/**/*.rs", "LICENSE", "README.md"]
 [lib]
 name = "scm_client"
 
+[features]
+serde-json-arbitrary-precision = ["scm-contracts/serde-json-arbitrary-precision"]
+
 [dependencies]
 futures-util.workspace = true
 reqwest.workspace = true

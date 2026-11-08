@@ -20,6 +20,9 @@ const TABLE_COLUMNS: [(&str, usize); 7] = [
 ];
 
 pub(crate) enum CommandOutput {
+    Account {
+        value: Value,
+    },
     Value {
         value: Value,
         provider_error: bool,
@@ -51,6 +54,12 @@ struct TableRow {
 }
 
 impl CommandOutput {
+    pub(crate) fn account<T: Serialize>(value: T) -> Result<Self, CliError> {
+        Ok(Self::Account {
+            value: serde_json::to_value(value).map_err(CliError::Serialize)?,
+        })
+    }
+
     pub(crate) fn plain<T: Serialize>(value: T) -> Result<Self, CliError> {
         Ok(Self::Value {
             value: serde_json::to_value(value).map_err(CliError::Serialize)?,
@@ -118,6 +127,7 @@ impl CommandOutput {
 pub(crate) fn render(output: &CommandOutput, json: bool) -> Result<(), CliError> {
     if json {
         let rendered = match output {
+            CommandOutput::Account { value } => serde_json::to_string_pretty(value),
             CommandOutput::Value { value, .. } => serde_json::to_string_pretty(value),
             CommandOutput::Search { document, .. } => serde_json::to_string_pretty(document),
         };
@@ -125,10 +135,48 @@ pub(crate) fn render(output: &CommandOutput, json: bool) -> Result<(), CliError>
         return Ok(());
     }
     match output {
+        CommandOutput::Account { value } => render_account(value),
         CommandOutput::Value { value, .. } => render_value(value),
         CommandOutput::Search { document, .. } => render_search(document),
     }
     Ok(())
+}
+
+fn render_account(value: &Value) {
+    if let Some(configured) = value.get("configured").and_then(Value::as_bool) {
+        println!("inventory_configured={configured}");
+        return;
+    }
+    if let Some(items) = value.get("items").and_then(Value::as_array) {
+        print!("items={}", items.len());
+        if let Some(status) = value.get("status").and_then(Value::as_str) {
+            print!(" status={}", normalize(status));
+        }
+        println!();
+        for item in items {
+            let part = normalize(item["supplier_part_number"].as_str().unwrap_or("-"));
+            let mpn = normalize(item["manufacturer_part_number"].as_str().unwrap_or("-"));
+            let balances = [
+                "jlcpcb_parts",
+                "global_sourcing_parts",
+                "consigned_parts",
+                "idle_stock",
+            ]
+            .iter()
+            .map(|name| {
+                format!(
+                    "{}={}",
+                    name,
+                    item["balances"][name]
+                        .as_i64()
+                        .map_or_else(|| "?".to_owned(), |n| n.to_string())
+                )
+            })
+            .collect::<Vec<_>>()
+            .join(" ");
+            println!("{part}\t{mpn}\t{balances}");
+        }
+    }
 }
 
 fn render_value(value: &Value) {
